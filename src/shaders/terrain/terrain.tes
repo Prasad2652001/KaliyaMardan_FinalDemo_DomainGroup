@@ -1,0 +1,106 @@
+#version 460 core                                                                               
+
+layout(triangles, equal_spacing, ccw) in;
+
+uniform mat4 u_gWorld;
+uniform mat4 u_gVP;
+uniform float u_gDispFactor;
+uniform float u_freq;
+uniform int u_octaves;
+
+uniform vec3 u_gEyeWorldPos;
+uniform vec3 u_seed;
+uniform vec4 u_clipPlane;
+uniform float u_power;
+
+uniform vec3 u_fogColor;      // Fog color
+uniform float u_fogFalloff;   // Fog falloff strength
+
+in vec3 WorldPos_ES_in[];
+in vec2 TexCoord_ES_in[];
+in vec3 Normal_ES_in[];
+
+out vec3 WorldPos;
+out vec2 texCoord;
+out vec3 Normal;
+out float distFromPos;
+out float dispFactor;
+out float height;
+
+
+// Shadow
+uniform mat4 u_lightSpaceMatrix;
+uniform bool isShadow;
+out vec3 FragPos;
+out vec4 FragPosLightSpace;
+
+
+vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2) {
+	return vec2(gl_TessCoord.x) * v0 + vec2(gl_TessCoord.y) * v1 + vec2(gl_TessCoord.z) * v2;
+}
+
+vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2) {
+	return vec3(gl_TessCoord.x) * v0 + vec3(gl_TessCoord.y) * v1 + vec3(gl_TessCoord.z) * v2;
+}
+
+float Random2D(in vec2 st) {
+	return fract(sin(dot(st.xy, vec2(12.9898, 78.233) + u_seed.xy)) * 43758.5453123);
+}
+
+float InterpolatedNoise(int ind, float x, float y) {
+	int integer_X = int(floor(x));
+	float fractional_X = fract(x);
+	int integer_Y = int(floor(y));
+	float fractional_Y = fract(y);
+	vec2 randomInput = vec2(integer_X, integer_Y);
+	float a = Random2D(randomInput);
+	float b = Random2D(randomInput + vec2(1.0, 0.0));
+	float c = Random2D(randomInput + vec2(0.0, 1.0));
+	float d = Random2D(randomInput + vec2(1.0, 1.0));
+	vec2 w = vec2(fractional_X, fractional_Y);
+	w = w * w * w * (10.0 + w * (-15.0 + 6.0 * w));
+
+	float k0 = a, k1 = b - a, k2 = c - a, k3 = d - c - b + a;
+
+	return k0 + k1 * w.x + k2 * w.y + k3 * w.x * w.y;
+}
+
+float perlin(vec2 st) {
+	const mat2 m = mat2(0.8, -0.6, 0.6, 0.8);
+	float persistence = 0.5;
+	float total = 0.0, frequency = 0.005 * u_freq, amplitude = u_gDispFactor;
+	for(int i = 0; i < u_octaves; ++i) {
+		frequency *= 2.0;
+		amplitude *= persistence;
+
+		vec2 v = frequency * m * st;
+
+		total += InterpolatedNoise(0, v.x, v.y) * amplitude;
+	}
+	return pow(total, u_power);
+}
+
+void main() {                                                                                               
+    // Interpolate the attributes of the output vertex using the barycentric coordinates        
+	texCoord = interpolate2D(TexCoord_ES_in[0], TexCoord_ES_in[1], TexCoord_ES_in[2]);
+	Normal = interpolate3D(Normal_ES_in[0], Normal_ES_in[1], Normal_ES_in[2]);
+	Normal = normalize(Normal);
+	WorldPos = interpolate3D(WorldPos_ES_in[0], WorldPos_ES_in[1], WorldPos_ES_in[2]);    
+
+    // Displace the vertex along the normal                                                     
+	float Displacement = perlin(WorldPos.xz);
+	WorldPos += Normal * Displacement;
+
+	gl_ClipDistance[0] = dot(u_clipPlane, vec4(WorldPos, 1.0));
+
+	distFromPos = distance(WorldPos, u_gEyeWorldPos);
+	dispFactor = u_gDispFactor;
+	height = WorldPos.y;
+
+	gl_Position = u_gVP * vec4(WorldPos, 1.0);
+
+    if(isShadow) {
+        FragPos = vec3(u_gWorld * vec4(WorldPos, 1.0));
+        FragPosLightSpace = u_lightSpaceMatrix * vec4(FragPos, 1.0);
+    }
+}

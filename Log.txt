@@ -1,0 +1,65 @@
+============================================================
+Log File "Log.txt" Has Been Created Successfully !!!
+============================================================
+
+".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+"./src/shaders/texture/texture.vs" : Vertex Shader Compilation Succeeded.
+"./src/shaders/texture/texture.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\model\model.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\model\model.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+"./src/shaders/overlayTexture/texture.vs" : Vertex Shader Compilation Succeeded.
+"./src/shaders/overlayTexture/texture.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+"./src/shaders/overlayColor/color.vs" : Vertex Shader Compilation Succeeded.
+"./src/shaders/overlayColor/color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\model\modelParticles.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\model\modelParticles.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+"./src/shaders/textureLight/texture.vs" : Vertex Shader Compilation Succeeded.
+"./src/shaders/textureLight/texture.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+ERROR::ASSIMP:: Failed To Load .\assets\models\scene2\Pine\pineTrees.obj Model.
+"./src/shaders/texture/texture.vs" : Vertex Shader Compilation Succeeded.
+"./src/shaders/texture/texture.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+InitalizeAudio() : alCOpenDevice() Failed.
+Initialize Successful...
+
+
+Variables  | OBJ -28.600082f, 23.500046f, 15.500017f | OBJ Angle 0.000000f | SCALE 29.000000f, -28.000000f, -120.000000f
+
+
+
+
+light_objX : 0.000000 , light_objY : 0.000000 , light_objZ : 0.000000
+ 
+
+std::vector<std::vector<float>> bezierPoints = {
+{-28.600082f, 23.500046f, 15.500017f},
+};
+
+
+// YAW GLOBAL
+std::vector<float> yawGlobal = {
+29.000000f,
+};
+
+
+// PITCH GLOBAL
+std::vector<float> pitchGlobal = {
+-28.000000f,
+	};
+
+
+// FOV GLOBAL
+std::vector<float> fovGlobal = {
+-120.000000f,
+	};
+============================================================
+Log File "Log.txt" Has Been Closed Successfully !!!
+============================================================
