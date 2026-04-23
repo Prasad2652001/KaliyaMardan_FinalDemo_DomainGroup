@@ -24,7 +24,7 @@ public:
     BOOL initialize(int selected_scene, bool isE2E)
     {
         // model_room->initializeModel(".\\assets\\models\\toyroom\\toyroom.obj");
-        model_room->initializeModel(".\\assets\\models\\scene2\\Pine\\pineTrees.obj");
+        //model_room->initializeModel(".\\assets\\models\\scene2\\Pine\\pineTrees.obj");
        
         return TRUE;
     }

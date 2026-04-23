@@ -32,7 +32,7 @@ public:
     Scene *scene;
 
     // --------- new update particular scene class object declaration -------
-    Scene1 *scene1;
+    ToyScene1 *scene1;
     /* Scene2 *scene2;
     Scene3 *scene3;
     Scene4 *scene4;
@@ -47,7 +47,7 @@ public:
     MainScene()
     {
         // SCENE
-        scene1 = new Scene1();
+        scene1 = new ToyScene1();
         /* scene2 = new Scene2();
         scene3 = new Scene3();
         scene4 = new Scene4();
@@ -122,6 +122,7 @@ public:
             switch (selected_scene)
             {
             case SCENE_1:
+                PrintLog("\n\nin SCENE_1 case\n\n");
                 scene = scene1;
                 break;
           /*   case SCENE_2:

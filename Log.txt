@@ -23,11 +23,35 @@ Shader Program Linking Succeeded.
 "./src/shaders/textureLight/texture.vs" : Vertex Shader Compilation Succeeded.
 "./src/shaders/textureLight/texture.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-ERROR::ASSIMP:: Failed To Load .\assets\models\scene2\Pine\pineTrees.obj Model.
-"./src/shaders/texture/texture.vs" : Vertex Shader Compilation Succeeded.
-"./src/shaders/texture/texture.fs" : Fragment Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-InitalizeAudio() : alCOpenDevice() Failed.
+
+
+in SCENE_1 case
+
+"./src/shaders/shine/shine.vs" : Vertex Shader Compilation Succeeded.
+"./src/shaders/shine/shine.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+LoadPNGImage Failed for waterDUDV
+".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+"./src/shaders/godRays/godrays.vert" : Vertex Shader Compilation Succeeded.
+"./src/shaders/godRays/godrays.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+[Core::TextureModel::LoadCubeMapModel]: Failed to load Cubemap Texture: .\assets\textures\modelCubeMap\px.png
+".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
 Initialize Successful...
 
 
