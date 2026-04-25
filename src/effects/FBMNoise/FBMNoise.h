@@ -75,7 +75,7 @@ public:
         glUniform1f(fbmNoise->alphaUniform , alpha);
 
         // Render the square model using the fbmNoise shader.
-       glBindVertexArray(vao_square);
+        glBindVertexArray(vao_square);
        
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

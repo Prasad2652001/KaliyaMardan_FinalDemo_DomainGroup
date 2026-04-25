@@ -6,7 +6,7 @@
 #include "../../shaders/model/Model_Shader.h"
 #include "../../shaders/shine/ShineShader.h"
 #include "../../utils/gltf/Model.h"
-#include "../../utils/gltf/TextureModel.h"
+#include "../../utils/gltf/TextureModel.h"  
 #include "../../utils/EventManager.h"
 #include "../../effects/terrain/Terrain.h"
 
@@ -25,7 +25,7 @@ public:
     CubeMap *cubemap;
     Terrain *terrain;
     WaterMatrix *waterMatrix;
-      
+    
     // Shaders
     GodRaysShader *godRaysShader;
 
@@ -69,7 +69,7 @@ public:
         shineShader = new ShineShader();
 
         terrain = new Terrain(10 * 100.);
-        waterMatrix = new WaterMatrix(300. * 40.);
+        waterMatrix = new WaterMatrix(600. * 40.);
         godRaysShader = new GodRaysShader();
     }
 
@@ -208,109 +208,109 @@ public:
         // YAW GLOBAL
         std::vector<float> yawGlobalSC1 = {
             -66.000000f,
--66.000000f,
--66.000000f,
--67.000000f,
--75.000000f,
--75.000000f,
--75.000000f,
--75.000000f,
--73.000000f,
--60.000000f,
--53.000000f,
--47.000000f,
--36.000000f,
--16.000000f,
-7.000000f,
-45.000000f,
-77.000000f,
-154.000000f,
-154.000000f,
-154.000000f,
-156.000000f,
-156.000000f,
-157.000000f,
-159.000000f,
-164.000000f,
-164.000000f,
-169.000000f,
-169.000000f,
-177.000000f,
-177.000000f,
-177.000000f,
-177.000000f,
+            -66.000000f,
+            -66.000000f,
+            -67.000000f,
+            -75.000000f,
+            -75.000000f,
+            -75.000000f,
+            -75.000000f,
+            -73.000000f,
+            -60.000000f,
+            -53.000000f,
+            -47.000000f,
+            -36.000000f,
+            -16.000000f,
+            7.000000f,
+            45.000000f,
+            77.000000f,
+            154.000000f,
+            154.000000f,
+            154.000000f,
+            156.000000f,
+            156.000000f,
+            157.000000f,
+            159.000000f,
+            164.000000f,
+            164.000000f,
+            169.000000f,
+            169.000000f,
+            177.000000f,
+            177.000000f,
+            177.000000f,
+            177.000000f,
         };
 
         // PITCH GLOBAL
         std::vector<float> pitchGlobalSC1 = {
             -6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-10.000000f,
-	-10.000000f,
-	-10.000000f,
-	-10.000000f,
-	-14.000000f,
-	-14.000000f,
-	-14.000000f,
-	-14.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-6.000000f,
-	-1.000000f,
-	-1.000000f,
-	9.000000f,
-	22.000000f,
-	22.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -10.000000f,
+            -10.000000f,
+            -10.000000f,
+            -10.000000f,
+            -14.000000f,
+            -14.000000f,
+            -14.000000f,
+            -14.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -6.000000f,
+            -1.000000f,
+            -1.000000f,
+            9.000000f,
+            22.000000f,
+            22.000000f,
         };
 
         // FOV GLOBAL
         std::vector<float> fovGlobalSC1 = {
            1820.000000f,
-	-1200.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-620.000000f,
-	-1220.000000f,
-	-1520.000000f,
-	-1660.000000f,
-	-1660.000000f,
-	-1660.000000f,
-	-1660.000000f,
-	-1660.000000f,
-	-1220.000000f,
-	-1220.000000f,
-	-820.000000f,
-	-200.000000f,
-	700.000000f,
-	700.000000f,
-	700.000000f,
+            -1200.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -620.000000f,
+            -1220.000000f,
+            -1520.000000f,
+            -1660.000000f,
+            -1660.000000f,
+            -1660.000000f,
+            -1660.000000f,
+            -1660.000000f,
+            -1220.000000f,
+            -1220.000000f,
+            -820.000000f,
+            -200.000000f,
+            700.000000f,
+            700.000000f,
+            700.000000f,
         };
         sc1.initialize();
         sc1.setBezierPoints(bezierPointsSC1, yawGlobalSC1, pitchGlobalSC1, fovGlobalSC1);
@@ -322,56 +322,18 @@ public:
     void display()
     {
 
-        // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal, fovGlobal);
-        // sceneCamera->update();
-         pushMatrix(modelMatrix);
-        {
-            modelMatrix = modelMatrix * vmath::translate(4600.000000f, 800.000000f, 4700.000000f) * vmath::scale(1000000.0f, 1000000.0f, 1000000.0f);
-            cubemap->display();
-        }
-        modelMatrix = popMatrix();
+         // Camera
+        modelMatrix = mat4::identity();
+        perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)giWindowWidth / (GLfloat)giWindowHeight, 10.0f, 10000000.0f);
+
+        // modelLoader.display();
+        // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
 
         // TERRAIN GODRAYS
-        //displayGodRays();
-
-        // DRAW TERRAIN IN BLACK
-        pushMatrix(modelMatrix);
-        {
-            terrain->up = 1;
-            terrain->draw(false);
-        }
-        modelMatrix = popMatrix();
-
-        pushMatrix(modelMatrix);
-        {
-            drawToyMarriage();
-        }
-        modelMatrix = popMatrix();
-
-        /*
-        // Room
-        pushMatrix(modelMatrix);
-        {
-            drawRoom();
-        }
-        modelMatrix = popMatrix();
-
-        // Baby
-        pushMatrix(modelMatrix);
-        {
-            drawGltfBabyModel();
-        }
-        modelMatrix = popMatrix();
-        // Baby
-        pushMatrix(modelMatrix);
-        {
-            drawCross();
-        }
-        modelMatrix = popMatrix(); */
-
+        displayGodRays();
 
         // Fading
-        /* pushMatrix(modelMatrix);
+       /*  pushMatrix(modelMatrix);
         {
             modelMatrix = vmath::scale(1.0f, 1.0f, 1.0f);
             if (sceneEvents->isEventInProgress(FADE_IN))
@@ -381,25 +343,176 @@ public:
         }
         modelMatrix = popMatrix(); */
 
-        // Marrriage stage shadow
-       /*  pushMatrix(modelMatrix);
-        {
-            modelMatrix = modelMatrix * vmath::translate(-10.0f + 4.40f, 1.0f + -0.80f + 0.20f, 18.0f + -24.80f) * vmath::rotate(90.0f, 1.0f, 0.0f, 0.0f) * vmath::scale(9.04f + 0.50f, 6.03f + 0.50f, 1.0f);
-            commonShaders->textureShader->drawQuadWithTexture(texture_marriageStage, modelMatrix, viewMatrix, perspectiveProjectionMatrix, 1.0f);
-        }
-        modelMatrix = popMatrix();
-
-        // Boy laying shadow
-        pushMatrix(modelMatrix);
-        {
-            modelMatrix = modelMatrix * vmath::translate(-10.0f + -8.45f, 1.0f + -0.70f, 18.0f + -10.0f) * vmath::rotate(90.0f, 1.0f, 0.0f, 0.0f) * vmath::rotate(180.0f, 0.0f, 1.0f, 0.0f) * vmath::rotate(-74.0f, 0.0f, 0.0f, 1.0f) * vmath::scale(9.04f + -1.5f, 6.03f + 5.85f, 1.0f);
-            commonShaders->textureShader->drawQuadWithTexture(texture_layingBoy, modelMatrix, viewMatrix, perspectiveProjectionMatrix, 1.0f);
-        }
-        modelMatrix = popMatrix(); */
-
+        // displayScene(1.0);
+    
         // sceneCamera->displayBezierCurve();
     }
 
+    void displayGodRays()
+    {
+        // FIRST PASS
+        glBindFramebuffer(GL_FRAMEBUFFER, godRaysShader->FBOscene);
+        glClearBufferfv(GL_COLOR, 0, vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        glClearBufferfv(GL_DEPTH, 0, vec1(1.0f));
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, 1920, 1080);
+        {
+            // DRAW TERRAIN IN BLACK
+            pushMatrix(modelMatrix);
+            {
+                terrain->isGodRaysOcclusion = true;
+                terrain->up = 1;
+                terrain->draw(false);
+                terrain->isGodRaysOcclusion = false;
+            }
+            modelMatrix = popMatrix();
+            // DRAW LIGHT SOURCE IN WHITE
+            pushMatrix(modelMatrix);
+            {
+                glUseProgram(commonShaders->colorShader->shaderProgramObject);
+
+                vmath::mat4 translationMatrix = mat4::identity();
+                vmath::mat4 rotateMatrix = mat4::identity();
+
+                translationMatrix = vmath::translate(-18200.000000f + 6900.0f, 12400.000000f + -5400.0f, -1004.0f + 36800.000000f + 17400.0f);
+
+                modelMatrix = translationMatrix * vmath::scale(50.0f + 188.502304f, 50.0f + 188.502304f, 50.0f + 188.502304f);
+
+                glVertexAttrib3f(MATRIX_ATTRIBUTE_COLOR, 1.0f, 1.0f, 1.0f);
+                glUniformMatrix4fv(commonShaders->colorShader->modelMatrixUniform, 1, GL_FALSE, modelMatrix);
+                glUniformMatrix4fv(commonShaders->colorShader->viewMatrixUniform, 1, GL_FALSE, viewMatrix);
+                glUniformMatrix4fv(commonShaders->colorShader->projectionMatrixUniform, 1, GL_FALSE, perspectiveProjectionMatrix);
+
+                glBindVertexArray(godRaysShader->vao_scene_sphere);
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, godRaysShader->sphereAish->getNumberOfSphereVertices());
+                glBindVertexArray(0);
+
+                glUseProgram(0);
+            }
+            modelMatrix = popMatrix();
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // SECOND PASS
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        {
+
+            pushMatrix(modelMatrix);
+            {
+                glUseProgram(commonShaders->colorShader->shaderProgramObject);
+
+                vmath::mat4 translationMatrix = mat4::identity();
+                vmath::mat4 rotateMatrix = mat4::identity();
+
+                translationMatrix = vmath::translate(-18200.000000f + 6900.0f, 12400.000000f + -5400.0f, -1004.0f + 36800.000000f + 17400.0f);
+
+                modelMatrix = translationMatrix * vmath::scale(50.0f + 188.502304f, 50.0f + 188.502304f, 50.0f + 188.502304f);
+
+                glVertexAttrib3f(MATRIX_ATTRIBUTE_COLOR, 1.0f, 1.0f, 1.0f);
+                glUniformMatrix4fv(commonShaders->colorShader->modelMatrixUniform, 1, GL_FALSE, modelMatrix);
+                glUniformMatrix4fv(commonShaders->colorShader->viewMatrixUniform, 1, GL_FALSE, viewMatrix);
+                glUniformMatrix4fv(commonShaders->colorShader->projectionMatrixUniform, 1, GL_FALSE, perspectiveProjectionMatrix);
+
+                glBindVertexArray(godRaysShader->vao_scene_sphere);
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, godRaysShader->sphereAish->getNumberOfSphereVertices());
+                glBindVertexArray(0);
+
+                glUseProgram(0);
+            }
+            modelMatrix = popMatrix();
+
+            // Water FBO
+            {
+                // Refraction
+                waterMatrix->bindReflectionFBO(1920, 1080);
+                {
+                    displayScene(1.0);
+                }
+                waterMatrix->unbindReflectionFBO();
+
+                // Refraction
+                waterMatrix->bindRefractionFBO(1920, 1080);
+                {
+                    displayScene(-1.0);
+                }
+                waterMatrix->unbindRefractionFBO();
+            }
+
+            displayScene(1.0);
+
+            // Water Bed
+            pushMatrix(modelMatrix);
+            {
+                modelMatrix = modelMatrix * translate(0.0f, 100.900028f, 0.0f);
+                waterMatrix->renderWaterQuad(terrain->getWaterHeight());
+            }
+            modelMatrix = popMatrix();
+
+            // cubemap
+            pushMatrix(modelMatrix);
+            {
+                modelMatrix = modelMatrix * vmath::scale(500000.0f, 500000.0f, 500000.0f);
+                cubemap->display();
+            }
+            modelMatrix = popMatrix();
+        }
+
+        // THIRD PASS
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glUseProgram(godRaysShader->shaderProgramObject_Godrays);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, godRaysShader->texture_fbo_scene);
+        glUniform1f(0, 1.1f);
+        glUniform1f(1, 0.06f);
+        glUniform1f(2, 0.98f);
+        glUniform1f(3, 0.5f);
+        glUniform1i(4, 100);
+        glUniform2fv(5, 1, setScreenSpaceCoords(perspectiveProjectionMatrix * viewMatrix * translate(-3.45f, -0.3f, 2.828f), vec4(-18200.000000f + 6900.0f, 12400.000000f + -5400.0f, -1004.0f + 36800.000000f + 17400.0f, 1.0f)));
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glUseProgram(0);
+        glDisable(GL_BLEND);
+    }
+
+    vec2 setScreenSpaceCoords(const mat4 &vp, const vec4 &pos)
+    {
+        auto transform = [](const mat4 &m, const vec4 &v) -> vec4
+        {
+            vec4 out;
+            out[0] = m[0][0] * v[0] + m[1][0] * v[1] + m[2][0] * v[2] + m[3][0] * v[3];
+            out[1] = m[0][1] * v[0] + m[1][1] * v[1] + m[2][1] * v[2] + m[3][1] * v[3];
+            out[2] = m[0][2] * v[0] + m[1][2] * v[1] + m[2][2] * v[2] + m[3][2] * v[3];
+            out[3] = m[0][3] * v[0] + m[1][3] * v[1] + m[2][3] * v[2] + m[3][3] * v[3];
+            return out;
+        };
+        vec4 ssPos = transform(vp, pos);
+        float ssX = ssPos[0] / ssPos[3];
+        float ssY = ssPos[1] / ssPos[3];
+
+        // map ssX and ssY from [-1, 1] to [0, 1]
+        ssX = ssX * 0.5f + 0.5f;
+        ssY = ssY * 0.5f + 0.5f;
+        return vec2(ssX, ssY);
+    }
+
+    void displayScene(float terrainUp)
+    {   
+        // Terrain
+        displayTerrain(terrainUp);
+
+        //drawPineTrees();
+    }
+
+    void displayTerrain(float terrainUp)
+    {
+        pushMatrix(modelMatrix);
+        {
+            terrain->up = terrainUp;
+            terrain->draw(false);
+        }
+        modelMatrix = popMatrix();
+    }
+    
     void drawRoom()
     {
         pushMatrix(modelMatrix);
@@ -532,19 +645,55 @@ public:
 
     void update()
     {
-        // EVENT UPDATE
+         // sceneCamera->time = globalTime;
+        if (terrain->getTextureTransitionFactor() < 1.0f)
+        {
+            terrain->setTextureTransitionFactor(terrain->getTextureTransitionFactor() + 0.001f);
+        }
+
+        if (terrain->getGrassCoverage() < 0.5f)
+        {
+            terrain->setGrassCoverage(terrain->getGrassCoverage() + 0.0005f);
+        }
+
+        /* // CAMERA UPDATE
+        sceneCamera->time = sceneEvents->getEventTime(SC_T1);
         // sceneCamera->time = globalTime;
-        sceneCamera->time = sceneEvents->getEventTime(SC_T);
         sceneEvents->increment();
 
-        /// Completing scene hereq
-        if (sceneEvents->isEventComplete(START_T))
+        // / Completing scene hereq
+        if (sceneEvents->isEventComplete(END_T))
         {
             isSceneComplete = true;
-        }
-    }
+        } */
+
+        terrain->setWaterHeight(500.0f - 20.000000f);
+        waterMatrix->interpolateWaterColor = 1.0f;
+        terrain->setTextureTransitionFactor(1.0f);
+    }   
 
     void uninitialize()
     {
+        if (cubemap)
+        {
+            cubemap->uninitialize();
+            delete (cubemap);
+            cubemap = NULL;
+        }
+
+        if (terrain)
+        {
+            delete terrain;
+            terrain = nullptr;
+        }
+
+        // modelLoader.uninitialize();
+
+        if (cubemap)
+        {
+            cubemap->uninitialize();
+            delete (cubemap);
+            cubemap = NULL;
+        }
     }
 };
