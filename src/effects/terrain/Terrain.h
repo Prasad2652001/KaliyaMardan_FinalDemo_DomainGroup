@@ -2,7 +2,7 @@
 #include "../../utils/common.h"
 #include "../../utils/camera/Camera.h"
 #include "../../shaders/terrain/TerrainShader.h"
-#include "../water/Water.h"
+#include "../water/Water.h" 
 #include "TerrainGPU.h"
 #include <utility>
 
@@ -51,11 +51,18 @@ public:
         vmath::mat4 positionMatrix = vmath::translate(0.0f, 0.0f, 0.0f);
         modelMatrix = positionMatrix;
 
-        octaves = 10;
+        /*octaves = 10;
         frequency = 0.022f;
         grassCoverage = 0.716f;
         tessMultiplier = 1.625f;
+        dispFactor = 20.226f; */
+        
+        /* octaves = 10;
+        frequency = 0.010f;
+        grassCoverage = 0.716f;
+        tessMultiplier = 1.625f;
         dispFactor = 20.226f;
+        */
 
         fogFalloff = 1.689f;
 
@@ -379,15 +386,25 @@ private:
     }
     int res;
     GLuint planeVBO, planeVAO, planeEBO;
-    float dispFactor, scaleFactor, frequency, grassCoverage, tessMultiplier, fogFalloff, power;
+    float scaleFactor, fogFalloff, power;
     float FogEnd;
     float LayeredFogTop;
     float ExpFogDensity;
     float FogStart;
-    int octaves;
     int gridLength;
     float textureTransitionFactor = -0.3f;
     bool drawFog;
+
+// ========== change by prasad
+public:
+    float frequency;
+    float  grassCoverage;
+    float  tessMultiplier;
+    int octaves;
+    float dispFactor;
+// ===============
+
+private:
 
     GLuint *textures_green, *textures_dark, posBuffer;
 
@@ -443,3 +460,4 @@ private:
 
     void uninitialize();
 };
+

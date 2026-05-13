@@ -24,7 +24,9 @@ class ToyScene1 : public Scene
 public:
     CubeMap *cubemap;
     Terrain *terrain;
+
     WaterMatrix *waterMatrix;
+
     
     // Shaders
     GodRaysShader *godRaysShader;
@@ -67,9 +69,10 @@ public:
         cubemap = new CubeMap();
         sceneCamera = new BezierCamera();
         shineShader = new ShineShader();
+        
+        terrain = new Terrain(20.0f * 80.0f);
+        waterMatrix = new WaterMatrix(300. * 80.);
 
-        terrain = new Terrain(10 * 100.);
-        waterMatrix = new WaterMatrix(600. * 40.);
         godRaysShader = new GodRaysShader();
     }
 
@@ -88,6 +91,7 @@ public:
             PrintLog("Failed to initialize Terrain");
             return FALSE;
         }
+
 
         // Water
         waterMatrix->initialize();
@@ -124,7 +128,6 @@ public:
             return FALSE;
         }
 
-
         std::vector<std::string> faces{
             ".\\assets\\textures\\modelCubeMap\\px.png",
             ".\\assets\\textures\\modelCubeMap\\nx.png",
@@ -135,7 +138,6 @@ public:
         cubeMapTexture = Core::TextureModel::LoadCubeMapModel(faces);
         //////////////////////////////////////////////////////////////////////
         
-
         // Event System
         sceneEvents = new EventManager(
             {{START_T, {0.0f, 30.0f}},
@@ -321,7 +323,6 @@ public:
 
     void display()
     {
-
          // Camera
         modelMatrix = mat4::identity();
         perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)giWindowWidth / (GLfloat)giWindowHeight, 10.0f, 10000000.0f);
@@ -334,41 +335,50 @@ public:
 
         // Fading
        /*  pushMatrix(modelMatrix);
-        {
+        {   
             modelMatrix = vmath::scale(1.0f, 1.0f, 1.0f);
             if (sceneEvents->isEventInProgress(FADE_IN))
                 commonShaders->overlayColorShader->draw(modelMatrix, 0.0f, 0.0f, 0.0f, lerp(sceneEvents->getEventTime(FADE_IN), 1.0f, 0.0f));
             else
                 commonShaders->overlayColorShader->draw(modelMatrix, 0.0f, 0.0f, 0.0f, lerp(sceneEvents->getEventTime(FADE_OUT), 0.0f, 1.0f));
-        }
+        }   
         modelMatrix = popMatrix(); */
-
+            
         // displayScene(1.0);
-    
+        
         // sceneCamera->displayBezierCurve();
-    }
+    }   
 
     void displayGodRays()
-    {
+    {   
         // FIRST PASS
         glBindFramebuffer(GL_FRAMEBUFFER, godRaysShader->FBOscene);
         glClearBufferfv(GL_COLOR, 0, vec4(1.0f, 1.0f, 1.0f, 1.0f));
         glClearBufferfv(GL_DEPTH, 0, vec1(1.0f));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, 1920, 1080);
-        {
+        {   
             // DRAW TERRAIN IN BLACK
             pushMatrix(modelMatrix);
-            {
+            {   
+                // ==== this variable adjust terrain all properties for specific scene == added by prasad
+                terrain->octaves = 10;
+                terrain->frequency = 0.010f;
+                terrain->grassCoverage = 0.716f;
+                terrain->tessMultiplier = 1.625f;
+                terrain->dispFactor = 20.226f;
+
                 terrain->isGodRaysOcclusion = true;
-                terrain->up = 1;
+                terrain->up = 1.0f;
                 terrain->draw(false);
                 terrain->isGodRaysOcclusion = false;
             }
             modelMatrix = popMatrix();
+
+           
             // DRAW LIGHT SOURCE IN WHITE
             pushMatrix(modelMatrix);
-            {
+            {   
                 glUseProgram(commonShaders->colorShader->shaderProgramObject);
 
                 vmath::mat4 translationMatrix = mat4::identity();
@@ -395,15 +405,14 @@ public:
 
         // SECOND PASS
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        {
-
+        {   
             pushMatrix(modelMatrix);
             {
                 glUseProgram(commonShaders->colorShader->shaderProgramObject);
 
                 vmath::mat4 translationMatrix = mat4::identity();
                 vmath::mat4 rotateMatrix = mat4::identity();
-
+            
                 translationMatrix = vmath::translate(-18200.000000f + 6900.0f, 12400.000000f + -5400.0f, -1004.0f + 36800.000000f + 17400.0f);
 
                 modelMatrix = translationMatrix * vmath::scale(50.0f + 188.502304f, 50.0f + 188.502304f, 50.0f + 188.502304f);
@@ -420,34 +429,38 @@ public:
                 glUseProgram(0);
             }
             modelMatrix = popMatrix();
+            
+            // Reset modelMatrix before water FBO rendering
+            modelMatrix = mat4::identity();
 
             // Water FBO
-            {
-                // Refraction
+            {   
+                // Reflection
                 waterMatrix->bindReflectionFBO(1920, 1080);
                 {
                     displayScene(1.0);
                 }
                 waterMatrix->unbindReflectionFBO();
-
+                
                 // Refraction
                 waterMatrix->bindRefractionFBO(1920, 1080);
                 {
                     displayScene(-1.0);
                 }
                 waterMatrix->unbindRefractionFBO();
-            }
+            }   
 
             displayScene(1.0);
-
+            
             // Water Bed
             pushMatrix(modelMatrix);
             {
-                modelMatrix = modelMatrix * translate(0.0f, 100.900028f, 0.0f);
+                modelMatrix = modelMatrix * translate(0.0f, 200.900028f, 0.0f) * scale(1100.0f, 1.0f, 1100.0f);
                 waterMatrix->renderWaterQuad(terrain->getWaterHeight());
             }
             modelMatrix = popMatrix();
 
+          
             // cubemap
             pushMatrix(modelMatrix);
             {
@@ -472,12 +485,12 @@ public:
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glUseProgram(0);
         glDisable(GL_BLEND);
-    }
+    }   
 
     vec2 setScreenSpaceCoords(const mat4 &vp, const vec4 &pos)
-    {
+    {   
         auto transform = [](const mat4 &m, const vec4 &v) -> vec4
-        {
+        {   
             vec4 out;
             out[0] = m[0][0] * v[0] + m[1][0] * v[1] + m[2][0] * v[2] + m[3][0] * v[3];
             out[1] = m[0][1] * v[0] + m[1][1] * v[1] + m[2][1] * v[2] + m[3][1] * v[3];
@@ -501,18 +514,19 @@ public:
         displayTerrain(terrainUp);
 
         //drawPineTrees();
-    }
-
+    }   
+    
     void displayTerrain(float terrainUp)
-    {
+    {       
         pushMatrix(modelMatrix);
-        {
+        {   
+            modelMatrix = vmath::scale(100000.0f,0.0f,100000.0f);
             terrain->up = terrainUp;
             terrain->draw(false);
-        }
+        }   
         modelMatrix = popMatrix();
     }
-    
+
     void drawRoom()
     {
         pushMatrix(modelMatrix);
@@ -645,6 +659,7 @@ public:
 
     void update()
     {
+        
          // sceneCamera->time = globalTime;
         if (terrain->getTextureTransitionFactor() < 1.0f)
         {
@@ -667,7 +682,7 @@ public:
             isSceneComplete = true;
         } */
 
-        terrain->setWaterHeight(500.0f - 20.000000f);
+        terrain->setWaterHeight(1000.0f - 20.000000f);
         waterMatrix->interpolateWaterColor = 1.0f;
         terrain->setTextureTransitionFactor(1.0f);
     }   
