@@ -84,7 +84,11 @@ public:
         // //////////////////////////////////////////////////////// gltf model
 
         mToyMarriage = std::make_unique<Core::Model>();
-        mToyMarriage->LoadModel("assets/models/scene1_models/spidey.glb");
+        mToyMarriage->LoadModel("assets/models/scene1_models/KaliyaMardan.glb");
+
+        
+        mCross = std::make_unique<Core::Model>();
+        mCross->LoadModel("assets/models/scene1_models/Kaliya.glb");
 
         if (!terrain)
         {
@@ -106,8 +110,6 @@ public:
         mRoom = std::make_unique<Core::Model>();
         mRoom->LoadModel("./assets/models/scene1/boyhouse.glb");
 
-        mCross = std::make_unique<Core::Model>();
-        mCross->LoadModel("./assets/models/scene1/cross.glb");
 
         brdfLookUp = Core::TextureModel::LoadTextureModel("./assets/textures/newbrdfLUT.png"); */
 
@@ -451,6 +453,10 @@ public:
             }   
 
             displayScene(1.0);
+
+            drawToyMarriage();
+
+            drawCross();
             
             // Water Bed
             pushMatrix(modelMatrix);
@@ -556,17 +562,17 @@ public:
     }
 
     void drawToyMarriage()
-    {
+    {   
         pushMatrix(modelMatrix);
-        {
+        {   
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            static float anglecounter = 0.01f;
+            static float anglecounter = 180.0f;
 
             // Use the shader program object
             mToyMarriage->mTextureShader->Use();
-            modelMatrix = vmath::translate(-6.000000f, 0.000000f, -6.000000f);
-            vmath::mat4 scaleMatrix = vmath::scale(12.000000f, 12.000000f, 12.000000f);
+            modelMatrix = vmath::translate(objX + 2000.0f , objY + 5000.0f, objZ);
+            vmath::mat4 scaleMatrix = vmath::scale(150.000000f, 150.000000f, 150.000000f);
             vmath::mat4 rotatationMatrix = vmath::rotate(0.0f, anglecounter, 0.0f);
 
             mToyMarriage->mTextureShader->SetUniform("u_model", modelMatrix * rotatationMatrix * scaleMatrix);
@@ -591,8 +597,8 @@ public:
 
             // Use the shader program object
             mCross->mTextureShader->Use();
-            modelMatrix = vmath::translate(-35.000000f, 38.000000f, 11.000000f);
-            vmath::mat4 scaleMatrix = vmath::scale(2.000000f + -1.800000f, 2.000000f + -1.800000f, 2.000000f + -1.800000f);
+            modelMatrix = vmath::translate(-35.000000f, 2000.000000f, 11.000000f);
+            vmath::mat4 scaleMatrix = vmath::scale(40.0f,40.0f,40.0f);
             vmath::mat4 rotatationMatrix = vmath::rotate(0.0f, 91.0f, 0.0f);
 
             mCross->mTextureShader->SetUniform("u_model", modelMatrix * rotatationMatrix * scaleMatrix);
