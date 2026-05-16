@@ -12,6 +12,7 @@ public:
     GLuint modelMatrixUniform;
     GLuint skyBoxUniform;
     GLuint isBarsatUniform;
+    GLuint alphaUniform;
 
     // Member Functions
     BOOL initialize()
@@ -44,6 +45,7 @@ public:
         modelMatrixUniform = glGetUniformLocation(shaderProgramObject, "u_modelMatrix");
         skyBoxUniform = glGetUniformLocation(shaderProgramObject, "u_skyBox");
         isBarsatUniform = glGetUniformLocation(shaderProgramObject, "isBarsat");
+        alphaUniform = glGetUniformLocation(shaderProgramObject, "u_alpha");
         return TRUE;
     }
 

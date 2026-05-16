@@ -6,20 +6,19 @@
 #include "../includes/vmath.h"
 #include "../includes/helper_timer.h"
 
+#include <map>
+
 #define lerp(t, a, b) (a + t * (b - a))
 
 enum SCENE
 {
-    SCENE_1,
-    SCENE_2,
-    SCENE_3,
-    SCENE_4,
-    SCENE_5,
-    SCENE_6,
-    SCENE_7,
-    SCENE_8,
-    SCENE_9,
-    SCENE_10,
+    SCENE_INTRO = 0,
+    SCENE_00,
+    SCENE_01,
+    SCENE_02,
+    SCENE_03,
+    SCENE_04,
+    SCENE_OUTRO
 };
 
 enum PHASE
@@ -32,6 +31,8 @@ enum PHASE
 #include "../includes/3DModels.h"
 
 #include "../includes/stb_image.h"
+
+// #include "../includes/ft2build.h"
 
 using namespace vmath;
 
@@ -91,6 +92,12 @@ extern bool isMovementStarted;
 // Timer
 extern StopWatchInterface *timer;
 
+//  tint effect flag
+extern BOOL gEnableTint;
+extern int gTintMode;
+extern float gTintVignettePower;
+extern float gTintStrength;
+
 struct DeltaTimer
 {
     double loadTime;
@@ -109,6 +116,8 @@ struct ControlVariables
 
 extern DeltaTimer deltaTimer;
 extern ControlVariables controlVariables;
+
+extern GLfloat Cubemap_Alpha;
 
 #define FBO_WIDTH_LIGHT 2048
 #define FBO_HEIGHT_LIGHT 2048

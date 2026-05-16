@@ -24,8 +24,8 @@ public:
     glmodel *vehicleModel;
     glmodel *roadModel;
     SceneLight *lightManager;
-    
-    // member functions (constructor)
+
+    // member functions
     HowToLoadModel()
     {
     }
@@ -354,4 +354,3 @@ public:
     {
     }
 };
-

@@ -5,9 +5,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// for imgui
+#include <gl/glew.h>
+#include <gl/GL.h>
+
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_win32.h"
+#include "imgui/imgui_impl_opengl3.h"
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
+
+float gModelTranslate[3] = {0.0f, 0.0f, 0.0f};
+float gModelRotate[3] = {-90.0f, 0.0f, 0.0f};
+float gModelScale[3] = {20.0f, 20.0f, 20.0f};
+
+bool gShowImGui = true;
+bool gWireframe = false;
+bool gEnableLighting = true;
+bool gEnableTexture = true;
+bool gEnableCullFace = false;
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 /* OpenGL Header files */
 #include "./includes/OpenAL.h"
 
+#include <playsoundapi.h>
+
+#pragma comment(lib, "Winmm.lib")
 // ======================================= SCENES/
 #include "./scenes/MainScene/MainScene.h"
 // ======================================= SCENES END
@@ -17,6 +42,9 @@
 #include "./utils/camera/BezierCamera.h"
 // ======================================= CAMERA END
 
+//  Grid and gizmo
+#include "./utils/grid/grid.h"
+#include "./utils/gltf/Model.h"
 #include "./utils/common.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -74,12 +102,12 @@ CommonModels *commonModels;
 float objX = 0.0f;
 float objY = 0.0f;
 float objZ = 0.0f;
-float objIncrement = 20.0f;
+float objIncrement = 1.0f;
 
 // Scale
-float scaleX = 0.0;
-float scaleY = 0.0;
-float scaleZ = 0.0;
+float scaleX = 1.0;
+float scaleY = 1.0;
+float scaleZ = 1.0;
 float scaleIncrement = 1.0f;
 
 float globalTime = 0.0f;
@@ -87,7 +115,7 @@ float globalTime = 0.0f;
 float light_objX = 0.0f;
 float light_objY = 0.0f;
 float light_objZ = 0.0f;
-float lightObjIncrement = 0.1f;
+float lightObjIncrement = 1.0f;
 
 float objAngle = 0.0f;
 float objAngleIncrement = 1.0f;
@@ -96,8 +124,8 @@ bool isMovementStarted = true;
 
 // =============================== GLOBAL CONTROLS
 BOOL USE_FPV_CAM = FALSE;
-BOOL playMusic = FALSE;
-BOOL enableBezierCameraControl = TRUE;
+BOOL playMusic = TRUE;
+BOOL enableBezierCameraControl = FALSE;
 BOOL spaceBarIsPressed = FALSE;
 float VOLUME_LEVEL = 0.8f;
 // ==============================================//
@@ -107,7 +135,7 @@ static uint64_t clockOffset = 0;
 static LARGE_INTEGER frequency;
 static LARGE_INTEGER startCount;
 
-BOOL start_fade_out_opening = FALSE;
+BOOL start_fade_out_opening = TRUE;
 
 std::vector<std::vector<float>> bezierPoints = {
 
@@ -149,10 +177,25 @@ uint64_t getTimerValue()
 	return (uint64_t)(currentCount.QuadPart - startCount.QuadPart);
 }
 
+// =============== Grid
+Grid *grid = NULL;
+std::unique_ptr<Core::Model> mGizmoAxis;
+BOOL showGrid = true;
+BOOL gEnableTint = false;
+int gTintMode = 1;
+float gTintVignettePower = 2.2f;
+float gTintStrength = 0.88f;
+
 DOUBLE getTime(void)
 {
 	return (DOUBLE)(getTimerValue() - clockOffset) / frequency.QuadPart;
 }
+
+void initializeImGui(void);
+void beginImGuiFrame(void);
+void drawImGui(void);
+void endImGuiFrame(void);
+void uninitializeImGui(void);
 
 /* Entry Point Function */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int iCmdShow)
@@ -167,7 +210,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	WNDCLASSEX wndclass;
 	HWND hwnd;
 	MSG msg;
-	TCHAR szAppName[] = TEXT("MyWindow");
+	TCHAR szAppName[] = TEXT("Vivid Voxel");
 	BOOL bDone = FALSE;
 	int iRetVal = 0;
 	int iHeightOfWindow, iWidthOfWindow;
@@ -197,7 +240,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 
 	/* Create Window */
 	hwnd = CreateWindowEx(WS_EX_APPWINDOW, szAppName,
-						  TEXT("RTR5 - PERSPECTIVE GROUP | The Child's Play"),
+						  TEXT("Vivid Voxel"),
 						  WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
 						  (iWidthOfWindow - WINWIDTH) / 2,
 						  (iHeightOfWindow - WINHEIGHT) / 2,
@@ -211,6 +254,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 
 	// initizalize
 	iRetVal = initialize();
+	initializeImGui();
 
 	if (iRetVal == -1)
 	{
@@ -284,21 +328,31 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 					break;
 				}
 			}
-
 			if (gbActiveWindow == TRUE)
 			{
-				/* Render the seen */
-				display();
-
 				static DOUBLE prevTime = getTime();
 				DOUBLE current = getTime();
 				DOUBLE delta = current - prevTime;
 				prevTime = current;
 				gDeltaTime = delta;
 
-				// updatetheseen
 				update();
+				display();
 			}
+			// if (gbActiveWindow == TRUE)
+			// {
+			// 	/* Render the seen */
+			// 	display();
+
+			// 	static DOUBLE prevTime = getTime();
+			// 	DOUBLE current = getTime();
+			// 	DOUBLE delta = current - prevTime;
+			// 	prevTime = current;
+			// 	gDeltaTime = delta;
+
+			// 	// updatetheseen
+			// 	update();
+			// }
 			if (isFrameLimitEnabled)
 			{
 				// Wait for the timer
@@ -322,6 +376,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
 	/* fucntion declarations */
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, iMsg, wParam, lParam))
+	{
+		return 0;
+	}
 
 	// void ToggleFullScreen();
 	void resize(int, int);
@@ -353,7 +411,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		{
 		case 'f':
 		case 'F':
-			ToggleFullScreen();
+			if (gbFullScreen == FALSE)
+			{
+				ToggleFullScreen();
+				gbFullScreen = TRUE;
+			}
+			else
+			{
+				ToggleFullScreen();
+				gbFullScreen = FALSE;
+			}
 			break;
 		case '+':
 			if (enableBezierCameraControl)
@@ -682,12 +749,188 @@ void ToggleFullScreen()
 	}
 }
 
+void beginImGuiFrame(void)
+{
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+}
+
+void drawImGui(void)
+{
+	if (!gShowImGui)
+		return;
+
+	ImGui::Begin("Model Controls");
+	{
+		ImGui::Text("Selected Model");
+
+		ImGui::DragFloat3("Translate", gModelTranslate, 0.05f, -500.0f, 500.0f);
+		ImGui::DragFloat3("Rotate", gModelRotate, 1.0f, -360.0f, 360.0f);
+		ImGui::DragFloat3("Scale", gModelScale, 0.01f, 0.01f, 100.0f);
+
+		if (ImGui::Button("Reset Transform"))
+		{
+			gModelTranslate[0] = 0.0f;
+			gModelTranslate[1] = 0.0f;
+			gModelTranslate[2] = 0.0f;
+
+			gModelRotate[0] = -90.0f;
+			gModelRotate[1] = 0.0f;
+			gModelRotate[2] = 0.0f;
+
+			gModelScale[0] = 20.0f;
+			gModelScale[1] = 20.0f;
+			gModelScale[2] = 20.0f;
+		}
+
+		ImGui::Separator();
+
+		if (ImGui::Button(showGrid ? "Hide Grid" : "Show Grid"))
+		{
+			showGrid = !showGrid;
+		}
+
+		// if (ImGui::Button(gEnableTint ? "Disable Tint" : "Enable Tint"))
+		// {
+		// 	gEnableTint = !gEnableTint;
+		// }
+
+		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		ImGui::Separator();
+		ImGui::Text("Tint / Vintage Effect");
+
+		bool enableTint = (gEnableTint == TRUE);
+
+		if (ImGui::Checkbox("Enable Tint Effect", &enableTint))
+		{
+			gEnableTint = enableTint ? TRUE : FALSE;
+		}
+
+		static const char* tintModes[] =
+		{
+			"No Tint",
+			"Vintage Brown / Yellow",
+			"Grey / Black White",
+			"Pastel Happy",
+			"Warm Film"
+		};
+
+		ImGui::Combo("Tint Mode", &gTintMode, tintModes, IM_ARRAYSIZE(tintModes));
+
+		ImGui::SliderFloat("Vignette Power", &gTintVignettePower, 0.5f, 4.0f);
+		ImGui::SliderFloat("Tint Strength", &gTintStrength, 0.0f, 1.0f);
+
+		if (ImGui::Button("Best Vintage Look"))
+		{
+			gEnableTint = TRUE;
+			gTintMode = 1;
+			gTintVignettePower = 2.2f;
+			gTintStrength = 0.88f;
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("No Tint"))
+		{
+			gEnableTint = FALSE;
+			gTintMode = 0;
+			gTintStrength = 0.0f;
+		}
+
+		ImGui::Text("Current Tint Mode: %d", gTintMode);
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		// Terrain Controls for Scene3
+		if (mainScene && mainScene->scene0 && mainScene->scene0->terrain)
+		{
+			Terrain* t = mainScene->scene0->terrain;
+
+			ImGui::Separator();
+			ImGui::Text("Scene3 Terrain Controls");
+
+			float freq = t->getFreq();
+			if (ImGui::SliderFloat("Terrain Frequency", &freq, 0.001f, 0.08f))
+				t->setFreq(freq);
+
+			float disp = t->getDispFactor();
+			if (ImGui::SliderFloat("Terrain Height / Disp", &disp, 1.0f, 60.0f))
+				t->setDispFactor(disp);
+
+			float tess = t->getTessMultiplier();
+			if (ImGui::SliderFloat("Tess Multiplier", &tess, 0.1f, 5.0f))
+				t->setTessMultiplier(tess);
+
+			float grass = t->getGrassCoverage();
+			if (ImGui::SliderFloat("Grass Coverage", &grass, 0.0f, 1.0f))
+				t->setGrassCoverage(grass);
+
+			float trans = t->getTextureTransitionFactor();
+			if (ImGui::SliderFloat("Texture Transition", &trans, -1.0f, 1.0f))
+				t->setTextureTransitionFactor(trans);
+
+			float waterH = (float)t->getWaterHeight();
+			if (ImGui::SliderFloat("Water Height", &waterH, 0.0f, 200.0f))
+				t->setWaterHeight(waterH);
+
+			float scale = t->getScale();
+			if (ImGui::SliderFloat("Terrain Scale", &scale, 0.1f, 10.0f))
+				t->setScale(scale);
+
+			int oct = t->getOctaves();
+			if (ImGui::SliderInt("Octaves", &oct, 1, 16))
+				t->setOctaves(oct);
+
+			if (ImGui::Button("Sand Hill Test Preset"))
+			{
+				t->setFreq(0.012f);
+				t->setDispFactor(18.0f);
+				t->setTessMultiplier(1.8f);
+				t->setGrassCoverage(1.0f);
+				t->setTextureTransitionFactor(1.0f);
+				t->setScale(1.0f);
+				t->setWaterHeight(85.0f);
+			}
+		}
+
+	}
+	ImGui::End();
+}
+
+void endImGuiFrame(void)
+{
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void initializeImGui(void)
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+
+	ImGuiIO &io = ImGui::GetIO();
+	(void)io;
+
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	// optional later:
+	// io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplWin32_Init(ghwnd);
+	ImGui_ImplOpenGL3_Init("#version 460");
+}
+
 int initialize(void)
 {
 	/* fucntion delcations */
 	void resize(int, int);
 	void uninitialize(void);
-	void ToggleFullScreen();
+	// void ToggleFullScreen();
 	/* variable declartions */
 	PIXELFORMATDESCRIPTOR pfd;
 	int iPixelFormatIndex = 0;
@@ -743,6 +986,17 @@ int initialize(void)
 	commonModels = new CommonModels();
 	commonModels->initialize(mainScene->selected_scene, mainScene->START_E2E_DEMO);
 
+	grid = new Grid();
+	if (!grid)
+	{
+		PrintLog("Failed to initialize grid");
+		return FALSE;
+	}
+	grid->initialize();
+
+/* 	mGizmoAxis = std::make_unique<Core::Model>();
+	mGizmoAxis->LoadModel("./assets/models/Gizmo/gizmo.glb"); //  gizmo */
+
 	if (!mainScene->initialize())
 	{
 		PrintLog("Failed to initialize mainScene");
@@ -768,19 +1022,25 @@ int initialize(void)
 
 	// warmup resize call
 	resize(WINWIDTH, WINHEIGHT);
-	ToggleFullScreen();
+	// ToggleFullScreen();
 
-	if (playMusic)
-	{
-		myMusic.InitializeAudio(MAKEINTRESOURCE(MYMUSIC));
+	// if (playMusic)
+	// {
 
-		if (mainScene->START_E2E_DEMO == true)
-		{
-			myMusic.Play();
-		}
+	myMusic.InitializeAudio(MAKEINTRESOURCE(MYMUSIC));
+	// myMusic.Play();
 
-		// myMusic.setAudio(VOLUME_LEVEL);
-	}
+	// for music
+	// PlaySound(MAKEINTRESOURCE(MYMUSIC), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+	// myMusic.InitializeAudio(MAKEINTRESOURCE(MYMUSIC));
+
+	// if (mainScene->START_E2E_DEMO == true)
+	// {
+	// 	myMusic.Play();
+	// }
+
+	// myMusic.setAudio(VOLUME_LEVEL);
+	// }
 
 	sdkCreateTimer(&timer);
 	sdkStartTimer(&timer);
@@ -813,10 +1073,50 @@ void resize(int width, int height)
 		10000000.0f);
 }
 
+void drawGizmoAxis(bool isBlack = false)
+{
+	if (!mGizmoAxis)
+		return;
+
+	pushMatrix(modelMatrix);
+	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		mGizmoAxis->mTextureShader->Use();
+		mGizmoAxis->mTextureShader->SetUniform("isBlack", isBlack);
+
+		vmath::mat4 gizmoModelMatrix = modelMatrix * vmath::translate(0.0f, 0.0f, 0.0f);
+
+		mGizmoAxis->mTextureShader->SetUniform("u_model", gizmoModelMatrix);
+		mGizmoAxis->mTextureShader->SetUniform("u_view", viewMatrix);
+		mGizmoAxis->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+		mGizmoAxis->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+
+		mGizmoAxis->Draw(mGizmoAxis->mTextureShader);
+
+		glDisable(GL_BLEND);
+	}
+	modelMatrix = popMatrix();
+}
+
 void display(void)
 {
 	/* Code */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	beginImGuiFrame();
+
+	// ImGui-based render states
+	if (gWireframe)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	if (gEnableCullFace)
+		glEnable(GL_CULL_FACE);
+	else
+		glDisable(GL_CULL_FACE);
 
 	if (enableBezierCameraControl)
 	{
@@ -828,15 +1128,82 @@ void display(void)
 		fovGlobal[vectorIndex] = scaleZ;
 	}
 
-	updateGlobalViewMatrix();
+	updateGlobalViewMatrix(); // uncomment this to run simultaniuously scnee
 
 	// ==================================== SCENE
 	mainScene->display();
+
+	// ==================================== Gizmo and Grid
+	if (showGrid)
+	{
+		pushMatrix(modelMatrix);
+		{
+			grid->display();
+		}
+		modelMatrix = popMatrix();
+		//drawGizmoAxis();
+	}
+
+	// ==================================== IMGUI
+	drawImGui();
+	endImGuiFrame();
+
 	// ==================================== DISPLAY TEXT IN TITLE BAR
-	char titleText[255];
-	sprintf(titleText, "SceneTime = %f,CameTime = %f Index = %d Variables | OBJ Angle %f | OBJ %f :: %f :: %f | SCALE %f :: %f :: %f", mainScene->scene->sceneEvents->getT(), globalTime, vectorIndex, objAngle, objX, objY, objZ, scaleX, scaleY, scaleZ);
-	SetWindowTextA(ghwnd, (LPCSTR)titleText);
-	// =============================================================
+	char titleText[512];
+
+	int currentSceneNumber = -1;
+	if (mainScene)
+		currentSceneNumber = mainScene->selected_scene;
+
+	float currentSceneTime = 0.0f;
+	if (mainScene && mainScene->scene && mainScene->scene->sceneEvents)
+		currentSceneTime = mainScene->scene->sceneEvents->getT();
+
+	const char *sceneName = "UNKNOWN";
+	if (mainScene)
+	{
+		switch (mainScene->selected_scene)
+		{
+		case SCENE_INTRO:
+			sceneName = "INTRO";
+			break;
+		case SCENE_00:
+			sceneName = "SCENE_00";
+			break;
+		case SCENE_01:
+			sceneName = "SCENE_01";
+			break;
+		case SCENE_02:
+			sceneName = "SCENE_02";
+			break;
+		case SCENE_03:
+			sceneName = "SCENE_03";
+			break;
+		case SCENE_04:
+			sceneName = "SCENE_04";
+			break;
+		case SCENE_OUTRO:
+			sceneName = "OUTRO";
+			break;
+		default:
+			sceneName = "UNKNOWN";
+			break;
+		}
+	}
+
+	sprintf(
+		titleText,
+		"Current Scene = %d (%s) | SceneTime = %.2f | GlobalTime = %.2f | CamIndex = %d | OBJ Angle = %.2f | OBJ = %.2f, %.2f, %.2f | SCALE = %.2f, %.2f, %.2f",
+		currentSceneNumber,
+		sceneName,
+		currentSceneTime,
+		globalTime,
+		vectorIndex,
+		objAngle,
+		objX, objY, objZ,
+		scaleX, scaleY, scaleZ);
+
+	SetWindowTextA(ghwnd, titleText);
 
 	SwapBuffers(ghdc);
 }
@@ -845,26 +1212,79 @@ float camSpeed = 100.0f;
 void update(void)
 {
 	mainScene->update();
-	if (globalTime <= 1.0f)
-		globalTime += (0.000015f + globalSpeedAdjust);
-	// globalTime += (0.000015f + camSpeed);
 
-	// if (globalTime > 0.17f)
-	// {
-	// 	if (camSpeed < 0.0008f)
-	// 		camSpeed += 0.00003f;
-	// }
-	// globalTime = 0.8f + globalSpeedAdjust;
+	globalTime += (float)gDeltaTime + globalSpeedAdjust;
+
+	if (globalTime < 0.0f)
+		globalTime = 0.0f;
+}
+// void update(void)
+// {
+// 	mainScene->update();
+// 	if (globalTime <= 1.0f)
+// 		globalTime += (0.000015f + globalSpeedAdjust);
+// 	// globalTime += (0.000015f + camSpeed);
+
+// 	// if (globalTime > 0.17f)
+// 	// {
+// 	// 	if (camSpeed < 0.0008f)
+// 	// 		camSpeed += 0.00003f;
+// 	// }
+// 	// globalTime = 0.8f + globalSpeedAdjust;
+// }
+void uninitializeImGui(void)
+{
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 }
 
 void uninitialize(void)
 {
 	/* function declarations */
 	void ToggleFullScreen(void);
+	uninitializeImGui();
 
-	/* code */
-	mainScene->uninitialize();
-	commonShaders->uninitialize();
+
+	if (gbFullScreen == TRUE)
+	{
+		ToggleFullScreen();
+		gbFullScreen = FALSE;
+	}
+
+	if (mainScene)
+	{
+		mainScene->uninitialize();
+		delete mainScene;
+		mainScene = NULL;
+	}
+
+	if (grid)
+	{
+		grid->uninitialize();
+		delete grid;
+		grid = NULL;
+	}
+
+	if (commonModels)
+	{
+		commonModels->uninitialize();
+		delete commonModels;
+		commonModels = NULL;
+	}
+
+	if (commonShaders)
+	{
+		commonShaders->uninitialize();
+		delete commonShaders;
+		commonShaders = NULL;
+	}
+
+	if (timer)
+	{
+		sdkDeleteTimer(&timer);
+		timer = NULL;
+	}
 
 	if (wglGetCurrentContext() == ghrc)
 	{
@@ -880,13 +1300,13 @@ void uninitialize(void)
 	if (ghdc)
 	{
 		ReleaseDC(ghwnd, ghdc);
-		ghwnd = NULL;
 		ghdc = NULL;
 	}
 
 	if (ghwnd)
 	{
 		DestroyWindow(ghwnd);
+		ghwnd = NULL;
 	}
 
 	CloseLogFile();

@@ -162,7 +162,7 @@ namespace Core
 
     bool Model::LoadModel(const std::string &pFile)
     {
-        // Setting up shader for Model 
+        // Setting up shader for Model
         this->SetupShader();
 
         // Importer class
@@ -359,6 +359,9 @@ namespace Core
             shader->SetUniform("u_Exposure", shader->exposure);
             shader->SetUniform("u_MipCount", 10);
             shader->SetUniform("u_EnvIntensity", 0.5f);
+            shader->SetUniform("u_MaterialShininess", 64.0f);          // 128.0f
+            shader->SetUniform("u_LD", vmath::vec3(1.0f, 1.0f, 1.0f)); //  TODO : remove hard coding
+            shader->SetUniform("u_LS", vmath::vec3(1.0f, 1.0f, 1.0f));
         }
 
         // Draw

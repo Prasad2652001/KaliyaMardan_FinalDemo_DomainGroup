@@ -133,7 +133,7 @@ public:
     void keyboardInputs(WPARAM keyPressed)
     {
         // in
-        float velocity = movementSpeed * 5.0f;
+        float velocity = movementSpeed * 25.0f;
         if (keyPressed == 'w')
         {
             position = position + (front * velocity);

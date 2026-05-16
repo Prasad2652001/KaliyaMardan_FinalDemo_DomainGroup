@@ -1,5 +1,5 @@
 #include "OGLMain.h"
 
-MYICON ICON "../assets/textures/favicon.ico"
+//MYICON ICON "../assets/textures/sharayu.ico"
 
-//MYMUSIC WAVE "../assets/audio/V10.wav"
+//MYMUSIC WAVE "../assets/audio/Music.wav"

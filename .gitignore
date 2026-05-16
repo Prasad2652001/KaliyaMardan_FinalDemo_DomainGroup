@@ -1,0 +1,52 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+bin/*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Executables
+*.exe
+*.out
+*.app
+*.res
+*.txt
+*.mp3
+**/bin/*.obj
+.vs/
+Videos/*
+x64/Debug
+Porkhel/x64/Debug
+Porkhel/x64/Debug/Porkhel.Build.CppClean.log
+Porkhel/x64/Debug/Porkhel.tlog/link-cvtres.read.1.tlog
+Porkhel/x64/Debug/Porkhel.tlog/link-cvtres.write.1.tlog
+Porkhel/x64/Debug/Porkhel.tlog/link-rc.read.1.tlog
+Porkhel/x64/Debug/Porkhel.tlog/link-rc.write.1.tlog
+Porkhel/x64/Debug/Porkhel.tlog/link.read.2.tlog
+Porkhel/x64/Debug/Porkhel.tlog/link.read.3.tlog
+Porkhel/x64/Debug/Porkhel.tlog/link.read.4.tlog
+Porkhel/x64/Debug/Porkhel.tlog/unsuccessfulbuild
+*.blend
+*.blend1
+assets/models/scene3-toy/boythrownew.glb
+assets/models/scene1Real/Church/churchDecimated.glb

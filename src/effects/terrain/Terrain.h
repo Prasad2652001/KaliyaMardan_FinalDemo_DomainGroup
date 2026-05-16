@@ -2,7 +2,7 @@
 #include "../../utils/common.h"
 #include "../../utils/camera/Camera.h"
 #include "../../shaders/terrain/TerrainShader.h"
-#include "../water/Water.h" 
+#include "../water/Water.h"
 #include "TerrainGPU.h"
 #include <utility>
 
@@ -46,25 +46,34 @@ public:
     Terrain(int tileW_)
     {
         tileW = tileW_;
-        int gl = 30;
+        int gl = 120;
         vmath::mat4 scaleMatrix = vmath::scale(1.0f, 0.0f, 1.0f);
         vmath::mat4 positionMatrix = vmath::translate(0.0f, 0.0f, 0.0f);
         modelMatrix = positionMatrix;
 
-        /*octaves = 10;
-        frequency = 0.022f;
-        grassCoverage = 0.716f;
-        tessMultiplier = 1.625f;
-        dispFactor = 20.226f; */
-        
-        /* octaves = 10;
-        frequency = 0.010f;
-        grassCoverage = 0.716f;
-        tessMultiplier = 1.625f;
-        dispFactor = 20.226f;
-        */
+        // octaves = 10;
+        // frequency = 0.022f;
+        // grassCoverage = 0.716f;
+        // tessMultiplier = 1.625f;
+        // dispFactor = 20.226f;
 
-        fogFalloff = 1.689f;
+        // fogFalloff = 1.689f;
+
+        // Above previous values
+
+        octaves = 10;
+        frequency = 0.01f;
+        grassCoverage = 0.0f;
+        tessMultiplier = 1.6f;
+        // dispFactor = 24.5f; orginal previously large size
+        // my calculated one 
+        // dispFactor = 8.0f;   // very low plateau
+        dispFactor = 12.0f;  // medium low
+        // dispFactor = 16.0f;  // still mountain feel
+
+        // fogFalloff = 0.5f;
+
+        // fogFalloff = 1.689f;
 
         posBuffer = 0;
 
@@ -99,19 +108,23 @@ public:
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR grass");
         }
-        if (LoadPNGImage(&textures_green[2], "./assets/textures/terrain/green/rdiffuse.png") == FALSE)
+        // main line
+        // if (LoadPNGImage(&textures_green[2], "./assets/textures/terrain/green/rdiffuse.png") == FALSE)
+        if (LoadPNGImage(&textures_green[2], "./assets/textures/terrain/green/sand.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR rdiffuse");
         }
-        if (LoadPNGImage(&textures_green[3], "./assets/textures/terrain/green/snow2.png") == FALSE)
-        {
-            PrintLog("\t\t IMAGE LOADING FAILED FOR snow2");
-        }
-        if (LoadPNGImage(&textures_green[4], "./assets/textures/terrain/green/rnormal.png") == FALSE)
+        // if (LoadPNGImage(&textures_green[3], "./assets/textures/terrain/green/snow2.png") == FALSE)
+        // {
+        //     PrintLog("\t\t IMAGE LOADING FAILED FOR snow2");
+        // }
+        // mainline
+        // if (LoadPNGImage(&textures_green[3], "./assets/textures/terrain/green/rnormal.png") == FALSE)
+        if (LoadPNGImage(&textures_green[3], "./assets/textures/terrain/green/sand.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR rnormal");
         }
-        if (LoadPNGImage(&textures_green[5], "./assets/textures/terrain/green/terrainTexture.png") == FALSE)
+        if (LoadPNGImage(&textures_green[4], "./assets/textures/terrain/green/terrainTexture.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR terrainTexture");
         }
@@ -126,15 +139,17 @@ public:
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR grass");
         }
-        if (LoadPNGImage(&textures_dark[2], "./assets/textures/terrain/dark/rdiffuse.png") == FALSE)
+        // mainline
+        // if (LoadPNGImage(&textures_dark[2], "./assets/textures/terrain/dark/rdiffuse.png") == FALSE)
+        if (LoadPNGImage(&textures_dark[2], "./assets/textures/terrain/dark/sand.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR rdiffuse");
         }
-        if (LoadPNGImage(&textures_dark[3], "./assets/textures/terrain/dark/snow2.png") == FALSE)
-        {
-            PrintLog("\t\t IMAGE LOADING FAILED FOR snow2");
-        }
-        if (LoadPNGImage(&textures_dark[4], "./assets/textures/terrain/dark/terrainTexture.png") == FALSE)
+        // if (LoadPNGImage(&textures_dark[3], "./assets/textures/terrain/dark/snow2.png") == FALSE)
+        // {
+        //     PrintLog("\t\t IMAGE LOADING FAILED FOR snow2");
+        // }
+        if (LoadPNGImage(&textures_dark[3], "./assets/textures/terrain/dark/terrainTexture.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR terrainTexture");
         }
@@ -216,17 +231,18 @@ public:
         shad->setSampler2D("sand_green", textures_green[0], 1);
         shad->setSampler2D("grass_green", textures_green[1], 2);
         shad->setSampler2D("rock_green", textures_green[2], 3);
-        shad->setSampler2D("snow_green", textures_green[3], 4);
+        // shad->setSampler2D("snow_green", textures_green[3], 4);
         shad->setSampler2D("grass1_green", textures_green[5], 5);
 
         // Normal Texture
         shad->setSampler2D("rockNormal", textures_green[4], 6);
 
         // Dark Textures
-        shad->setSampler2D("sand_da rk", textures_dark[0], 7);
+        // shad->setSampler2D("sand_da rk", textures_dark[0], 7);
+        shad->setSampler2D("sand_dark", textures_dark[0], 7);
         shad->setSampler2D("grass_dark", textures_dark[1], 8);
         shad->setSampler2D("rock_dark", textures_dark[2], 9);
-        shad->setSampler2D("snow_dark", textures_dark[3], 10);
+        // shad->setSampler2D("snow_dark", textures_dark[3], 10);
         shad->setSampler2D("grass1_dark", textures_dark[4], 11);
 
         // Set shadow variables
@@ -369,7 +385,7 @@ public:
             tessMultiplier = tm;
     }
 
-    int getWaterHeight() const { return waterHeight; }
+    float getWaterHeight() const { return waterHeight; }
     int getOctaves() const { return octaves; }
     float getFreq() const { return frequency; }
     float getDispFactor() const { return dispFactor; }
@@ -386,25 +402,15 @@ private:
     }
     int res;
     GLuint planeVBO, planeVAO, planeEBO;
-    float scaleFactor, fogFalloff, power;
+    float dispFactor, scaleFactor, frequency, grassCoverage, tessMultiplier, fogFalloff, power;
     float FogEnd;
     float LayeredFogTop;
     float ExpFogDensity;
     float FogStart;
+    int octaves;
     int gridLength;
     float textureTransitionFactor = -0.3f;
     bool drawFog;
-
-// ========== change by prasad
-public:
-    float frequency;
-    float  grassCoverage;
-    float  tessMultiplier;
-    int octaves;
-    float dispFactor;
-// ===============
-
-private:
 
     GLuint *textures_green, *textures_dark, posBuffer;
 
@@ -460,4 +466,3 @@ private:
 
     void uninitialize();
 };
-

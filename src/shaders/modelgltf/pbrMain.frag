@@ -80,8 +80,7 @@ layout (binding = 10)uniform sampler2D texture_brdf_lut;
 
 vec3 getNormalFromMap()
 {
-    vec3 tangentNormal = normalize(2.0 * texture(texture_normal,fs_in.Tex).rgb - 1.0);
-    return normalize(fs_in.TBN * tangentNormal);
+    return normalize(fs_in.N);
 }
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -150,24 +149,10 @@ float getSpotAngleAttenuation(vec3 l, vec3 light_dir,float inner_angle,float out
 vec3 indirectLightingDiffuse(vec3 N, vec3 P)
 {
     vec3 albedo = isTexture ? texture(texture_diffuse,fs_in.Tex).rgb : material.diffuse;
-    float metallic = material.metallic;
-    if(isTexture)
-    {
-       metallic = specularGloss ? max(max(texture(texture_specular,fs_in.Tex).r,texture(texture_specular,fs_in.Tex).g),texture(texture_specular,fs_in.Tex).b) : texture(texture_PBR,fs_in.Tex).r;
-    }
-    float roughness = material.roughness;
-    if(isTexture) 
-    {
-       roughness = specularGloss ? 1.0 - texture(texture_PBR,fs_in.Tex).r : texture(texture_PBR,fs_in.Tex).g;
-    }
-
+    float metallic = 0.0;
+    float roughness = 1.0;
     float ao = 1.0;
-    if(isTexture) 
-    {
-       ao = specularGloss ? 1.0 - texture(texture_PBR,fs_in.Tex).g : texture(texture_PBR,fs_in.Tex).b;
-    }
-
-    N = isTexture ? getNormalFromMap() : N;
+    N = normalize(fs_in.N);
 
     vec3 w0 = normalize(viewPos - P);
     vec3 r = reflect(-w0, N);
@@ -196,18 +181,9 @@ vec3 indirectLightingDiffuse(vec3 N, vec3 P)
 vec3 pbr(BaseLight base, vec3 direction, vec3 N, vec3 P){
 
     vec3 albedo = isTexture ? texture(texture_diffuse,fs_in.Tex).rgb : material.diffuse;
-    float metallic = material.metallic;
-    if(isTexture)
-    {
-       metallic = specularGloss ? max(max(texture(texture_specular,fs_in.Tex).r,texture(texture_specular,fs_in.Tex).g),texture(texture_specular,fs_in.Tex).b) : texture(texture_PBR,fs_in.Tex).r;
-    }
-    float roughness = material.roughness;
-    if(isTexture) 
-    {
-       roughness = specularGloss ? 1.0 - texture(texture_PBR,fs_in.Tex).r : texture(texture_PBR,fs_in.Tex).g;
-    }
-
-    N = isTexture ? getNormalFromMap() : N;
+    float metallic = 0.0;
+    float roughness = 1.0;
+    N = normalize(fs_in.N);
 
     vec3 w0 = normalize(viewPos - fs_in.P);
     vec3 wi = normalize(direction);
@@ -280,7 +256,7 @@ void main(void) {
     } else {
 		ambient = ambientColor;
 	}
-    
+    // fragColor = vec4(1.0f);
     fragColor = vec4(ambient + directional + point + spot, material.opacity);
     emmitColor = vec4(texture(texture_emissive,fs_in.Tex).rgb + material.emissive,material.opacity);
 	occlusionColor = emmitColor * renderEmissiveToOcclusion;

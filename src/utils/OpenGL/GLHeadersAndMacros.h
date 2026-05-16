@@ -16,8 +16,7 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "cudart.lib")
-
- 
+// #pragma comment(lib, "freetype.lib")
 
 enum
 {

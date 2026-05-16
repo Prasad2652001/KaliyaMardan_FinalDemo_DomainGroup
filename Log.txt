@@ -28,12 +28,22 @@ Shader Program Linking Succeeded.
 ".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
 ".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-
-
-in SCENE_1 case
-
-"./src/shaders/shine/shine.vs" : Vertex Shader Compilation Succeeded.
-"./src/shaders/shine/shine.fs" : Fragment Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+ERROR::ASSIMP:: Failed To Load .\assets\models\boat\boat.obj Model.
+".\src\shaders\grid\grid.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\grid\grid.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
 ".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
@@ -42,20 +52,17 @@ LoadPNGImage Failed for waterDUDV
 ".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-"./src/shaders/godRays/godrays.vert" : Vertex Shader Compilation Succeeded.
-"./src/shaders/godRays/godrays.frag" : Fragment Shader Compilation Succeeded.
+".\src\shaders\tint\tint.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\tint\tint.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
-".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
-Shader Program Linking Succeeded.
-[Core::TextureModel::LoadCubeMapModel]: Failed to load Cubemap Texture: .\assets\textures\modelCubeMap\px.png
-".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
-".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
-Shader Program Linking Succeeded.
+
+ FBO creation Sucessful!! 
+InitalizeAudio() : alCOpenDevice() Failed.
 Initialize Successful...
 
 
-Variables  | OBJ -28.600082f, 23.500046f, 15.500017f | SCALE 29.000000f, -28.000000f, -120.000000f
+Variables  | OBJ -1.000000f, 0.000000f, -1.000000f | OBJ Angle 0.000000f | SCALE -16.000000f, 12.000000f, 0.000000f
+
 
 
 
