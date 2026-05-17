@@ -158,13 +158,10 @@ public:
         // Water
         waterMatrix->initialize();
 
-        // IMPortanttt
-        terrain->setFreq(0.024f);            // broad beach hills
-        terrain->setDispFactor(12.0f);        // softer hill height
-        terrain->setTessMultiplier(1.6f);
-        terrain->setTextureTransitionFactor(1.0f); // use green texture set only
-        terrain->setGrassCoverage(0.0f);     // >1.0 avoids grass branch
-        terrain->setWaterHeight(100.0f);       // keep your sea level
+        // IMPortantt
+        terrain->setWaterHeight(85.0f);
+        terrain->setTextureTransitionFactor(1.0f);
+        terrain->setGrassCoverage(0.75f);
 
         waterMatrix->interpolateWaterColor = 1.0f;
         waterMatrix->moveFactor = 0.0f;
@@ -189,7 +186,6 @@ public:
         // sceneCamera->handlePerspective = true;
 
         isInitialized = true;
-        isSceneComplete = false;
         return TRUE;
     }
 

@@ -1,8 +1,4 @@
-/**
- * TODO:
- * scene : railway station
- * 2. toon shader
- */
+
 #pragma once
 #include "../../utils/common.h"
 #include "../../shaders/model/Model_Shader.h"
@@ -37,14 +33,8 @@ public:
     Terrain *terrain;
     WaterMatrix *waterMatrix;
 
-
-    // ModelShader shoesRenderer;
-
     glshaderprogram *programStaticPBR;
     SceneLight *lightManager;
-
-    std::unique_ptr<Core::Model> mPillar;
-    std::unique_ptr<Core::Model> mBoy;
 
     GLuint brdfLookUp = 0;
     GLuint walltexture;
@@ -91,7 +81,6 @@ public:
             return FALSE;
         }
 
-        // shoesRenderer.initialize_ModelShaderObject(commonModels->ModelShoes);
 
         programStaticPBR = new glshaderprogram({"./src/shaders/modelgltf/pbrStatic.vert",
                                                 "./src/shaders/modelgltf/pbrMain.frag"});
@@ -202,26 +191,26 @@ public:
         sceneCamera = &sc1;
     }
 
-    void drawPillarModel(mat4 transformedModelMatrix, bool isBlack = false)
-    {
-        if (!mPillar)
-            return;
+    // void drawPillarModel(mat4 transformedModelMatrix, bool isBlack = false)
+    // {
+    //     if (!mPillar)
+    //         return;
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //     glEnable(GL_BLEND);
+    //     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        mPillar->mTextureShader->Use();
-        mPillar->mTextureShader->SetUniform("isBlack", isBlack);
+    //     mPillar->mTextureShader->Use();
+    //     mPillar->mTextureShader->SetUniform("isBlack", isBlack);
 
-        mPillar->mTextureShader->SetUniform("u_model", transformedModelMatrix);
-        mPillar->mTextureShader->SetUniform("u_view", viewMatrix);
-        mPillar->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-        mPillar->mTextureShader->SetSampler2D("u_GGXLUT", brdfLookUp, 5);
+    //     mPillar->mTextureShader->SetUniform("u_model", transformedModelMatrix);
+    //     mPillar->mTextureShader->SetUniform("u_view", viewMatrix);
+    //     mPillar->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+    //     mPillar->mTextureShader->SetSampler2D("u_GGXLUT", brdfLookUp, 5);
 
-        mPillar->Draw(mPillar->mTextureShader);
+    //     mPillar->Draw(mPillar->mTextureShader);
 
-        glDisable(GL_BLEND);
-    }
+    //     glDisable(GL_BLEND);
+    // }
 
     void display()
     {

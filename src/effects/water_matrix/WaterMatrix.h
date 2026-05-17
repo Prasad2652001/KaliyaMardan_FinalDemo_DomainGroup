@@ -287,7 +287,7 @@ public:
 			return (-8);
 		}
 
-		if (LoadPNGImage(&texture_waterNormalMap, ".\\assets\\textures\\water\\waterNormalMap.png") == FALSE)
+		if (LoadPNGImage(&texture_waterNormalMap, ".\\assets\\textures\\water\\waterNormalMap.jpg") == FALSE)
 		{
 			PrintLog("LoadPNGImage Failed for waterNormalMap\n");
 			return (-9);
