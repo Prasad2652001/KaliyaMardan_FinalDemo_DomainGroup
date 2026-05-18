@@ -55,7 +55,7 @@ public:
         {
             // introScene->initialize();
             scene0->initialize();
-            //  scene1->initialize();
+            scene1->initialize();
             // scene2->initialize();
             // scene3->initialize();
             // scene4->initialize();

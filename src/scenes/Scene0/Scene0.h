@@ -1,4 +1,6 @@
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// we will use this scene for showing their stay near the bank of the lake 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #pragma once
 #include "../../utils/common.h"
 #include "../../shaders/model/Model_Shader.h"
@@ -19,30 +21,65 @@
 #include "../../effects/terrain/Terrain.h"
 #include "../../shaders/terrain/TerrainShader.h"
 #include "../../shaders/godRays/GodRaysShader.h"
+// #include "../../effects/rain/Rain.h"
+// #include "../../shaders/rain/RainShader.h"
+
+// #include "../../../scenes/howtoloadmodel/HowToLoadModel.h"
+
+#define _DEBUG
 
 extern Camera camera;
 extern BezierCamera *globalBezierCamera;
 
 class DemoScene0 : public Scene
 {
+
 public:
     CubeMap *cubeMap;
-    BezierCamera sc1;
-
     GLuint cubeMapTexture;
     Terrain *terrain;
+    // GLuint brdfLookUp;
     WaterMatrix *waterMatrix;
+    // Rain *rain = NULL;
+
+    // HowToLoadModel modelLoader;
+    // std::unique_ptr<Core::Shader> mCubeMapShader;
+    // std::unique_ptr<Core::Model> mRideScene;
+    // std::unique_ptr<Core::Model> mChurch;
+    // std::unique_ptr<Core::Model> mMarriageCar;
+    // std::unique_ptr<Core::Model> mCross;
+
+    // float carMovementX = 0.0f;
+    // float carMovementZ = 0.0f;
+    // bool fadingIn_Cube2 = true; // Track fade direction
+    // bool fadeIn = true;
+    // int iCurrentCubeMap = 0;
+
+    // std::unique_ptr<Core::Model> mRoad;
+    // std::unique_ptr<Core::Model> mTunnel;
+
+    std::unique_ptr<Core::Model> mSwing;
 
     glshaderprogram *programStaticPBR;
+    // glmodel *churchModel;
+    // glmodel *roadModel;
     SceneLight *lightManager;
 
-    GLuint brdfLookUp = 0;
-    GLuint walltexture;
-    GLuint texture_wall;
-    GLuint texture_wall2;
-    GLuint texture_floor;
-    GLuint textureIDs[3];
+    // Shaders
+    GodRaysShader *godRaysShader;
 
+    // Fadein Fadeout
+    // float scaleFactor = 2.0f;
+
+    // shadow
+    // float maxShadowTranslate = 158.0f;
+    // float shadowTranslate = 0.0f;
+
+    BezierCamera sc1;
+    BezierCamera sc2;
+    BezierCamera sc3;
+
+    // EVENT
     enum sceneEventIds
     {
         START_T,
@@ -52,176 +89,243 @@ public:
         END_T,
     };
 
+    // member functions
     DemoScene0()
     {
         cubeMap = new CubeMap();
-        sceneCamera = new BezierCamera();
-        terrain = new Terrain(4. * 40.);
+        // cubeMap[1] = new CubeMap();
+        terrain = new Terrain(20. * 60.);
         waterMatrix = new WaterMatrix(300. * 400.);
-
-        programStaticPBR = NULL;
-        lightManager = NULL;
+        sceneCamera = new BezierCamera();
+        // rain = new Rain(40000);
+        // godRaysShader = new GodRaysShader();
     }
 
     bool initialize()
     {
-         const char *facesLight[] =
-        {
-            ".\\assets\\textures\\terrain\\cubemap_light\\px.png",
-            ".\\assets\\textures\\terrain\\cubemap_light\\nx.png",
-            ".\\assets\\textures\\terrain\\cubemap_light\\py.png",
-            ".\\assets\\textures\\terrain\\cubemap_light\\ny.png",
-            ".\\assets\\textures\\terrain\\cubemap_light\\pz.png",
-            ".\\assets\\textures\\terrain\\cubemap_light\\nz.png"
-        };
+        // const char *facesLight[] =
+        //     {
+        //         ".\\assets\\textures\\DayCubeMap\\px.png",
+        //         ".\\assets\\textures\\DayCubeMap\\nx.png",
+        //         ".\\assets\\textures\\DayCubeMap\\py.png",
+        //         ".\\assets\\textures\\DayCubeMap\\ny.png",
+        //         ".\\assets\\textures\\DayCubeMap\\pz.png",
+        //         ".\\assets\\textures\\DayCubeMap\\nz.png"};
+        // if (!cubeMap[1]->initialize(facesLight))
+        // {
+        //     PrintLog("Failed to initialize CubeMap");
+        //     return FALSE;
+        // }
 
-        if (!cubeMap->initialize(facesLight))
+        const char *facesLight2[] =
+            {
+                ".\\assets\\textures\\modelCubeMap\\px.png",
+                ".\\assets\\textures\\modelCubeMap\\nx.png",
+                ".\\assets\\textures\\modelCubeMap\\py.png",
+                ".\\assets\\textures\\modelCubeMap\\ny.png",
+                ".\\assets\\textures\\modelCubeMap\\pz.png",
+                ".\\assets\\textures\\modelCubeMap\\nz.png"
+            };
+        if (!cubeMap->initialize(facesLight2))
         {
-            PrintLog(" Failed to initialize CubeMap\n");
+            PrintLog("Failed to initialize CubeMap");
             return FALSE;
         }
 
+        if (!terrain)
+        {
+            PrintLog("Failed to initialize Terrain");
+            return FALSE;
+        }
 
-        programStaticPBR = new glshaderprogram({"./src/shaders/modelgltf/pbrStatic.vert",
-                                                "./src/shaders/modelgltf/pbrMain.frag"});
+        mSwing = std::make_unique<Core::Model>();
+        mSwing->LoadModel("./assets/models/scene1_models/Kaliya.glb");
 
- /*        mBoy = std::make_unique<Core::Model>();
-        mBoy->LoadModel("./assets/models/scene_0/boy.glb"); // main line
-        // mBoy->LoadModel("./assets/models/SceneCave/Chatri.glb"); testing
+        // // Camera
 
-        mPillar = std::make_unique<Core::Model>();
-        mPillar->LoadModel("./assets/models/scene_0/PillarModel.glb"); */
+        // Initializing GLB Model
+        // programStaticPBR = new glshaderprogram({"./src/shaders/modelgltf/pbrStatic.vert", "./src/shaders/modelgltf/pbrMain.frag"});
+        // churchModel = new glmodel("./assets/models/scene2/church.glb", aiProcessPreset_TargetRealtime_Quality, true);
+        // roadModel = new glmodel("./assets/models/scene2/road.glb", aiProcessPreset_TargetRealtime_Quality, true);
 
         lightManager = new SceneLight();
-        lightManager->addDirectionalLights({DirectionalLight(vec3(0.55f), 10.0f, vec3(0.0f, -1.0f, -1.0f)),
-                                            DirectionalLight(vec3(0.55f), 10.0f, vec3(0.0f, -1.0f, 1.0f)),
-                                            DirectionalLight(vec3(0.30f), 10.0f, vec3(0.0f, -1.0f, 0.0f))});
-        lightManager->addSpotLights({SpotLight(vec3(1.0f), 10.0f, vec3(0.0f, 10.0f, 0.0f), 100.0f,
-                                               vec3(0.0f, -0.9f, -0.3f), 20.0f, 22.0f)});
+        lightManager->addDirectionalLights({
+            DirectionalLight(vec3(0.55f), 10.0f, vec3(0.0f, -1.0f, -1.0f)),
+            DirectionalLight(vec3(0.55f), 10.0f, vec3(0.0f, -1.0f,  1.0f)),
+            DirectionalLight(vec3(0.30f), 10.0f, vec3(0.0f, -1.0f,  0.0f))
+        });
+        lightManager->addSpotLights({
+            SpotLight(vec3(1.0f), 10.0f, vec3(0.0f, 10.0f, 0.0f), 100.0f,
+                      vec3(0.0f, -0.9f, -0.3f), 20.0f, 22.0f)
+        });
         lightManager->setAmbient(vec3(0.05f));
-
-        sceneEvents = new EventManager(
-            {{START_T, {0.0f, 15.0f}},
-             {FADE_IN, {0.0f, 2.0f}},
-             {SC_T1, {0.0f, 13.0f}},
-             {FADE_OUT, {13.0f, 2.0f}},
-             {END_T, {15.0f, 0.0f}}},
-            true);
-
-
+        
         // Water
         waterMatrix->initialize();
 
-        // main terrain
-        terrain->setFreq(0.013f);            // broad beach hills
-        terrain->setDispFactor(8.100f);        // softer hill height
-        terrain->setTessMultiplier(1.0f);
-        terrain->setTextureTransitionFactor(1.0f); // use green texture set only
-        terrain->setGrassCoverage(0.5f);     // >1.0 avoids grass branch
-        terrain->setWaterHeight(77.50f);       // keep your sea level
-        // terrain->setScale(1.0f);
-        // terrain->setOctaves(8);
+        // IMPortantt
+        terrain->setFreq(0.031f);            // broad beach hills
+        terrain->setDispFactor(13.000f);        // softer hill height
+        terrain->setTessMultiplier(1.625f);
+        terrain->setTextureTransitionFactor(1.0f); // use green texture set onl y
+        terrain->setGrassCoverage(0.716f);     // >1.0 avoids grass branch
+        terrain->setWaterHeight(400.0f);       // keep your sea level
 
         waterMatrix->interpolateWaterColor = 1.0f;
         waterMatrix->moveFactor = 0.0f;
 
-       /*  const char *textureFiles[] = {
-            "./assets/textures/scene_0/wall.png",
-            "./assets/textures/scene_0/wall2.png",
-            "./assets/textures/scene_0/floor.png"}; */
+        // if (!rain->initialize(2))
+        // {
+        //     PrintLog("Failed to initialize Rain");
+        // }
 
-       /*  // Load single texture
-        if (LoadPNGImage(&texture_wall, "./assets/textures/scene_0/wall.png") == FALSE)
-        {
-            PrintLog("Failed to Wall load texture\n");
-            return false;
-        }
-
-        if (LoadPNGImage(&texture_wall2, "./assets/textures/scene_0/wall2.png") == FALSE)
-        {
-            PrintLog("Failed to Wall2 load texture\n");
-            return false;
-        }
-
-        if (LoadPNGImage(&texture_floor, "./assets/textures/scene_0/floor.png") == FALSE)
-        {
-            PrintLog("Failed to floor load texture\n");
-            return false;
-        } */
+        // Event System
+        sceneEvents = new EventManager(
+            {{START_T, {0.0f, 30.0f}},
+             {FADE_IN, {0.0f, 3.0f}},
+             {SC_T1, {0.0f, 28.0f}},
+             {FADE_OUT, {28.0f, 2.0f}},
+             {END_T, {30.0f, 0.0f}}},
+            true);
 
         setupCamera();
-        
-        isInitialized = true;
-        isSceneComplete = false;
-        return TRUE;
-    }
+        // sceneCamera->initialize();
+        // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
+        // sceneCamera->handlePerspective = true;
 
-    bool LoadTextures(GLuint *textures, const char *filenames[], size_t count)
-    {
-        for (size_t i = 0; i < count; i++)
-        {
-            if (LoadPNGImage(&textures[i], filenames[i]) == FALSE)
-            {
-                PrintLog("Failed to load texture: %s\n", filenames[i]);
-                return false;
-            }
-            else
-            {
-                PrintLog("Succesfully loaded texture: %s\n", filenames[i]);
-            }
-        }
-        return true;
+        isInitialized = true;
+        return TRUE;
     }
 
     void setupCamera()
     {
-        std::vector<std::vector<float>> bezierPointsSC1 =
-            {
-                {0.0f, 10.0f, 60.0f},
-                {0.0f, 0.0f, 0.0f}};
+        std::vector<std::vector<float>> bezierPointsSC1 = {
+            {761.399902f, 8713.500000f, -14994.500000f},
+            {761.399902f, 8713.500000f, -14994.500000f},
+            {-1648.600098f, 8713.500000f, -14994.500000f},
+            {-3558.600098f, 8713.500000f, -14994.500000f},
+            {-3558.600098f, 8713.500000f, -12814.500000f},
+            {-3558.600098f, 8713.500000f, -9584.500000f},
+            {-5008.600098f, 7733.500000f, -9584.500000f},
+            {-5568.600098f, 7733.500000f, -6804.500000f},
+            {-5568.600098f, 6433.500000f, -5954.500000f},
+            {-5568.600098f, 6693.500000f, -5764.500000f},
+            {-5568.600098f, 7063.500000f, -4514.500000f},
+            {-5568.600098f, 7063.500000f, -2684.500000f},
+            {-5568.600098f, 7063.500000f, -1564.500000f},
+            {-5568.600098f, 7063.500000f, 1805.500000f},
+            {-5568.600098f, 7063.500000f, 3915.500000f},
+            {-5568.600098f, 7063.500000f, 5015.500000f},
+        };
 
-        std::vector<float> yawGlobalSC1 = {-90.0f, -90.0f}; // around Y axis  ... side look
-        std::vector<float> pitchGlobalSC1 = {0.0f, 0.0f};   // around X axis  ... up down
-        std::vector<float> fovGlobalSC1 = {-45.0f, -45.0f}; // aroudn Z axis  ... zoom level
+        // YAW GLOBAL
+        std::vector<float> yawGlobalSC1 = {
+            29.000000f,
+            29.000000f,
+            29.000000f,
+            29.000000f,
+            29.000000f,
+            29.000000f,
+            29.000000f,
+            29.000000f,
+            29.000000f,
+            29.000000f,
+            29.000000f,
+            29.000000f,
+            49.000000f,
+            49.000000f,
+            79.000000f,
+            109.000000f,
+        };
+
+        // PITCH GLOBAL
+        std::vector<float> pitchGlobalSC1 = {
+            32.000000f,
+            12.000000f,
+            12.000000f,
+            2.000000f,
+            2.000000f,
+            -8.000000f,
+            2.000000f,
+            2.000000f,
+            2.000000f,
+            2.000000f,
+            -8.000000f,
+            -8.000000f,
+            -8.000000f,
+            -8.000000f,
+            -8.000000f,
+            -8.000000f,
+        };
+
+        // FOV GLOBAL
+        std::vector<float> fovGlobalSC1 = {
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+            -120.000000f,
+        };
 
         sc1.initialize();
         sc1.setBezierPoints(bezierPointsSC1, yawGlobalSC1, pitchGlobalSC1, fovGlobalSC1);
         sc1.update();
-
-        sceneCamera = &sc1;
     }
 
-    // void drawPillarModel(mat4 transformedModelMatrix, bool isBlack = false)
-    // {
-    //     if (!mPillar)
-    //         return;
+     void drawSwingModel(bool isBlack = false)
+    {
+        if (!mSwing)
+            return;
 
-    //     glEnable(GL_BLEND);
-    //     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        pushMatrix(modelMatrix);
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    //     mPillar->mTextureShader->Use();
-    //     mPillar->mTextureShader->SetUniform("isBlack", isBlack);
+            mSwing->mTextureShader->Use();
+            mSwing->mTextureShader->SetUniform("isBlack", isBlack);
 
-    //     mPillar->mTextureShader->SetUniform("u_model", transformedModelMatrix);
-    //     mPillar->mTextureShader->SetUniform("u_view", viewMatrix);
-    //     mPillar->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-    //     mPillar->mTextureShader->SetSampler2D("u_GGXLUT", brdfLookUp, 5);
+            vmath::mat4 swingModelMatrix =
+                vmath::translate(8000.0f, 800.0f, -9000.0f)  *
+                vmath::scale(1000.0f, 1000.0f, 1000.0f) *
+                vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f);
 
-    //     mPillar->Draw(mPillar->mTextureShader);
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
 
-    //     glDisable(GL_BLEND);
-    // }
+            mSwing->mTextureShader->SetUniform("u_model", swingModelMatrix);
+            mSwing->mTextureShader->SetUniform("u_view", viewMatrix);
+            mSwing->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            mSwing->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
 
+            mSwing->Draw(mSwing->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+    
     void display()
     {
-        glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
-
+        // Camera
         modelMatrix = mat4::identity();
-        perspectiveProjectionMatrix = vmath::perspective(
-            45.0f,
-            (GLfloat)giWindowWidth / (GLfloat)giWindowHeight,
-            0.1f,
-            10000000.0f);
+        perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)giWindowWidth / (GLfloat)giWindowHeight, 10.0f, 10000000.0f);
+
+        // modelLoader.display();
+        // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
+        // sceneCamera->update();
 
         pushMatrix(modelMatrix);
         {
@@ -263,96 +367,59 @@ public:
         }
         modelMatrix = popMatrix();
 
+        drawSwingModel();
 
-        /* // scene
-        // Load Floor
-        pushMatrix(modelMatrix);
-        {
-            modelMatrix = modelMatrix *
-                          vmath::translate(0.0f, 1.0f, 20.0f) *
-                          vmath::scale(50.0f, 1.0f, 20.0f) *
-                          vmath::rotate(90.0f, 1.0f, 0.0f, 0.0f);
+        // RAIN RENDERING
+        // pushMatrix(modelMatrix);
+        // {
+        //     // modelMatrix = modelMatrix * translate(0.0f, -35.0f, -5.0f) * scale(1.0f,1.0f,1.0f);
+        //     if (rain->alpha > 0.0f)
+        //     {
+        //         drawRain();
+        //     }
+        // }
+        // modelMatrix = popMatrix();
 
-            commonShaders->textureShader->drawQuadWithTexture(texture_floor, modelMatrix, viewMatrix, perspectiveProjectionMatrix, 1.0f, 2.5f, 2.5f, vec4(10.0f, 10.0f, 10.0f, 1.0f), true, false, 64.0f);
-        }
-        modelMatrix = popMatrix();
-
-        // Load bgWall
-        pushMatrix(modelMatrix);
-        {
-            modelMatrix = modelMatrix *
-                          vmath::translate(0.0f, 20.0f, 0.0f) *
-                          vmath::scale(50.0f, 20.0f, 1.0f);
-
-            commonShaders->textureShader->drawQuadWithTexture(texture_wall, modelMatrix, viewMatrix, perspectiveProjectionMatrix, 1.0f, 1.0f, 1.0f, vec4(10.0f, 10.0f, 10.0f, 1.0f), true, false, 64.0f);
-        }
-        modelMatrix = popMatrix();
- */
-        /*   // Load Pillar
-        {
-            //  Pillar - 1
-            pushMatrix(modelMatrix);
-            {
-                modelMatrix = modelMatrix *
-                              vmath::translate(30.0f, 0.0f, 10.0f) *
-                              vmath::scale(4.0f, 10.0f, 4.0f);
-                drawPillarModel(modelMatrix);
-            }
-            modelMatrix = popMatrix();
-
-            //  Pillar - 2
-            pushMatrix(modelMatrix);
-            {
-                modelMatrix = modelMatrix *
-                              vmath::translate(-10.0f, 0.0f, 20.0f) *
-                              vmath::scale(4.0f, 10.0f, 4.0f);
-                drawPillarModel(modelMatrix);
-            }
-            modelMatrix = popMatrix();
-
-            //  Pillar - 3
-            pushMatrix(modelMatrix);
-            {
-                modelMatrix = modelMatrix *
-                              vmath::translate(-20.0f, 0.0f, 40.0f) *
-                              vmath::scale(8.0f, 10.0f, 4.0f);
-                drawPillarModel(modelMatrix);
-            }
-            modelMatrix = popMatrix();
-        }
-        */
-      /*   // Load Model
-        if (mBoy)
-        {
-            pushMatrix(modelMatrix);
-            {
-                modelMatrix = modelMatrix *
-                              vmath::translate(-4.0f, 4.0f, 24.0f) *
-                              vmath::scale(7.0f, 7.0f, 7.0f) *
-                              vmath::rotate(55.0f, 0.0f, 1.0f, 0.0f);
-
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-                mBoy->mTextureShader->Use();
-                mBoy->mTextureShader->SetUniform("isBlack", false);
-
-                mBoy->mTextureShader->SetUniform("u_model", modelMatrix);
-                mBoy->mTextureShader->SetUniform("u_view", viewMatrix);
-                mBoy->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-                mBoy->mTextureShader->SetSampler2D("u_GGXLUT", brdfLookUp, 5);
-                mBoy->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f)); // TODO set the light position  ... lightManager->getPointLightPosition()
-                mBoy->mTextureShader->SetUniform("u_ApplyToon", true);
-                mBoy->mTextureShader->SetUniform("u_ApplyRim", false);
-                mBoy->mTextureShader->SetUniform("u_ApplySpecular", false);
-                mBoy->Draw(mBoy->mTextureShader);
-                glDisable(GL_BLEND);
-            }
-            modelMatrix = popMatrix();
-        } */
+        // sceneCamera->displayBezierCurve();
     }
 
-    
+    // RAIN RELATED
+    // void drawRain(void)
+    // {
+    //     // code
+    //     pushMatrix(modelMatrix);
+    //     {
+    //         rain->lightAmbient[0] = 0.0f;
+    //         rain->lightAmbient[1] = 0.0f;
+    //         rain->lightAmbient[2] = 0.0f;
+    //         rain->lightAmbient[3] = 1.0f;
+
+    //         rain->lightDiffuse[0] = 1.0f;
+    //         rain->lightDiffuse[1] = 1.0f;
+    //         rain->lightDiffuse[2] = 1.0f;
+    //         rain->lightDiffuse[3] = 1.0f;
+
+    //         rain->lightPosition[0] = 0.0f;
+    //         rain->lightPosition[1] = 100.0f;
+    //         rain->lightPosition[2] = -30.0f;
+    //         rain->lightPosition[3] = 1.0f;
+
+    //         rain->lightSpecular[0] = 1.0f;
+    //         rain->lightSpecular[1] = 1.0f;
+    //         rain->lightSpecular[2] = 1.0f;
+    //         rain->lightSpecular[3] = 1.0f;
+
+    //         // depth buffer madhe writing disable karnya sathi
+
+    //         glEnable(GL_BLEND);
+
+    //         rain->display();
+    //         glDisable(GL_BLEND);
+    //     }
+    //     modelMatrix = popMatrix();
+    // }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     void displayScene(float terrainUp)
     {
         pushMatrix(modelMatrix);
@@ -383,48 +450,89 @@ public:
 
     void update()
     {
+        sceneCamera->time = globalTime;
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // terrain->setWaterHeight(85.0f);
+        // waterMatrix->interpolateWaterColor = 1.0f;
+        // terrain->setTextureTransitionFactor(1.0f);
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+        // if (terrain->getTextureTransitionFactor() < 1.0f)
+        // {
+        //     terrain->setTextureTransitionFactor(terrain->getTextureTransitionFactor() + 0.001f);
+        // }
+
+        // if (terrain->getGrassCoverage() < 0.5f)
+        // {
+        //     terrain->setGrassCoverage(terrain->getGrassCoverage() + 0.005f);
+        // }
+
+        // CAMERA UPDATE
         sceneCamera->time = sceneEvents->getEventTime(START_T);
         sceneEvents->increment();
 
+        // CAMERA UPDATE
         if (sceneEvents->isEventInProgress(SC_T1))
         {
             sceneCamera = &sc1;
             sceneCamera->time = sceneEvents->getEventTime(SC_T1);
         }
-
+        
         if (sceneEvents->isEventComplete(END_T))
             isSceneComplete = true;
+
+        // terrain->setWaterHeight(100.0f - 15.000000f);
+        // waterMatrix->interpolateWaterColor = 1.0f;
+        // terrain->setTextureTransitionFactor(1.0f);
+
+        float fadeSpeed = 0.001f; // Adjust speed for smooth fade effect
+
+        // if (fadeIn)
+        // {
+        //     Cubemap_Alpha += fadeSpeed;
+        //     if (Cubemap_Alpha >= 1.0f)
+        //     {
+        //         Cubemap_Alpha = 1.0f;
+        //         // fadeIn = false; // Start fading out
+        //     }
+        // }
+        // else
+        // {
+        //     Cubemap_Alpha -= fadeSpeed;
+        //     if (Cubemap_Alpha <= 0.0f)
+        //     {
+        //         Cubemap_Alpha = 0.0f;
+        //         fadeIn = true; // Start fading in the next texture
+        //         iCurrentCubeMap += 1;
+        //     }
+        // }
     }
 
     void uninitialize()
     {
-        if (lightManager)
-        {
-            delete lightManager;
-            lightManager = NULL;
-        }
-
-        if (programStaticPBR)
-        {
-            delete programStaticPBR;
-            programStaticPBR = NULL;
-        }
-
         if (cubeMap)
         {
             cubeMap->uninitialize();
-            delete cubeMap;
+            delete (cubeMap);
             cubeMap = NULL;
         }
 
-        if (sceneEvents)
+        if (terrain)
         {
-            delete sceneEvents;
-            sceneEvents = NULL;
+            delete terrain;
+            terrain = nullptr;
         }
 
-        sceneCamera = NULL;
-        isInitialized = false;
-        isSceneComplete = false;
+        mSwing.reset();
+
+        // // rain
+        // if (rain->alpha > 0.0f)
+        // {
+        //     rain->alpha -= 0.002f;
+        // }
+
+        // modelLoader.uninitialize();
     }
 };
