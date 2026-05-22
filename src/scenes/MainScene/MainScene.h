@@ -45,7 +45,7 @@ public:
 
         START_E2E_DEMO = true;
         // selected_scene = SCENE_INTRO;
-        selected_scene = SCENE_00;
+        selected_scene = SCENE_01;
         scene = nullptr;
     }
 
@@ -55,7 +55,7 @@ public:
         {
             // introScene->initialize();
             scene0->initialize();
-            //  scene1->initialize();
+            scene1->initialize();
             // scene2->initialize();
             // scene3->initialize();
             // scene4->initialize();

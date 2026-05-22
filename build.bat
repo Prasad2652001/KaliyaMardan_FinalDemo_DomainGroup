@@ -130,4 +130,5 @@ set PATH=%RUNTIME_DIR%;%PATH%
 @REM echo Running application...
 @REM echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-@REM OGLMain.exe
+OGLMain.exe
+

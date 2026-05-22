@@ -845,11 +845,11 @@ void drawImGui(void)
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		// Terrain Controls for Scene3
+		// Terrain Controls for Scene1
 		if (mainScene && mainScene->scene0 && mainScene->scene0->terrain)
 		{
 			Terrain* t = mainScene->scene0->terrain;
-
+			
 			ImGui::Separator();
 			ImGui::Text("Scene3 Terrain Controls");
 

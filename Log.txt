@@ -38,6 +38,11 @@ Shader Program Linking Succeeded.
 ".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
 ".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
 ERROR::ASSIMP:: Failed To Load .\assets\models\boat\boat.obj Model.
 ".\src\shaders\grid\grid.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\grid\grid.fs" : Fragment Shader Compilation Succeeded.
@@ -48,7 +53,15 @@ Shader Program Linking Succeeded.
 ".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-LoadPNGImage Failed for waterDUDV
+".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+[Core::Model::LoadModel]: Failed to parse model file: Unable to open file "./assets/models/scene1_models/vrundavan/cowHouse.glb".".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
 ".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
@@ -61,7 +74,7 @@ InitalizeAudio() : alCOpenDevice() Failed.
 Initialize Successful...
 
 
-Variables  | OBJ -1.000000f, 0.000000f, -1.000000f | OBJ Angle 0.000000f | SCALE -16.000000f, 12.000000f, 0.000000f
+Variables  | OBJ 0.000000f, 0.000000f, 0.000000f | OBJ Angle 0.000000f | SCALE 1.000000f, 1.000000f, 1.000000f
 
 
 
