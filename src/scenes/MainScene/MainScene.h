@@ -45,21 +45,46 @@ public:
 
         START_E2E_DEMO = true;
         // selected_scene = SCENE_INTRO;
-        selected_scene = SCENE_01;
+        selected_scene = SCENE_03;
         scene = nullptr;
+    }
+
+    // Initialize only scenes that will actually be used (avoids loading
+    // duplicate terrains/models/water FBOs for every scene at once).
+    void initializeScenesUpTo(int maxScene)
+    {
+        if (maxScene >= SCENE_00 && !scene0->isInitialized) scene0->initialize();
+        if (maxScene >= SCENE_01 && !scene1->isInitialized) scene1->initialize();
+        if (maxScene >= SCENE_02 && !scene2->isInitialized) scene2->initialize();
+        if (maxScene >= SCENE_03 && !scene3->isInitialized) scene3->initialize();
+        if (maxScene >= SCENE_04 && !scene4->isInitialized) scene4->initialize();
+        if (maxScene >= SCENE_OUTRO && !outroScene->isInitialized) outroScene->initialize();
+    }
+
+    void initializeActiveSceneOnly()
+    {
+        switch (selected_scene)
+        {
+        case SCENE_00: if (!scene0->isInitialized) scene0->initialize(); break;
+        case SCENE_01: if (!scene1->isInitialized) scene1->initialize(); break;
+        case SCENE_02: if (!scene2->isInitialized) scene2->initialize(); break;
+        case SCENE_03: if (!scene3->isInitialized) scene3->initialize(); break;
+        case SCENE_04: if (!scene4->isInitialized) scene4->initialize(); break;
+        case SCENE_OUTRO: if (!outroScene->isInitialized) outroScene->initialize(); break;
+        default: break;
+        }
     }
 
     BOOL initialize()
     {
         if (START_E2E_DEMO)
         {
-            // introScene->initialize();
-            scene0->initialize();
-            scene1->initialize();
-            // scene2->initialize();
-            // scene3->initialize();
-            // scene4->initialize();
-            // outroScene->initialize(); 
+            // E2E: only load the starting scene now; later scenes lazy-init on transition.
+            initializeScenesUpTo(selected_scene);
+        }
+        else
+        {
+            initializeActiveSceneOnly();
         }
 
         if (!tintEffect)
@@ -191,6 +216,9 @@ public:
         if (START_E2E_DEMO && scene->isSceneComplete)
         {
             selected_scene++;
+
+            // Lazy-init the next scene on first transition (keeps RAM low at startup).
+            initializeScenesUpTo(selected_scene);
 
             switch (selected_scene)
             {

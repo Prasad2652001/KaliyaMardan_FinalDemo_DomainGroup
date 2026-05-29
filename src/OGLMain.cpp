@@ -15,9 +15,9 @@
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
-float gModelTranslate[3] = {0.0f, 0.0f, 0.0f};
+float gModelTranslate[3] = {0.0f, 400.0f, 0.0f};
 float gModelRotate[3] = {-90.0f, 0.0f, 0.0f};
-float gModelScale[3] = {20.0f, 20.0f, 20.0f};
+float gModelScale[3] = {50.0f, 50.0f, 50.0f};
 
 bool gShowImGui = true;
 bool gWireframe = false;
@@ -210,7 +210,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	WNDCLASSEX wndclass;
 	HWND hwnd;
 	MSG msg;
-	TCHAR szAppName[] = TEXT("Vivid Voxel");
+	TCHAR szAppName[] = TEXT("Domain Group");
 	BOOL bDone = FALSE;
 	int iRetVal = 0;
 	int iHeightOfWindow, iWidthOfWindow;
@@ -765,23 +765,23 @@ void drawImGui(void)
 	{
 		ImGui::Text("Selected Model");
 
-		ImGui::DragFloat3("Translate", gModelTranslate, 0.05f, -500.0f, 500.0f);
+		ImGui::DragFloat3("Translate", gModelTranslate, 1.0f, -5000.0f, 5000.0f);
 		ImGui::DragFloat3("Rotate", gModelRotate, 1.0f, -360.0f, 360.0f);
-		ImGui::DragFloat3("Scale", gModelScale, 0.01f, 0.01f, 100.0f);
+		ImGui::DragFloat3("Scale", gModelScale, 0.5f, 0.01f, 1000.0f);
 
 		if (ImGui::Button("Reset Transform"))
 		{
 			gModelTranslate[0] = 0.0f;
-			gModelTranslate[1] = 0.0f;
+			gModelTranslate[1] = 400.0f;
 			gModelTranslate[2] = 0.0f;
 
 			gModelRotate[0] = -90.0f;
 			gModelRotate[1] = 0.0f;
 			gModelRotate[2] = 0.0f;
 
-			gModelScale[0] = 20.0f;
-			gModelScale[1] = 20.0f;
-			gModelScale[2] = 20.0f;
+			gModelScale[0] = 50.0f;
+			gModelScale[1] = 50.0f;
+			gModelScale[2] = 50.0f;
 		}
 
 		ImGui::Separator();
@@ -845,13 +845,14 @@ void drawImGui(void)
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		// Terrain Controls for Scene1
-		if (mainScene && mainScene->scene0 && mainScene->scene0->terrain)
+		// Terrain Controls for Scene3
+		if (mainScene && mainScene->scene3 && mainScene->scene3->terrain)
 		{
-			Terrain* t = mainScene->scene0->terrain;
+			Terrain* t = mainScene->scene3->terrain;
 			
 			ImGui::Separator();
 			ImGui::Text("Scene3 Terrain Controls");
+			
 
 			float freq = t->getFreq();
 			if (ImGui::SliderFloat("Terrain Frequency", &freq, 0.001f, 0.08f))

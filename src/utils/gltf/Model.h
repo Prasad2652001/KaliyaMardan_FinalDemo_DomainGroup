@@ -4,6 +4,8 @@
 #include <assimp/scene.h>
 #include <glm/glm.hpp>
 #include "Shader.h"
+#include <map>
+#include <string>
 
 namespace Core
 {
@@ -62,6 +64,7 @@ namespace Core
     class Model
     {
         std::vector<Mesh> meshes;
+        std::map<std::string, aiMatrix4x4> mBoneTransforms; // Populated during LoadModel for skinned meshes
 
         Mesh ProcessMesh(const aiMesh *mesh, const aiScene *scene, const glm::mat4 &transform);
         void ProcessNode(const aiNode *node, const aiScene *scene, const glm::mat4 &parentTransform);

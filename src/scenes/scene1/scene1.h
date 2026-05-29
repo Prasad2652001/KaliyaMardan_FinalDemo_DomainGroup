@@ -380,7 +380,7 @@ public:
         drawHouse1();
         drawHouse2();      
         drawHouse3();
-        drawVrundavanGate();
+        drawKaliyaModel();
         drawCowHouse();
         drawFarmLand();
         drawHutHouse();
@@ -571,7 +571,7 @@ public:
         modelMatrix = popMatrix();
     }
 
-    void drawVrundavanGate(bool isBlack = false)
+    void drawKaliyaModel(bool isBlack = false)
     {   
         if (!vrundavanGate)
             return;
