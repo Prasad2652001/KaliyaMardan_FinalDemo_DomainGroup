@@ -125,7 +125,7 @@ bool isMovementStarted = true;
 // =============================== GLOBAL CONTROLS
 BOOL USE_FPV_CAM = FALSE;
 BOOL playMusic = TRUE;
-BOOL enableBezierCameraControl = FALSE;
+BOOL enableBezierCameraControl = TRUE;
 BOOL spaceBarIsPressed = FALSE;
 float VOLUME_LEVEL = 0.8f;
 // ==============================================//

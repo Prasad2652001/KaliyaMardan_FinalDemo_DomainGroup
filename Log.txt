@@ -53,6 +53,16 @@ Shader Program Linking Succeeded.
 ".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
+".\src\shaders\bubbles\bubbles.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\bubbles\bubbles.gs" : Geometry Shader Compilation Succeeded.
+".\src\shaders\bubbles\bubbles.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+bubble shader initialized
+".\src\shaders\bubbles\bubbles.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\bubbles\bubbles.gs" : Geometry Shader Compilation Succeeded.
+".\src\shaders\bubbles\bubbles.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+bubble shader initialized
 ".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
@@ -74,12 +84,35 @@ InitalizeAudio() : alCOpenDevice() Failed.
 Initialize Successful...
 
 
-Variables  | OBJ 0.000000f, 0.000000f, 0.000000f | OBJ Angle 0.000000f | SCALE 1.000000f, 1.000000f, 1.000000f
+Variables  | OBJ -29.600082f, 673.500061f, 15.500017f | OBJ Angle 0.000000f | SCALE 29.000000f, -15.000000f, -120.000000f
 
 
 
 
 light_objX : 0.000000 , light_objY : 0.000000 , light_objZ : 0.000000
- ============================================================
+ 
+
+std::vector<std::vector<float>> bezierPoints = {
+{-29.600082f, 673.500061f, 15.500017f},
+};
+
+
+// YAW GLOBAL
+std::vector<float> yawGlobal = {
+29.000000f,
+};
+
+
+// PITCH GLOBAL
+std::vector<float> pitchGlobal = {
+-15.000000f,
+	};
+
+
+// FOV GLOBAL
+std::vector<float> fovGlobal = {
+-120.000000f,
+	};
+============================================================
 Log File "Log.txt" Has Been Closed Successfully !!!
 ============================================================

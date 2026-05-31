@@ -7,6 +7,7 @@
 #include "../../effects/cubemap/Cubemap.h"
 #include "../../effects/terrain/Terrain.h"
 #include "../../effects/water_matrix/WaterMatrix.h"
+#include "../../effects/bubbles/Bubbles.h"
 #include "../../utils/camera/BezierCamera.h"
 #include "../../utils/camera/Camera.h"
 
@@ -46,6 +47,18 @@ public:
     // GLuint brdfLookUp;
     WaterMatrix *waterMatrix;
     // Rain *rain = NULL;
+
+    Bubbles* jumpBubbles = NULL;
+    Bubbles* noseBubbles = NULL;
+
+    // default editable world positions
+    // model is drawn at translate(8000, 800, -9000), so start near that
+    vec3 jumpBubbleStartPos = vec3(8200.0f, 1100.0f, -9000.0f);
+    vec3 noseBubbleStartPos = vec3(8300.0f, 1150.0f, -8950.0f);
+
+    // optional toggles for testing
+    bool showJumpBubbles = true;
+    bool showNoseBubbles = true;
 
     // HowToLoadModel modelLoader;
     // std::unique_ptr<Core::Shader> mCubeMapShader;
@@ -104,6 +117,9 @@ public:
         sceneCamera = new BezierCamera();
         // rain = new Rain(40000);
         // godRaysShader = new GodRaysShader();
+
+        jumpBubbles = new Bubbles(1000);   // jump splash burst
+        noseBubbles = new Bubbles(180);    // nose breathing bubbles
     }
 
     bool initialize()
@@ -184,6 +200,33 @@ public:
         //     PrintLog("Failed to initialize Rain");
         // }
 
+        if (jumpBubbles)
+        {
+            if (!jumpBubbles->initialize(2))
+            {
+                PrintLog("Failed to initialize jump bubbles\n");
+                return FALSE;
+            }
+
+            jumpBubbles->alpha = 0.95f;
+            //jumpBubbles->alpha = 1.0f;
+            jumpBubbles->setModelOffset(vec3(0.0f, 0.0f, 0.0f));
+            jumpBubbles->setJumpBubbles(jumpBubbleStartPos);
+        }
+
+        if (noseBubbles)
+        {
+            if (!noseBubbles->initialize(2))
+            {
+                PrintLog("Failed to initialize nose bubbles\n");
+                return FALSE;
+            }
+
+            noseBubbles->alpha = 0.75f;
+            noseBubbles->setModelOffset(vec3(0.0f, 0.0f, 0.0f));
+            noseBubbles->setNoseBubbles(noseBubbleStartPos);
+        }
+
         // Event System
         sceneEvents = new EventManager(
             {{START_T, {0.0f, 30.0f}},
@@ -193,10 +236,10 @@ public:
              {END_T, {30.0f, 0.0f}}},
             true);
 
-        setupCamera();
-        // sceneCamera->initialize();
-        // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
-        // sceneCamera->handlePerspective = true;
+        //setupCamera();
+         sceneCamera->initialize();
+         sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
+         sceneCamera->handlePerspective = true;
 
         isInitialized = true;
         return TRUE;
@@ -303,7 +346,7 @@ public:
 
             vmath::mat4 swingModelMatrix =
                 vmath::translate(8000.0f, 800.0f, -9000.0f)  *
-                vmath::scale(1000.0f, 1000.0f, 1000.0f) *
+                vmath::scale(100.0f, 100.0f, 100.0f) *
                 vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
@@ -329,8 +372,8 @@ public:
         perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)giWindowWidth / (GLfloat)giWindowHeight, 10.0f, 10000000.0f);
 
         // modelLoader.display();
-        // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
-        // sceneCamera->update();
+         sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
+         sceneCamera->update();
 
         pushMatrix(modelMatrix);
         {
@@ -372,7 +415,7 @@ public:
         }
         modelMatrix = popMatrix();
 
-        drawSwingModel();
+        //drawSwingModel();
 
         // RAIN RENDERING
         // pushMatrix(modelMatrix);
@@ -384,6 +427,9 @@ public:
         //     }
         // }
         // modelMatrix = popMatrix();
+
+        drawSwingModel();
+        drawBubbles();
 
         // sceneCamera->displayBezierCurve();
     }
@@ -424,6 +470,71 @@ public:
     //     modelMatrix = popMatrix();
     // }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    void drawBubbles(void)
+    {
+        if (jumpBubbles && showJumpBubbles && jumpBubbles->alpha > 0.0f)
+        {
+            jumpBubbles->setEyePosition(sceneCamera->getEye());
+            jumpBubbles->setDeltaTime(0.016f); // replace with your real frame dt if available
+            jumpBubbles->setJumpBubbles(jumpBubbleStartPos);
+
+            jumpBubbles->lightAmbient[0] = 0.0f;
+            jumpBubbles->lightAmbient[1] = 0.0f;
+            jumpBubbles->lightAmbient[2] = 0.0f;
+            jumpBubbles->lightAmbient[3] = 1.0f;
+
+            jumpBubbles->lightDiffuse[0] = 1.0f;
+            jumpBubbles->lightDiffuse[1] = 1.0f;
+            jumpBubbles->lightDiffuse[2] = 1.0f;
+            jumpBubbles->lightDiffuse[3] = 1.0f;
+
+            jumpBubbles->lightSpecular[0] = 1.0f;
+            jumpBubbles->lightSpecular[1] = 1.0f;
+            jumpBubbles->lightSpecular[2] = 1.0f;
+            jumpBubbles->lightSpecular[3] = 1.0f;
+
+            jumpBubbles->lightPosition[0] = 0.0f;
+            jumpBubbles->lightPosition[1] = 100.0f;
+            jumpBubbles->lightPosition[2] = -30.0f;
+            jumpBubbles->lightPosition[3] = 1.0f;
+
+            glEnable(GL_BLEND);
+            jumpBubbles->display();
+            glDisable(GL_BLEND);
+        }
+
+        if (noseBubbles && showNoseBubbles && noseBubbles->alpha > 0.0f)
+        {
+            noseBubbles->setEyePosition(sceneCamera->getEye());
+            noseBubbles->setDeltaTime(0.016f); // replace with your real frame dt if available
+            noseBubbles->setNoseBubbles(noseBubbleStartPos);
+
+            noseBubbles->lightAmbient[0] = 0.0f;
+            noseBubbles->lightAmbient[1] = 0.0f;
+            noseBubbles->lightAmbient[2] = 0.0f;
+            noseBubbles->lightAmbient[3] = 1.0f;
+
+            noseBubbles->lightDiffuse[0] = 1.0f;
+            noseBubbles->lightDiffuse[1] = 1.0f;
+            noseBubbles->lightDiffuse[2] = 1.0f;
+            noseBubbles->lightDiffuse[3] = 1.0f;
+
+            noseBubbles->lightSpecular[0] = 1.0f;
+            noseBubbles->lightSpecular[1] = 1.0f;
+            noseBubbles->lightSpecular[2] = 1.0f;
+            noseBubbles->lightSpecular[3] = 1.0f;
+
+            noseBubbles->lightPosition[0] = 0.0f;
+            noseBubbles->lightPosition[1] = 100.0f;
+            noseBubbles->lightPosition[2] = -30.0f;
+            noseBubbles->lightPosition[3] = 1.0f;
+
+            glEnable(GL_BLEND);
+            noseBubbles->display();
+            glDisable(GL_BLEND);
+        }
+    }
 
     void displayScene(float terrainUp)
     {
@@ -517,6 +628,20 @@ public:
         // {
         //     rain->alpha -= 0.002f;
         // }
+
+        if (jumpBubbles)
+        {
+            jumpBubbles->uninitialize();
+            delete jumpBubbles;
+            jumpBubbles = NULL;
+        }
+
+        if (noseBubbles)
+        {
+            noseBubbles->uninitialize();
+            delete noseBubbles;
+            noseBubbles = NULL;
+        }
 
         // modelLoader.uninitialize();
     }
