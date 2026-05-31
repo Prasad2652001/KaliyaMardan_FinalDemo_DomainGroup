@@ -102,7 +102,7 @@ CommonModels *commonModels;
 float objX = 0.0f;
 float objY = 0.0f;
 float objZ = 0.0f;
-float objIncrement = 1.0f;
+float objIncrement = 20.0f;
 
 // Scale
 float scaleX = 1.0;
@@ -123,9 +123,9 @@ float objAngleIncrement = 1.0f;
 bool isMovementStarted = true;
 
 // =============================== GLOBAL CONTROLS
-BOOL USE_FPV_CAM = FALSE;
-BOOL playMusic = TRUE;
-BOOL enableBezierCameraControl = FALSE;
+BOOL USE_FPV_CAM = TRUE;
+BOOL playMusic = FALSE;
+BOOL enableBezierCameraControl = TRUE;
 BOOL spaceBarIsPressed = FALSE;
 float VOLUME_LEVEL = 0.8f;
 // ==============================================//
@@ -376,10 +376,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
 	/* fucntion declarations */
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, iMsg, wParam, lParam))
-	{
-		return 0;
-	}
 
 	// void ToggleFullScreen();
 	void resize(int, int);
@@ -411,16 +407,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		{
 		case 'f':
 		case 'F':
-			if (gbFullScreen == FALSE)
-			{
-				ToggleFullScreen();
-				gbFullScreen = TRUE;
-			}
-			else
-			{
-				ToggleFullScreen();
-				gbFullScreen = FALSE;
-			}
+			ToggleFullScreen();
 			break;
 		case '+':
 			if (enableBezierCameraControl)
@@ -515,19 +502,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		case 'r':
 		case 'R':
 			globalTime = 0.0f;
-			mainScene->scene->sceneEvents->resetT();
 			break;
 		case 'q':
 		case 'Q':
-			if (objIncrement == 20.0f)
-				objIncrement = 5.0f;
+			if (objIncrement == 0.1f)
+				objIncrement = 0.01f;
 			else
-				objIncrement = 20.0f;
+				objIncrement = 0.1f;
 
-			// if (scaleIncrement == 1.0f)
-			// 	scaleIncrement = 0.01f;
-			// else
-			// 	scaleIncrement = 1.0f;
+			if (scaleIncrement == 1.0f)
+				scaleIncrement = 0.01f;
+			else
+				scaleIncrement = 1.0f;
 			break;
 
 		case 'i':
@@ -1105,6 +1091,18 @@ void display(void)
 	/* Code */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	if (enableBezierCameraControl)
+	{
+		bezierPoints[vectorIndex][0] = objX;
+		bezierPoints[vectorIndex][1] = objY;
+		bezierPoints[vectorIndex][2] = objZ;
+		yawGlobal[vectorIndex] = scaleX;
+		pitchGlobal[vectorIndex] = scaleY;
+		fovGlobal[vectorIndex] = scaleZ;
+	}
+
+	updateGlobalViewMatrix(); // uncomment this to run simultaniuously scnee
+
 	beginImGuiFrame();
 
 	// ImGui-based render states
@@ -1117,18 +1115,6 @@ void display(void)
 		glEnable(GL_CULL_FACE);
 	else
 		glDisable(GL_CULL_FACE);
-
-	if (enableBezierCameraControl)
-	{
-		bezierPoints[vectorIndex][0] = objX;
-		bezierPoints[vectorIndex][1] = objY;
-		bezierPoints[vectorIndex][2] = objZ;
-		yawGlobal[vectorIndex] = scaleX;
-		pitchGlobal[vectorIndex] = scaleY;
-		fovGlobal[vectorIndex] = scaleZ;
-	}
-
-	updateGlobalViewMatrix(); // uncomment this to run simultaniuously scnee
 
 	// ==================================== SCENE
 	mainScene->display();
@@ -1145,7 +1131,7 @@ void display(void)
 	}
 
 	// ==================================== IMGUI
-	drawImGui();
+	// drawImGui();
 	endImGuiFrame();
 
 	// ==================================== DISPLAY TEXT IN TITLE BAR
@@ -1211,12 +1197,16 @@ void display(void)
 float camSpeed = 100.0f;
 void update(void)
 {
+	// mainScene->update();
+
+	// globalTime += (float)gDeltaTime + globalSpeedAdjust;
+
+	// if (globalTime < 0.0f)
+	// 	globalTime = 0.0f;
+
 	mainScene->update();
-
-	globalTime += (float)gDeltaTime + globalSpeedAdjust;
-
-	if (globalTime < 0.0f)
-		globalTime = 0.0f;
+	if (globalTime <= 1.0f)
+		globalTime += (0.000015f + globalSpeedAdjust);
 }
 // void update(void)
 // {

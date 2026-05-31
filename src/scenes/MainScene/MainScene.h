@@ -34,7 +34,7 @@ public:
 
     MainScene()
     {
-        // // introScene = new IntroScene();
+        // introScene = new IntroScene();
         scene0 = new DemoScene0();
         scene1 = new DemoScene1();
         scene2 = new DemoScene2();
@@ -55,11 +55,11 @@ public:
         {
             // introScene->initialize();
             scene0->initialize();
-            scene1->initialize();
+            // scene1->initialize();
             // scene2->initialize();
             // scene3->initialize();
             // scene4->initialize();
-            // outroScene->initialize(); 
+            // outroScene->initialize();
         }
 
         if (!tintEffect)
@@ -186,7 +186,7 @@ public:
         if (!scene)
             return;
 
-        // scene->update();
+        scene->update();
 
         if (START_E2E_DEMO && scene->isSceneComplete)
         {
