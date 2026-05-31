@@ -1,10 +1,5 @@
-/*
-* ***********************************************************************************
-*   Author: Pradnya Vijay Gokhale                                                   *
-* ***********************************************************************************
-*/
-
 #include "GLLog.h"
+#include <share.h>   // _SH_DENYNO
 //global variable declarations
 FILE *gpFile = NULL;
 
@@ -14,7 +9,11 @@ BOOL CreateLogFile(void)
 	if (gpFile != NULL)
 		return(FALSE);
 
-	if (fopen_s(&gpFile, "Log.txt", "w") != 0)
+	// Open with shared read-access so external tools (tail, VS Code preview,
+	// PowerShell Get-Content -Wait) holding a read handle don't prevent the
+	// app from truncating/creating Log.txt at startup.
+	gpFile = _fsopen("Log.txt", "w", _SH_DENYNO);
+	if (gpFile == NULL)
 	{
 		MessageBox(NULL, TEXT("Failed To Create Log File \"Log.txt\" !!! Exitting Now ..."), TEXT("LOG FILE ERROR"), MB_ICONERROR | MB_OK);
 		return(FALSE);
@@ -70,6 +69,8 @@ void PrintLogFunction(std::string callingFunc, const char *fmt, ...)
     va_start(arg, fmt);
     ret = vfprintf(gpFile, fmt, arg);
     va_end(arg);
+    fputc('\n', gpFile);
+    fflush(gpFile);
 }
 
 void PrintLogString(std::string data)

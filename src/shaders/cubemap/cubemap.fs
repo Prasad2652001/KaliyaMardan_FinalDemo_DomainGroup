@@ -5,11 +5,10 @@ out vec4 FragColor;
 in vec3 a_texcoords;
 uniform samplerCube u_skyBox;
 uniform int isBarsat = 0;
-void main(void)
-{
+uniform float u_alpha;
+void main(void) {
 	if(isBarsat == 1)
-		FragColor = texture(u_skyBox, a_texcoords) * vec4(0.6 , 0.6, 0.6,1.0);
+		FragColor = texture(u_skyBox, a_texcoords) * vec4(0.6, 0.6, 0.6, 1.0) * u_alpha;
 	else
-		FragColor = texture(u_skyBox, a_texcoords);
+		FragColor = texture(u_skyBox, a_texcoords) * u_alpha;
 };
-    

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../../utils/common.h"
+#include "../../utils/OpenGL/GLHeadersAndMacros.h"
+#include "../../utils/OpenGL/GLLog.h"
 #include "../../utils/camera/Camera.h"
 #include "../../shaders/rain/RainShader.h"
 
@@ -367,7 +369,7 @@ public:
 
             glUseProgram(0);
 
-            dt = 1e-3f * (ELAPSED_TIME * 0.05f);
+            dt = 1e-3f * (0.0f * 0.05f);
         }
         modelMatrix = popMatrix();
     }

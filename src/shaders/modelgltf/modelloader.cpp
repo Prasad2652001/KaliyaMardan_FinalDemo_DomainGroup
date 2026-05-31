@@ -968,8 +968,8 @@ void glmodel::draw(glshaderprogram *program, int instance, int baseInstance, boo
 				glUniform1f(program->getUniformLocation(materialTypeMap[MAT_OPACITY]), this->materials[this->meshes[i].materialIndex].opacity);
 
 				// TEMP
-				//  glUniform1i(program->getUniformLocation("texture_diffuse"), 0);
-				//  glBindTextureUnit(0, this->materials[this->meshes[i].materialIndex].textures[TEX_DIFFUSE].id);
+				glUniform1i(program->getUniformLocation("texture_diffuse"), 0);
+				glBindTextureUnit(0, this->materials[this->meshes[i].materialIndex].textures[TEX_DIFFUSE].id);
 				//////
 			}
 			glBindVertexArray(this->meshes[i].vao);

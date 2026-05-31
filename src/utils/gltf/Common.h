@@ -25,6 +25,12 @@
 #include "../../includes/vmath.h"
 
 #include "../common.h"
+#pragma push_macro("lerp")
+#undef lerp
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#pragma pop_macro("lerp")
 extern vmath::mat4 perspectiveProjectionMatrix;
 
 namespace Core

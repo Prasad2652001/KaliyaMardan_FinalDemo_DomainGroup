@@ -23,6 +23,13 @@ extern BezierCamera *globalBezierCamera;
 class WaterMatrix
 {
 public:
+	// tint clearnign fbo
+	GLint previousFBO_reflection = 0;
+	GLint previousFBO_refraction = 0;
+
+	GLint previousViewport_reflection[4];
+	GLint previousViewport_refraction[4];
+
 	float WATER_QUAD_SIZE = 1000. * 80.;
 	// FBO-related variables
 	GLuint fbo_reflection;
@@ -280,7 +287,7 @@ public:
 			return (-8);
 		}
 
-		if (LoadPNGImage(&texture_waterNormalMap, ".\\assets\\textures\\water\\waterNormalMap.png") == FALSE)
+		if (LoadPNGImage(&texture_waterNormalMap, ".\\assets\\textures\\water\\waterNormalMap.jpg") == FALSE)
 		{
 			PrintLog("LoadPNGImage Failed for waterNormalMap\n");
 			return (-9);
@@ -293,6 +300,10 @@ public:
 
 	void bindReflectionFBO(GLint textureWidth, GLint textureHeight)
 	{
+		// function declarations for tint
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFBO_reflection);
+		glGetIntegerv(GL_VIEWPORT, previousViewport_reflection);
+
 		// code
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo_reflection);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -333,11 +344,23 @@ public:
 			viewMatrix = globalBezierCamera->getViewMatrix();
 		}
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// changes for the tint fbo
+		glBindFramebuffer(GL_FRAMEBUFFER, previousFBO_reflection);
+		glViewport(
+			previousViewport_reflection[0],
+			previousViewport_reflection[1],
+			previousViewport_reflection[2],
+			previousViewport_reflection[3]
+		);
 	}
 
 	void bindRefractionFBO(GLint textureWidth, GLint textureHeight)
 	{
+		// fbo of the tint
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFBO_refraction);
+		glGetIntegerv(GL_VIEWPORT, previousViewport_refraction);
+
 		// code
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo_refraction);
 
@@ -361,7 +384,15 @@ public:
 
 	void unbindRefractionFBO()
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// for the tint fbo correction
+		glBindFramebuffer(GL_FRAMEBUFFER, previousFBO_refraction);
+		glViewport(
+			previousViewport_refraction[0],
+			previousViewport_refraction[1],
+			previousViewport_refraction[2],
+			previousViewport_refraction[3]
+		);
 	}
 
 	void renderWaterQuad(float wh)

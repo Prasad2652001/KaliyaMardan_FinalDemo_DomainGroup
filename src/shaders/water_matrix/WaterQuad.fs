@@ -102,7 +102,7 @@ void main(void) {
     vec4 color = mix(reflectColor, refractColor, refractiveFactor);
 
     //For Specular HighLights
-    vec4 normalMapColor = texture(u_waterNormalMapTextureSampler, totalDistortions);
+    vec4 normalMapColor = texture(u_waterNormalMapTextureSampler, distortedTexCoords);
     vec3 normal = vec3(normalMapColor.r * 2.0 - 1.0, normalMapColor.b, normalMapColor.g * 2.0 - 1.0);
     normal = normalize(normal);
 

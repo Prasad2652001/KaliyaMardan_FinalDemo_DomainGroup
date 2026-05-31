@@ -14,6 +14,7 @@ public:
     GLuint vbo_cube_position;
     unsigned int cubemapTexture;
     int isBarasat = 0;
+    float alpha = 0.0f;
 
     BOOL initialize(const char *faces_path[])
     {
@@ -112,6 +113,7 @@ public:
         glUniformMatrix4fv(cubemap->viewMatrixUniform, 1, GL_FALSE, viewMatrix);
         glUniformMatrix4fv(cubemap->projectionMatrixUniform, 1, GL_FALSE, perspectiveProjectionMatrix);
         glUniform1i(cubemap->isBarsatUniform, isBarasat);
+        glUniform1f(cubemap->alphaUniform, Cubemap_Alpha);
         glBindVertexArray(vao_cube);
 
         // Game coding here

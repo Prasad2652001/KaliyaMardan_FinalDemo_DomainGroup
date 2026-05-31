@@ -35,6 +35,8 @@ public:
     GLuint waterColor_JisDesh_Uniform;
     GLuint interpolateDarkToBright_uniform;
 
+    GLuint shoreFoamUniform;
+
     BOOL initialize(void)
     {
         // vertex Shader
@@ -81,6 +83,7 @@ public:
 
         waterColor_JisDesh_Uniform = glGetUniformLocation(shaderProgramObject_waterQuad, "waterColor_JisDesh");
         interpolateDarkToBright_uniform = glGetUniformLocation(shaderProgramObject_waterQuad, "interpolateDarkToBright");
+        shoreFoamUniform = glGetUniformLocation(shaderProgramObject_waterQuad, "u_enableShoreFoam");
 
         return TRUE;
     }

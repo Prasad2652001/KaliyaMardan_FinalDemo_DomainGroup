@@ -33,6 +33,8 @@ public:
                                             1.0f, -1.0f, 0.0f
                                       };
 
+
+
         //-------------------------------------------------------------------------------------------------------------- SQUARE
         // VAO
         glGenVertexArrays(1, &vao_square);
@@ -80,7 +82,9 @@ public:
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
 
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);

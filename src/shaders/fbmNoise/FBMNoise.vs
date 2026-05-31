@@ -7,5 +7,5 @@ out vec2 a_texcoords_out;
 
 void main(void) {
     gl_Position = a_position;
-    a_texcoords_out = a_texcoord; 
+    a_texcoords_out = a_texcoord;
 }

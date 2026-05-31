@@ -3,6 +3,12 @@
 in vec3 v_Position;
 in vec3 v_Normal;
 in vec2 v_texcoord;
+in vec3 v_LightDirection; 
+in vec3 v_ViewerVector; 
+
+uniform vec3 u_LD;
+uniform vec3 u_LS;
+uniform float u_MaterialShininess;
 
 out vec4 FragColor;
 
@@ -22,6 +28,11 @@ uniform sampler2D u_AmbientSampler;
 uniform sampler2D u_GGXLUT;
 
 uniform bool isBlack = false;
+
+uniform bool u_ApplyToon = true;
+uniform bool u_ApplyRim = false;
+uniform bool u_ApplySpecular = false;
+
 
 uniform samplerCube u_LambertianEnvSampler;
 uniform samplerCube u_GGXEnvSampler;
@@ -126,24 +137,67 @@ vec3 RRTAndODTFit(vec3 color) {
 }
 
 void main(void) {
-    if(isBlack) {
+    
+    vec3 albedo = texture(u_BaseColorSampler, v_texcoord).rgb;
+
+    vec3 N = normalize(v_Normal);
+    vec3 L = normalize(v_LightDirection);
+    vec3 V = normalize(v_ViewerVector);
+
+    if(isBlack) 
+    {
         FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-
-    } else {
-
-    // Sample textures
+    } 
+    else 
+    {
+        // Sample textures
         vec4 baseColor = SRGBtoLINEAR(texture(u_BaseColorSampler, v_texcoord));
         vec4 mrSample = texture(u_MetallicRoughnessSampler, v_texcoord);
 
-    // Calculate perceptual roughness and metallic values
+        // Calculate perceptual roughness and metallic values
         float perceptualRoughness = clamp(mrSample.g * u_RoughnessFactor, c_MinRoughness, 1.0);
         float metallic = clamp(mrSample.b * u_MetallicFactor, 0.0, 1.0);
         float alphaRoughness = perceptualRoughness * perceptualRoughness;
 
-    // Compute albedo and specular colors
+        // Compute albedo and specular colors
         vec3 f0 = vec3(0.04);
         vec3 diffuseColor = baseColor.rgb;
+        if(u_ApplyToon ==  false)
+        {
+            FragColor = vec4((diffuseColor * u_Exposure), baseColor.a * u_alpha);
+        }
+        else{
+            // TOON SHADER PART
+            vec3 toonSpecular = vec3(0.0);
+            vec3 rimLight = vec3(0.0);
 
-        FragColor = vec4((diffuseColor * u_Exposure), baseColor.a * u_alpha);
+            // diffuse
+            float diff = max(dot(N, L), 0.0);
+            float levels = 4.0;
+            diff = floor(diff * levels) / levels;
+            vec3 toonDiffuse = diffuseColor * diff;
+
+            // specular
+            if(u_ApplySpecular == true)
+            {
+                vec3 R = reflect(-L, N);
+                float spec = pow(max(dot(R, V), 0.0), u_MaterialShininess);
+                spec = spec > 0.5 ? 1.0 : 0.0;
+                toonSpecular = vec3(spec);
+            }
+
+            // Calculate reim for toon effect 
+            if(u_ApplyRim == true)
+            {
+                float rim = 1.0 - max(dot(V, N), 0.0);
+                rim = smoothstep(0.6, 1.0, rim);
+                rimLight = vec3(1.0) * rim * 0.5; 
+            }
+
+            // Final toon color
+            vec3 finalColor = (toonDiffuse + toonSpecular + rimLight) * u_Exposure;
+
+            FragColor = vec4(finalColor, baseColor.a * u_alpha);
+        }
     }
 }

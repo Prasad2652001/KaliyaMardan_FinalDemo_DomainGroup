@@ -129,11 +129,11 @@ public:
         width = _width;
         height = _height;
     }
-
+    
     void keyboardInputs(WPARAM keyPressed)
     {
         // in
-        float velocity = movementSpeed * 0.1f;
+        float velocity = movementSpeed * 0.5f;
         if (keyPressed == 'w')
         {
             position = position + (front * velocity);

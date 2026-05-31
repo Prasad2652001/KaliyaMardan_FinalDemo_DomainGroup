@@ -3,6 +3,120 @@
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #include "Shader.h"
+#include <map>
+#include <string>
+#include <algorithm>
+#include <vector>
+
+// --- Animation helpers for CPU skinning (bake a single frame to static geometry) ---
+static glm::mat4 AiMat4ToGlm(const aiMatrix4x4 &m)
+{
+    return glm::mat4(m.a1, m.b1, m.c1, m.d1,
+                     m.a2, m.b2, m.c2, m.d2,
+                     m.a3, m.b3, m.c3, m.d3,
+                     m.a4, m.b4, m.c4, m.d4);
+}
+
+static const aiNodeAnim *FindNodeChannel(const aiAnimation *anim, const std::string &name)
+{
+    for (unsigned int i = 0; i < anim->mNumChannels; i++)
+        if (name == anim->mChannels[i]->mNodeName.C_Str())
+            return anim->mChannels[i];
+    return nullptr;
+}
+
+static aiVector3D InterpPos(const aiNodeAnim *ch, double t)
+{
+    if (ch->mNumPositionKeys == 0) return aiVector3D(0, 0, 0);
+    if (ch->mNumPositionKeys == 1) return ch->mPositionKeys[0].mValue;
+    unsigned int i = ch->mNumPositionKeys - 2; // default: last interval
+    for (unsigned int k = 0; k + 1 < ch->mNumPositionKeys; k++)
+        if (t < ch->mPositionKeys[k + 1].mTime) { i = k; break; }
+    unsigned int j = (i + 1 < ch->mNumPositionKeys) ? i + 1 : i;
+    double dt = ch->mPositionKeys[j].mTime - ch->mPositionKeys[i].mTime;
+    float f = dt > 0.0 ? glm::clamp((float)((t - ch->mPositionKeys[i].mTime) / dt), 0.0f, 1.0f) : 0.0f;
+    return ch->mPositionKeys[i].mValue + (ch->mPositionKeys[j].mValue - ch->mPositionKeys[i].mValue) * f;
+}
+
+static aiQuaternion InterpRot(const aiNodeAnim *ch, double t)
+{
+    if (ch->mNumRotationKeys == 0) return aiQuaternion(1, 0, 0, 0);
+    if (ch->mNumRotationKeys == 1) return ch->mRotationKeys[0].mValue;
+    unsigned int i = ch->mNumRotationKeys - 2;
+    for (unsigned int k = 0; k + 1 < ch->mNumRotationKeys; k++)
+        if (t < ch->mRotationKeys[k + 1].mTime) { i = k; break; }
+    unsigned int j = (i + 1 < ch->mNumRotationKeys) ? i + 1 : i;
+    double dt = ch->mRotationKeys[j].mTime - ch->mRotationKeys[i].mTime;
+    float f = dt > 0.0 ? glm::clamp((float)((t - ch->mRotationKeys[i].mTime) / dt), 0.0f, 1.0f) : 0.0f;
+    aiQuaternion out;
+    aiQuaternion::Interpolate(out, ch->mRotationKeys[i].mValue, ch->mRotationKeys[j].mValue, f);
+    return out.Normalize();
+}
+
+static aiVector3D InterpScl(const aiNodeAnim *ch, double t)
+{
+    if (ch->mNumScalingKeys == 0) return aiVector3D(1, 1, 1);
+    if (ch->mNumScalingKeys == 1) return ch->mScalingKeys[0].mValue;
+    unsigned int i = ch->mNumScalingKeys - 2;
+    for (unsigned int k = 0; k + 1 < ch->mNumScalingKeys; k++)
+        if (t < ch->mScalingKeys[k + 1].mTime) { i = k; break; }
+    unsigned int j = (i + 1 < ch->mNumScalingKeys) ? i + 1 : i;
+    double dt = ch->mScalingKeys[j].mTime - ch->mScalingKeys[i].mTime;
+    float f = dt > 0.0 ? glm::clamp((float)((t - ch->mScalingKeys[i].mTime) / dt), 0.0f, 1.0f) : 0.0f;
+    return ch->mScalingKeys[i].mValue + (ch->mScalingKeys[j].mValue - ch->mScalingKeys[i].mValue) * f;
+}
+
+static void BuildGlobalTransforms(
+    const aiNode *node, const aiAnimation *anim, double t,
+    const aiMatrix4x4 &parent, std::map<std::string, aiMatrix4x4> &out)
+{
+    std::string name(node->mName.C_Str());
+    aiMatrix4x4 nodeT = node->mTransformation;
+
+    // If anim is null, use bind-pose transforms only (no animation sampling).
+    const aiNodeAnim *ch = anim ? FindNodeChannel(anim, name) : nullptr;
+    if (ch)
+    {
+        // Sample TRS from the animation; fall back to the bind-pose decomposition
+        // for any component the channel doesn't provide.
+        aiVector3D   bindScl(1, 1, 1);
+        aiQuaternion bindRot(1, 0, 0, 0);
+        aiVector3D   bindPos(0, 0, 0);
+        node->mTransformation.Decompose(bindScl, bindRot, bindPos);
+
+        aiVector3D   pos = (ch->mNumPositionKeys > 0) ? InterpPos(ch, t) : bindPos;
+        aiQuaternion rot = (ch->mNumRotationKeys > 0) ? InterpRot(ch, t) : bindRot;
+        aiVector3D   scl = (ch->mNumScalingKeys  > 0) ? InterpScl(ch, t) : bindScl;
+
+        // Build nodeT = T * R * S manually, bypassing aiQuaternion::GetMatrix /
+        // aiMatrix4x4 operator* in case those have a convention mismatch.
+        // Quaternion-to-3x3 (column-vector convention, v_new = M * v_old):
+        const float x = rot.x, y = rot.y, z = rot.z, w = rot.w;
+        const float xx = x*x, yy = y*y, zz = z*z;
+        const float xy = x*y, xz = x*z, yz = y*z;
+        const float wx = w*x, wy = w*y, wz = w*z;
+        // Rotation matrix R (row-major laid out the way aiMatrix4x4 stores it: aN = row 0)
+        float R00 = 1.0f - 2.0f*(yy + zz);
+        float R01 = 2.0f*(xy - wz);
+        float R02 = 2.0f*(xz + wy);
+        float R10 = 2.0f*(xy + wz);
+        float R11 = 1.0f - 2.0f*(xx + zz);
+        float R12 = 2.0f*(yz - wx);
+        float R20 = 2.0f*(xz - wy);
+        float R21 = 2.0f*(yz + wx);
+        float R22 = 1.0f - 2.0f*(xx + yy);
+        // T * R * S, with S as a diagonal pre-multiplier on columns of R, T as translation column:
+        nodeT.a1 = R00 * scl.x; nodeT.a2 = R01 * scl.y; nodeT.a3 = R02 * scl.z; nodeT.a4 = pos.x;
+        nodeT.b1 = R10 * scl.x; nodeT.b2 = R11 * scl.y; nodeT.b3 = R12 * scl.z; nodeT.b4 = pos.y;
+        nodeT.c1 = R20 * scl.x; nodeT.c2 = R21 * scl.y; nodeT.c3 = R22 * scl.z; nodeT.c4 = pos.z;
+        nodeT.d1 = 0.0f;        nodeT.d2 = 0.0f;        nodeT.d3 = 0.0f;        nodeT.d4 = 1.0f;
+    }
+
+    aiMatrix4x4 globalT = parent * nodeT;
+    out[name] = globalT;
+    for (unsigned int i = 0; i < node->mNumChildren; i++)
+        BuildGlobalTransforms(node->mChildren[i], anim, t, globalT, out);
+}
 
 namespace Core
 {
@@ -21,6 +135,79 @@ namespace Core
         std::vector<UINT> indices;
         std::vector<ModelTexture> textures;
 
+        // Pre-compute CPU-skinned positions, normals, and tangents
+        std::vector<glm::vec3> skinnedPositions, skinnedNormals, skinnedTangents;
+        if (mesh->HasBones() && !mBoneTransforms.empty())
+        {
+            const bool hasNormals   = mesh->HasNormals();
+            const bool hasTangents  = mesh->HasTangentsAndBitangents();
+
+            skinnedPositions.resize(mesh->mNumVertices, glm::vec3(0.0f));
+            if (hasNormals)  skinnedNormals.resize(mesh->mNumVertices, glm::vec3(0.0f));
+            if (hasTangents) skinnedTangents.resize(mesh->mNumVertices, glm::vec3(0.0f));
+
+            std::vector<float> totalWeight(mesh->mNumVertices, 0.0f);
+            unsigned int bonesNotFound = 0;
+
+            for (unsigned int b = 0; b < mesh->mNumBones; b++)
+            {
+                const aiBone *bone = mesh->mBones[b];
+                auto it = mBoneTransforms.find(bone->mName.C_Str());
+                if (it == mBoneTransforms.end()) { bonesNotFound++; continue; }
+                glm::mat4 boneMat    = AiMat4ToGlm(it->second * bone->mOffsetMatrix);
+                // Normal transform: inverse-transpose of the 3x3 rotation+scale part
+                glm::mat3 normalMat  = glm::mat3(glm::transpose(glm::inverse(boneMat)));
+
+                for (unsigned int w = 0; w < bone->mNumWeights; w++)
+                {
+                    unsigned int vid = bone->mWeights[w].mVertexId;
+                    float weight     = bone->mWeights[w].mWeight;
+
+                    const aiVector3D &v = mesh->mVertices[vid];
+                    skinnedPositions[vid] += glm::vec3(boneMat * glm::vec4(v.x, v.y, v.z, 1.0f)) * weight;
+                    totalWeight[vid] += weight;
+
+                    if (hasNormals)
+                    {
+                        const aiVector3D &n = mesh->mNormals[vid];
+                        skinnedNormals[vid] += normalMat * glm::vec3(n.x, n.y, n.z) * weight;
+                    }
+                    if (hasTangents)
+                    {
+                        const aiVector3D &t = mesh->mTangents[vid];
+                        skinnedTangents[vid] += normalMat * glm::vec3(t.x, t.y, t.z) * weight;
+                    }
+                }
+            }
+
+            // Fallback for zero-weight vertices; normalize accumulated positions, normals, tangents
+            unsigned int unweighted = 0;
+            unsigned int partial    = 0;
+            for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+            {
+                if (totalWeight[i] < 1e-5f)
+                {
+                    skinnedPositions[i] = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+                    if (hasNormals)  skinnedNormals[i]  = glm::vec3(mesh->mNormals[i].x,  mesh->mNormals[i].y,  mesh->mNormals[i].z);
+                    if (hasTangents) skinnedTangents[i] = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
+                    unweighted++;
+                }
+                else
+                {
+                    // Renormalize position to compensate for weights that do not sum to 1.0
+                    // (Assimp may drop sub-threshold weights). Without this, partially-weighted
+                    // vertices collapse toward the origin and produce spike artifacts.
+                    if (totalWeight[i] < 0.999f || totalWeight[i] > 1.001f) partial++;
+                    skinnedPositions[i] /= totalWeight[i];
+
+                    if (hasNormals  && glm::length(skinnedNormals[i])  > 1e-6f) skinnedNormals[i]  = glm::normalize(skinnedNormals[i]);
+                    if (hasTangents && glm::length(skinnedTangents[i]) > 1e-6f) skinnedTangents[i] = glm::normalize(skinnedTangents[i]);
+                }
+            }
+            PrintLogFunction(__FUNCTION__, "Skinned mesh '%s': verts=%u bones=%u bonesNotFound=%u unweighted=%u partial=%u",
+                mesh->mName.C_Str(), mesh->mNumVertices, mesh->mNumBones, bonesNotFound, unweighted, partial);
+        }
+
         // Process vertices
         for (UINT i = 0; i < mesh->mNumVertices; i++)
         {
@@ -29,13 +216,31 @@ namespace Core
             // position
             if (mesh->HasPositions())
             {
-                glm::vec4 transformedPosition = transform * glm::vec4(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z, 1.0f);
-                vertex.position = glm::vec3(transformedPosition);
+                if (!skinnedPositions.empty())
+                {
+                    // Animated skinned pose (baked from a single animation frame)
+                    vertex.position = skinnedPositions[i];
+                }
+                else if (mesh->HasBones())
+                {
+                    // Skinned mesh but no skinning data: render bind-pose, no node transform.
+                    // The bind-pose vertices are already in the same scale as the skinned ones.
+                    vertex.position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+                }
+                else
+                {
+                    // Static mesh: apply accumulated node transform
+                    glm::vec4 transformedPosition = transform * glm::vec4(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z, 1.0f);
+                    vertex.position = glm::vec3(transformedPosition);
+                }
             }
             // normals
             if (mesh->HasNormals())
             {
-                vertex.normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+                if (!skinnedNormals.empty())
+                    vertex.normal = skinnedNormals[i];
+                else
+                    vertex.normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
             }
             else
             {
@@ -53,14 +258,20 @@ namespace Core
             if (mesh->HasTangentsAndBitangents())
             {
                 // tangent
-                vertex.tangent = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
-
-                // bitangent
-                vertex.bitangent = glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+                if (!skinnedTangents.empty())
+                {
+                    vertex.tangent   = skinnedTangents[i];
+                    vertex.bitangent = glm::normalize(glm::cross(vertex.normal, vertex.tangent));
+                }
+                else
+                {
+                    vertex.tangent   = glm::vec3(mesh->mTangents[i].x,   mesh->mTangents[i].y,   mesh->mTangents[i].z);
+                    vertex.bitangent = glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+                }
             }
             else
             {
-                vertex.tangent = glm::vec3(0.0f, 0.0f, 0.0f);
+                vertex.tangent   = glm::vec3(0.0f, 0.0f, 0.0f);
                 vertex.bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
             }
             vertices.push_back(vertex);
@@ -162,7 +373,7 @@ namespace Core
 
     bool Model::LoadModel(const std::string &pFile)
     {
-        // Setting up shader for Model 
+        // Setting up shader for Model
         this->SetupShader();
 
         // Importer class
@@ -180,7 +391,25 @@ namespace Core
             return false;
         }
 
+        // Bake bone transforms for skinned models. Sample first animation at t=0.
+        mBoneTransforms.clear();
+        if (scene->HasAnimations() && scene->mNumAnimations > 0)
+        {
+            const aiAnimation *anim = scene->mAnimations[0];
+            double targetTime = 0.0;
+            BuildGlobalTransforms(scene->mRootNode, anim, targetTime, aiMatrix4x4(), mBoneTransforms);
+            PrintLogFunction(__FUNCTION__, "'%s': anim[0]='%s' dur=%.2f tps=%.2f targetT=%.2f bones=%zu",
+                pFile.c_str(), anim->mName.C_Str(), anim->mDuration, anim->mTicksPerSecond,
+                targetTime, mBoneTransforms.size());
+        }
+        else
+        {
+            PrintLogFunction(__FUNCTION__, "No animations found in '%s'", pFile.c_str());
+        }
+
         ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f));
+        PrintLogFunction(__FUNCTION__, "'%s' loaded: meshes=%zu", pFile.c_str(), meshes.size());
+        mBoneTransforms.clear();
 
         return true;
     }
@@ -359,6 +588,9 @@ namespace Core
             shader->SetUniform("u_Exposure", shader->exposure);
             shader->SetUniform("u_MipCount", 10);
             shader->SetUniform("u_EnvIntensity", 0.5f);
+            shader->SetUniform("u_MaterialShininess", 64.0f);          // 128.0f
+            shader->SetUniform("u_LD", vmath::vec3(1.0f, 1.0f, 1.0f)); //  TODO : remove hard coding
+            shader->SetUniform("u_LS", vmath::vec3(1.0f, 1.0f, 1.0f));
         }
 
         // Draw

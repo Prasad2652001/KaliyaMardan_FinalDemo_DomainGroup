@@ -23,43 +23,63 @@ Shader Program Linking Succeeded.
 "./src/shaders/textureLight/texture.vs" : Vertex Shader Compilation Succeeded.
 "./src/shaders/textureLight/texture.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-ERROR::ASSIMP:: Failed To Load .\assets\models\scene2\Pine\pineTrees.obj Model.
-"./src/shaders/texture/texture.vs" : Vertex Shader Compilation Succeeded.
-"./src/shaders/texture/texture.fs" : Fragment Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+ERROR::ASSIMP:: Failed To Load .\assets\models\boat\boat.obj Model.
+".\src\shaders\grid\grid.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\grid\grid.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+[Core::Model::LoadModel]: Failed to parse model file: Unable to open file "./assets/models/scene1_models/vrundavan/cowHouse.glb".".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\tint\tint.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\tint\tint.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+
+ FBO creation Sucessful!! 
 InitalizeAudio() : alCOpenDevice() Failed.
 Initialize Successful...
 
 
-Variables  | OBJ -28.600082f, 23.500046f, 15.500017f | OBJ Angle 0.000000f | SCALE 29.000000f, -28.000000f, -120.000000f
+Variables  | OBJ 0.000000f, 0.000000f, 0.000000f | OBJ Angle 0.000000f | SCALE 1.000000f, 1.000000f, 1.000000f
 
 
 
 
 light_objX : 0.000000 , light_objY : 0.000000 , light_objZ : 0.000000
- 
-
-std::vector<std::vector<float>> bezierPoints = {
-{-28.600082f, 23.500046f, 15.500017f},
-};
-
-
-// YAW GLOBAL
-std::vector<float> yawGlobal = {
-29.000000f,
-};
-
-
-// PITCH GLOBAL
-std::vector<float> pitchGlobal = {
--28.000000f,
-	};
-
-
-// FOV GLOBAL
-std::vector<float> fovGlobal = {
--120.000000f,
-	};
-============================================================
+ ============================================================
 Log File "Log.txt" Has Been Closed Successfully !!!
 ============================================================
