@@ -60,6 +60,8 @@ public:
 
     std::unique_ptr<Core::Model> mSwing;
 
+    std::unique_ptr<Core::Model> mKaliaMardan;
+
     glshaderprogram *programStaticPBR;
     // glmodel *churchModel;
     // glmodel *roadModel;
@@ -140,6 +142,9 @@ public:
 
         mSwing = std::make_unique<Core::Model>();
         mSwing->LoadModel("./assets/models/scene1_models/Kaliya_intro.glb");
+
+        mKaliaMardan = std::make_unique<Core::Model>();
+        mKaliaMardan->LoadModel("./assets/models/scene1_models/KaliyaMardan.glb");
 
         // // Camera
 
@@ -344,8 +349,6 @@ std::vector<float> fovGlobalSC1 = {
 
      void drawSwingModel(bool isBlack = false)
     {
-        if (!mSwing)
-            return;
 
         pushMatrix(modelMatrix);
         {
@@ -370,6 +373,39 @@ std::vector<float> fovGlobalSC1 = {
             mSwing->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
 
             mSwing->Draw(mSwing->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    void drawKaliyaMardanModel(bool isBlack = false)
+    {
+
+        pushMatrix(modelMatrix);
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            mKaliaMardan->mTextureShader->Use();
+            mKaliaMardan->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 swingModelMatrix =
+                vmath::translate(5180.0f, 3830.0f , 1290.0f)     *
+                vmath::scale(-300.0f, -300.0f, -300.0f) *
+                vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f) * 
+                vmath::rotate(180.0f , 1.0f , 0.0f , 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            mKaliaMardan->mTextureShader->SetUniform("u_model", swingModelMatrix);
+            mKaliaMardan->mTextureShader->SetUniform("u_view", viewMatrix);
+            mKaliaMardan->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            mKaliaMardan->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+
+            mKaliaMardan->Draw(mKaliaMardan->mTextureShader);
 
             glDisable(GL_BLEND);
         }
@@ -427,6 +463,8 @@ std::vector<float> fovGlobalSC1 = {
         modelMatrix = popMatrix();
 
         drawSwingModel();
+
+        drawKaliyaMardanModel();
 
         // RAIN RENDERING
         // pushMatrix(modelMatrix);
@@ -529,7 +567,7 @@ std::vector<float> fovGlobalSC1 = {
         //     terrain->setGrassCoverage(terrain->getGrassCoverage() + 0.005f);
         // }
 
-        // CAMERA UPDATE
+        // // CAMERA UPDATE
         sceneCamera->time = sceneEvents->getEventTime(START_T);
         sceneEvents->increment();
         // sceneCamera->time = globalTime;
@@ -585,8 +623,6 @@ std::vector<float> fovGlobalSC1 = {
             delete terrain;
             terrain = nullptr;
         }
-
-        mSwing.reset();
 
         // // rain
         // if (rain->alpha > 0.0f)

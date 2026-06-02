@@ -15,9 +15,9 @@
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
-float gModelTranslate[3] = {0.0f, 0.0f, 0.0f};
+float gModelTranslate[3] = {0.0f, 400.0f, 0.0f};
 float gModelRotate[3] = {-90.0f, 0.0f, 0.0f};
-float gModelScale[3] = {20.0f, 20.0f, 20.0f};
+float gModelScale[3] = {50.0f, 50.0f, 50.0f};
 
 bool gShowImGui = true;
 bool gWireframe = false;
@@ -102,7 +102,7 @@ CommonModels *commonModels;
 float objX = 0.0f;
 float objY = 0.0f;
 float objZ = 0.0f;
-float objIncrement = 20.0f;
+float objIncrement = 10.0f;
 
 // Scale
 float scaleX = 1.0;
@@ -123,9 +123,9 @@ float objAngleIncrement = 1.0f;
 bool isMovementStarted = true;
 
 // =============================== GLOBAL CONTROLS
-BOOL USE_FPV_CAM = TRUE;
-BOOL playMusic = FALSE;
-BOOL enableBezierCameraControl = TRUE;
+BOOL USE_FPV_CAM = FALSE;
+BOOL playMusic = TRUE;
+BOOL enableBezierCameraControl = FALSE;
 BOOL spaceBarIsPressed = FALSE;
 float VOLUME_LEVEL = 0.8f;
 // ==============================================//
@@ -210,7 +210,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	WNDCLASSEX wndclass;
 	HWND hwnd;
 	MSG msg;
-	TCHAR szAppName[] = TEXT("Vivid Voxel");
+	TCHAR szAppName[] = TEXT("Domain Group");
 	BOOL bDone = FALSE;
 	int iRetVal = 0;
 	int iHeightOfWindow, iWidthOfWindow;
@@ -376,6 +376,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
 	/* fucntion declarations */
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, iMsg, wParam, lParam))
+	{
+		return 0;
+	}
 
 	// void ToggleFullScreen();
 	void resize(int, int);
@@ -407,7 +411,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		{
 		case 'f':
 		case 'F':
-			ToggleFullScreen();
+			if (gbFullScreen == FALSE)
+			{
+				ToggleFullScreen();
+				gbFullScreen = TRUE;
+			}
+			else
+			{
+				ToggleFullScreen();
+				gbFullScreen = FALSE;
+			}
 			break;
 		case '+':
 			if (enableBezierCameraControl)
@@ -502,18 +515,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		case 'r':
 		case 'R':
 			globalTime = 0.0f;
+			mainScene->scene->sceneEvents->resetT();
 			break;
 		case 'q':
 		case 'Q':
-			if (objIncrement == 0.1f)
-				objIncrement = 0.01f;
+			if (objIncrement == 20.0f)
+				objIncrement = 5.0f;
 			else
-				objIncrement = 0.1f;
+				objIncrement = 20.0f;
 
-			if (scaleIncrement == 1.0f)
-				scaleIncrement = 0.01f;
-			else
-				scaleIncrement = 1.0f;
+			// if (scaleIncrement == 1.0f)
+			// 	scaleIncrement = 0.01f;
+			// else
+			// 	scaleIncrement = 1.0f;
 			break;
 
 		case 'i':
@@ -751,23 +765,23 @@ void drawImGui(void)
 	{
 		ImGui::Text("Selected Model");
 
-		ImGui::DragFloat3("Translate", gModelTranslate, 0.05f, -500.0f, 500.0f);
+		ImGui::DragFloat3("Translate", gModelTranslate, 1.0f, -5000.0f, 5000.0f);
 		ImGui::DragFloat3("Rotate", gModelRotate, 1.0f, -360.0f, 360.0f);
-		ImGui::DragFloat3("Scale", gModelScale, 0.01f, 0.01f, 100.0f);
+		ImGui::DragFloat3("Scale", gModelScale, 0.5f, 0.01f, 1000.0f);
 
 		if (ImGui::Button("Reset Transform"))
 		{
 			gModelTranslate[0] = 0.0f;
-			gModelTranslate[1] = 0.0f;
+			gModelTranslate[1] = 400.0f;
 			gModelTranslate[2] = 0.0f;
 
 			gModelRotate[0] = -90.0f;
 			gModelRotate[1] = 0.0f;
 			gModelRotate[2] = 0.0f;
 
-			gModelScale[0] = 20.0f;
-			gModelScale[1] = 20.0f;
-			gModelScale[2] = 20.0f;
+			gModelScale[0] = 50.0f;
+			gModelScale[1] = 50.0f;
+			gModelScale[2] = 50.0f;
 		}
 
 		ImGui::Separator();
@@ -832,12 +846,13 @@ void drawImGui(void)
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		// Terrain Controls for Scene3
-		if (mainScene && mainScene->scene0 && mainScene->scene0->terrain)
+		if (mainScene && mainScene->scene3 && mainScene->scene3->terrain)
 		{
-			Terrain* t = mainScene->scene0->terrain;
-
+			Terrain* t = mainScene->scene3->terrain;
+			
 			ImGui::Separator();
 			ImGui::Text("Scene3 Terrain Controls");
+			
 
 			float freq = t->getFreq();
 			if (ImGui::SliderFloat("Terrain Frequency", &freq, 0.001f, 0.08f))
@@ -1091,18 +1106,6 @@ void display(void)
 	/* Code */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if (enableBezierCameraControl)
-	{
-		bezierPoints[vectorIndex][0] = objX;
-		bezierPoints[vectorIndex][1] = objY;
-		bezierPoints[vectorIndex][2] = objZ;
-		yawGlobal[vectorIndex] = scaleX;
-		pitchGlobal[vectorIndex] = scaleY;
-		fovGlobal[vectorIndex] = scaleZ;
-	}
-
-	updateGlobalViewMatrix(); // uncomment this to run simultaniuously scnee
-
 	beginImGuiFrame();
 
 	// ImGui-based render states
@@ -1115,6 +1118,18 @@ void display(void)
 		glEnable(GL_CULL_FACE);
 	else
 		glDisable(GL_CULL_FACE);
+
+	if (enableBezierCameraControl)
+	{
+		bezierPoints[vectorIndex][0] = objX;
+		bezierPoints[vectorIndex][1] = objY;
+		bezierPoints[vectorIndex][2] = objZ;
+		yawGlobal[vectorIndex] = scaleX;
+		pitchGlobal[vectorIndex] = scaleY;
+		fovGlobal[vectorIndex] = scaleZ;
+	}
+
+	updateGlobalViewMatrix(); // uncomment this to run simultaniuously scnee
 
 	// ==================================== SCENE
 	mainScene->display();
@@ -1131,7 +1146,7 @@ void display(void)
 	}
 
 	// ==================================== IMGUI
-	// drawImGui();
+	drawImGui();
 	endImGuiFrame();
 
 	// ==================================== DISPLAY TEXT IN TITLE BAR
@@ -1197,16 +1212,12 @@ void display(void)
 float camSpeed = 100.0f;
 void update(void)
 {
-	// mainScene->update();
-
-	// globalTime += (float)gDeltaTime + globalSpeedAdjust;
-
-	// if (globalTime < 0.0f)
-	// 	globalTime = 0.0f;
-
 	mainScene->update();
-	if (globalTime <= 1.0f)
-		globalTime += (0.000015f + globalSpeedAdjust);
+
+	globalTime += (float)gDeltaTime + globalSpeedAdjust;
+
+	if (globalTime < 0.0f)
+		globalTime = 0.0f;
 }
 // void update(void)
 // {
