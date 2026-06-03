@@ -438,12 +438,14 @@ namespace Core
 
             if (data)
             {
-                GLenum format{};
+                GLenum format = GL_RGBA;
                 if (nrComponents == 1)
                     format = GL_RED;
+                else if (nrComponents == 2)
+                    format = GL_RG;
                 else if (nrComponents == 3)
                     format = GL_RGB;
-                else if (nrComponents == 4)
+                else
                     format = GL_RGBA;
 
                 glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
@@ -453,9 +455,8 @@ namespace Core
             }
             else
             {
-                // @TODO: Add texture path for debugging
                 PrintLogFunction(__FUNCTION__, "Failed to load embedded textures.\n");
-                stbi_image_free(data);
+                // data is null here — do not call stbi_image_free
             }
         }
         else

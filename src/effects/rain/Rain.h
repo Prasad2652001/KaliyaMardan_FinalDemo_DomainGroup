@@ -27,13 +27,13 @@ public:
     GLuint modelMatrixUniform;
 
     int maxParticles;
-    float posBuffer[280000] = {0};
-    float seedBuffer[280000] = {0};
-    float veloBuffer[280000] = {0};
+    float *posBuffer  = nullptr;
+    float *seedBuffer = nullptr;
+    float *veloBuffer = nullptr;
     float clusterScale = 20.0f;
     float veloFactor = 250.0f;
 
-    float dataBuffer[4 * 50000] = {0};
+    float *dataBuffer = nullptr;
     vec3 eyePos = vec3(0.2f, 0.3f, 4.0f);
     vec3 winDir[512];
     float windForce = 10.0f;
@@ -104,6 +104,10 @@ public:
     Rain(int particleSize)
     {
         maxParticles = particleSize;
+        posBuffer  = new float[4 * maxParticles]();
+        seedBuffer = new float[4 * maxParticles]();
+        veloBuffer = new float[4 * maxParticles]();
+        dataBuffer = new float[4 * maxParticles]();
     }
 
     BOOL initialize(GLuint textureNumber)
@@ -189,21 +193,21 @@ public:
             return FALSE;
         }
 
-        if (textureNumber == 1)
+        const char *rainTexPath = (textureNumber == 1)
+            ? "./assets/textures/Rain/rain-light.png"
+            : "./assets/textures/Rain/rain-heavy.png";
+
+        if (LoadPNGImage(&texture_rain, rainTexPath) == FALSE)
         {
-            if (LoadPNGImage(&texture_rain, "./assets/textures/Rain/rain-light.png") == FALSE)
-            {
-                PrintLog("Failed to load Rain texture\n");
-                return FALSE;
-            }
-        }
-        else if (textureNumber == 2)
-        {
-            if (LoadPNGImage(&texture_rain, "./assets/textures/Rain/rain-heavy.png") == FALSE)
-            {
-                PrintLog("Failed to load Rain texture\n");
-                return FALSE;
-            }
+            PrintLog("Rain texture file missing - generating white fallback\n");
+            // Generate a simple 1x1 white texture so rain can still render
+            glGenTextures(1, &texture_rain);
+            glBindTexture(GL_TEXTURE_2D, texture_rain);
+            unsigned char white[4] = {255, 255, 255, 255};
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, white);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
 
         return TRUE;
@@ -211,16 +215,8 @@ public:
 
     void createRainData(void)
     {
-        // code
-        posBuffer[4 * maxParticles * sizeof(float)];
-        seedBuffer[4 * maxParticles * sizeof(float)];
-        veloBuffer[4 * maxParticles * sizeof(float)];
-
-        dataBuffer[sizeof(posBuffer) * 3];
-
         int numLodLv1 = 8;
-        // eyePos = (USE_FPV_CAM ? camera.getEye() : globalBezierCamera->getEye());
-        eyePos = camera.getEye();
+        eyePos = (USE_FPV_CAM ? camera.getEye() : globalBezierCamera->getEye());
         // eyePos = vec3(1.0f, 1.0f, 1.0f);
 
         for (int lodLv1 = 0; lodLv1 < numLodLv1; lodLv1++)
@@ -302,8 +298,7 @@ public:
             glUniformMatrix4fv(rainShader->viewMatrixUniform, 1, GL_FALSE, mat4::identity());
             glUniformMatrix4fv(rainShader->projectionMatrixUniform, 1, GL_FALSE, perspectiveProjectionMatrix);
 
-            // glUniform3fv(rainShader->eyePosUniform, 1, (USE_FPV_CAM ? camera.getEye() : globalBezierCamera->getEye()));
-            glUniform3fv(rainShader->eyePosUniform, 1, camera.getEye());
+                glUniform3fv(rainShader->eyePosUniform, 1, (USE_FPV_CAM ? camera.getEye() : globalBezierCamera->getEye()));
             // glUniform3fv(rainShader->windDirUniform, 1, winDir[windPtr]);
             glUniform3fv(rainShader->windDirUniform, 1, vec3(5.0f, 0.0f, 0.0f));
             glUniform1f(rainShader->dtUniform, dt);
@@ -412,6 +407,11 @@ public:
 
     void uninitialize(void)
     {
+        delete[] posBuffer;  posBuffer  = nullptr;
+        delete[] seedBuffer; seedBuffer = nullptr;
+        delete[] veloBuffer; veloBuffer = nullptr;
+        delete[] dataBuffer; dataBuffer = nullptr;
+
         if (rainShader)
         {
             rainShader->uninitialize();
