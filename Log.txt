@@ -43,13 +43,19 @@ Shader Program Linking Succeeded.
 ".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
 ".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-ERROR::ASSIMP:: Failed To Load .\assets\models\boat\boat.obj Model.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
 ".\src\shaders\grid\grid.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\grid\grid.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
 ".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/Kaliya.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/Kaliya.glb' loaded: meshes=1
 ".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
@@ -59,7 +65,64 @@ Shader Program Linking Succeeded.
 ".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-[Core::Model::LoadModel]: Failed to parse model file: Unable to open file "./assets/models/scene1_models/vrundavan/cowHouse.glb".".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/cowHouse.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/cowHouse.glb' loaded: meshes=5
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house1.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house1.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house2.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house2.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house3.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house3.glb' loaded: meshes=2
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/vrundavanGate.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/vrundavanGate.glb' loaded: meshes=7
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/well.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/well.glb' loaded: meshes=7
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmLand.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmLand.glb' loaded: meshes=22
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/hutHouse.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/hutHouse.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmer2_bailgadi.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmer2_bailgadi.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmer3.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmer3.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/tree1.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/tree1.glb' loaded: meshes=23
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/bananaTree.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/bananaTree.glb' loaded: meshes=11
+".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/cowHouse.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/cowHouse.glb' loaded: meshes=5
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house1.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house1.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house2.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house2.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house3.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house3.glb' loaded: meshes=2
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/vrundavanGate.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/vrundavanGate.glb' loaded: meshes=7
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/well.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/well.glb' loaded: meshes=7
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmLand.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmLand.glb' loaded: meshes=22
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/hutHouse.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/hutHouse.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmer2_bailgadi.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmer2_bailgadi.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmer3.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmer3.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/tree1.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/tree1.glb' loaded: meshes=23
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/bananaTree.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/bananaTree.glb' loaded: meshes=11
+".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
 ".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
@@ -74,7 +137,7 @@ InitalizeAudio() : alCOpenDevice() Failed.
 Initialize Successful...
 
 
-Variables  | OBJ 0.000000f, 0.000000f, 0.000000f | OBJ Angle 0.000000f | SCALE 1.000000f, 1.000000f, 1.000000f
+Variables  | OBJ 0.000000f, 0.000000f, 0.000000f | OBJ Angle 0.000000f | SCALE 2.000000f, -2.000000f, 1.000000f
 
 
 

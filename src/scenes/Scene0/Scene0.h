@@ -1,6 +1,6 @@
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// we will use this scene for showing their stay near the bank of the lake 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// *************************************
+// INTRO SCENE WITH TITLE + KALIYA AND OCEAN
+// *************************************
 #pragma once
 #include "../../utils/common.h"
 #include "../../shaders/model/Model_Shader.h"
