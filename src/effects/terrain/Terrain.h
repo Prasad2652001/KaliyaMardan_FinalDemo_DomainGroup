@@ -84,27 +84,27 @@ public:
 
         // Load Green Textures
         this->textures_green = new GLuint[6];
-        if (LoadPNGImage(&textures_green[0], "./assets/textures/terrain/green/sand.png") == FALSE)
+        if (LoadPNGImage(&textures_green[0], "./assets/textures/terrain/green2/sand_.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR sand");
         }
-        if (LoadPNGImage(&textures_green[1], "./assets/textures/terrain/green/grass.png") == FALSE)
+        if (LoadPNGImage(&textures_green[1], "./assets/textures/terrain/green2/grass.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR grass");
         }
-        if (LoadPNGImage(&textures_green[2], "./assets/textures/terrain/green/rdiffuse.png") == FALSE)
+        if (LoadPNGImage(&textures_green[2], "./assets/textures/terrain/green2/rdiffuse.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR rdiffuse");
         }
-        if (LoadPNGImage(&textures_green[3], "./assets/textures/terrain/green/snow2.png") == FALSE)
+        if (LoadPNGImage(&textures_green[3], "./assets/textures/terrain/green2/snow2.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR snow2");
         }
-        if (LoadPNGImage(&textures_green[4], "./assets/textures/terrain/green/rnormal.png") == FALSE)
+        if (LoadPNGImage(&textures_green[4], "./assets/textures/terrain/green2/rnormal.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR rnormal");
         }
-        if (LoadPNGImage(&textures_green[5], "./assets/textures/terrain/green/terrainTexture.png") == FALSE)
+        if (LoadPNGImage(&textures_green[5], "./assets/textures/terrain/green2/terrainTexture.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR terrainTexture");
         }

@@ -21,8 +21,8 @@
 #include "../../effects/terrain/Terrain.h"
 #include "../../shaders/terrain/TerrainShader.h"
 #include "../../shaders/godRays/GodRaysShader.h"
-// #include "../../effects/rain/Rain.h"
-// #include "../../shaders/rain/RainShader.h"
+#include "../../effects/rain/Rain.h"
+#include "../../shaders/rain/RainShader.h"
 
 // #include "../../../scenes/howtoloadmodel/HowToLoadModel.h"
 
@@ -40,7 +40,7 @@ public:
     Terrain *terrain;
     // GLuint brdfLookUp;
     WaterMatrix *waterMatrix;
-    // Rain *rain = NULL;
+    Rain *rain = NULL;
 
     // HowToLoadModel modelLoader;
     // std::unique_ptr<Core::Shader> mCubeMapShader;
@@ -69,6 +69,11 @@ public:
 
     // Shaders
     GodRaysShader *godRaysShader;
+
+    // Lightning
+    GLuint texture_lightning1 = 0;
+    GLuint texture_lightning2 = 0;
+    float cloudNoiseAlpha = 1.0f;
 
     // Fadein Fadeout
     // float scaleFactor = 2.0f;
@@ -99,7 +104,7 @@ public:
         terrain = new Terrain(20. * 60.);
         waterMatrix = new WaterMatrix(300. * 400.);
         sceneCamera = new BezierCamera();
-        // rain = new Rain(40000);
+        rain = new Rain(40000);
         // godRaysShader = new GodRaysShader();
     }
 
@@ -179,10 +184,22 @@ public:
         waterMatrix->interpolateWaterColor = 1.0f;
         waterMatrix->moveFactor = 0.0f;
 
-        // if (!rain->initialize(2))
-        // {
-        //     PrintLog("Failed to initialize Rain");
-        // }
+        // Lightning
+        if (LoadPNGImage(&texture_lightning1, "./assets/textures/lightning/lightning1.png") == FALSE)
+        {
+            PrintLog("Failed to load Lightning 1 texture\n");
+            return FALSE;
+        }
+        if (LoadPNGImage(&texture_lightning2, "./assets/textures/lightning/lightning2.png") == FALSE)
+        {
+            PrintLog("Failed to load Lightning 2 texture\n");
+            return FALSE;
+        }
+
+        if (!rain->initialize(2))
+        {
+            PrintLog("Failed to initialize Rain");
+        }
 
         // Event System
         sceneEvents = new EventManager(
@@ -391,7 +408,7 @@ std::vector<float> fovGlobalSC1 = {
             mKaliaMardan->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 swingModelMatrix =
-                vmath::translate(5180.0f, 3830.0f , 1290.0f)     *
+                vmath::translate(5180.0f , 3830.0f -150.000000f , 1290.0f -1810.000000f)     *
                 vmath::scale(-300.0f, -300.0f, -300.0f) *
                 vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f) * 
                 vmath::rotate(180.0f , 1.0f , 0.0f , 0.0f);
@@ -466,55 +483,109 @@ std::vector<float> fovGlobalSC1 = {
 
         drawKaliyaMardanModel();
 
+        drawLightning();
+
         // RAIN RENDERING
-        // pushMatrix(modelMatrix);
-        // {
-        //     // modelMatrix = modelMatrix * translate(0.0f, -35.0f, -5.0f) * scale(1.0f,1.0f,1.0f);
-        //     if (rain->alpha > 0.0f)
-        //     {
-        //         drawRain();
-        //     }
-        // }
-        // modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            // modelMatrix = modelMatrix * translate(0.0f, -35.0f, -5.0f) * scale(1.0f,1.0f,1.0f);
+            if (rain->alpha > 0.0f)
+            {
+                drawRain();
+            }
+        }
+        modelMatrix = popMatrix();
 
         // sceneCamera->displayBezierCurve();
     }
 
+    // Lightning
+    void drawLightning(void)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(44100.000000f + 21440.000000f, 18300.000000f , -53400.000000f + -260.000000f) * vmath::scale(1.0f + 9050.0f, 1.0f + 14450.0f, 1.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(6000.000000f + 21440.000000f, 13800.000000f , -70500.000000f + -260.000000f) * vmath::scale(1.0f + 3400.000000f, 1.0f + 7700.000000f, 1.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning2, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(-1800.000000f + 21440.000000f, 9150.000000f , -34050.000000f + -260.000000f) * vmath::scale(1.0f + 6550.000000f, 1.0f + 9450.000000f, 1.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(26100.000000f + 21440.000000f, 13050.000000f , 7950.000000f + -260.000000f) * vmath::scale(7750.000000f, 10400.000000f, 1.0f) * rotate(0.0f, 0.0f, 1.0f, 0.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(59850.000000f + 21440.000000f, 15900.000000f , -7650.000000f + -260.000000f) * vmath::scale(21550.000000f, 16150.000000f, 1.0f) * rotate(-4710.000000f, 0.0f, 1.0f, 0.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(-13200.000000f + 21440.000000f, 8100.000000f , 36150.000000f + -260.000000f) * rotate(-200.000000f, 0.0f, 1.0f, 0.0f) * vmath::scale(6700.000000f, 12400.000000f, 1.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(-12900.000000f + 21440.000000f, 4950.000000f , 4800.000000f + -260.000000f) * rotate(-250.000000f, 0.0f, 1.0f, 0.0f) * vmath::scale(8650.000000f, 17200.000000f, 1.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+
+        glDisable(GL_BLEND);
+    }
+
     // RAIN RELATED
-    // void drawRain(void)
-    // {
-    //     // code
-    //     pushMatrix(modelMatrix);
-    //     {
-    //         rain->lightAmbient[0] = 0.0f;
-    //         rain->lightAmbient[1] = 0.0f;
-    //         rain->lightAmbient[2] = 0.0f;
-    //         rain->lightAmbient[3] = 1.0f;
+    void drawRain(void)
+    {
+        // code
+        pushMatrix(modelMatrix);
+        {
+            rain->lightAmbient[0] = 0.0f;
+            rain->lightAmbient[1] = 0.0f;
+            rain->lightAmbient[2] = 0.0f;
+            rain->lightAmbient[3] = 1.0f;
 
-    //         rain->lightDiffuse[0] = 1.0f;
-    //         rain->lightDiffuse[1] = 1.0f;
-    //         rain->lightDiffuse[2] = 1.0f;
-    //         rain->lightDiffuse[3] = 1.0f;
+            rain->lightDiffuse[0] = 1.0f;
+            rain->lightDiffuse[1] = 1.0f;
+            rain->lightDiffuse[2] = 1.0f;
+            rain->lightDiffuse[3] = 1.0f;
 
-    //         rain->lightPosition[0] = 0.0f;
-    //         rain->lightPosition[1] = 100.0f;
-    //         rain->lightPosition[2] = -30.0f;
-    //         rain->lightPosition[3] = 1.0f;
+            rain->lightPosition[0] = 0.0f;
+            rain->lightPosition[1] = 100.0f;
+            rain->lightPosition[2] = -30.0f;
+            rain->lightPosition[3] = 1.0f;
 
-    //         rain->lightSpecular[0] = 1.0f;
-    //         rain->lightSpecular[1] = 1.0f;
-    //         rain->lightSpecular[2] = 1.0f;
-    //         rain->lightSpecular[3] = 1.0f;
+            rain->lightSpecular[0] = 1.0f;
+            rain->lightSpecular[1] = 1.0f;
+            rain->lightSpecular[2] = 1.0f;
+            rain->lightSpecular[3] = 1.0f;
 
-    //         // depth buffer madhe writing disable karnya sathi
+            // depth buffer madhe writing disable karnya sathi
 
-    //         glEnable(GL_BLEND);
+            glEnable(GL_BLEND);
 
-    //         rain->display();
-    //         glDisable(GL_BLEND);
-    //     }
-    //     modelMatrix = popMatrix();
-    // }
+            rain->display();
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     void displayScene(float terrainUp)
@@ -607,6 +678,30 @@ std::vector<float> fovGlobalSC1 = {
         //         iCurrentCubeMap += 1;
         //     }
         // }
+
+        // rain
+        // if (rain->alpha > 0.0f)
+        // {
+        //     rain->alpha -= 0.002f;
+        // }
+
+        // Lightning fluctuation
+        float period = fmod(globalTime, 4.0f); // 4 seconds cycle
+        if (period < 0.15f) // First double flash
+        {
+            if (period < 0.04f) cloudNoiseAlpha = 1.0f;
+            else if (period < 0.06f) cloudNoiseAlpha = 0.0f;
+            else if (period < 0.12f) cloudNoiseAlpha = 1.0f;
+            else cloudNoiseAlpha = 0.0f;
+        }
+        else if (period > 1.5f && period < 1.6f) // Second single short flash
+        {
+            cloudNoiseAlpha = 1.0f;
+        }
+        else
+        {
+            cloudNoiseAlpha = 0.0f;
+        }
     }
 
     void uninitialize()
@@ -624,11 +719,16 @@ std::vector<float> fovGlobalSC1 = {
             terrain = nullptr;
         }
 
-        // // rain
-        // if (rain->alpha > 0.0f)
-        // {
-        //     rain->alpha -= 0.002f;
-        // }
+        if (texture_lightning1)
+        {
+            glDeleteTextures(1, &texture_lightning1);
+            texture_lightning1 = 0;
+        }
+        if (texture_lightning2)
+        {
+            glDeleteTextures(1, &texture_lightning2);
+            texture_lightning2 = 0;
+        }
 
         // modelLoader.uninitialize();
     }
