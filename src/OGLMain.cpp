@@ -234,7 +234,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 
 	/* Register Above wndclass */
 	RegisterClassEx(&wndclass);
-
+	
 	iHeightOfWindow = GetSystemMetrics(SM_CYSCREEN); // Height of Window Screen
 	iWidthOfWindow = GetSystemMetrics(SM_CXSCREEN);	 // Width Of Window Screen
 

@@ -98,30 +98,10 @@ Shader Program Linking Succeeded.
 ".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/cowHouse.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/cowHouse.glb' loaded: meshes=5
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house1.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house1.glb' loaded: meshes=1
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house2.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house2.glb' loaded: meshes=1
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house3.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house3.glb' loaded: meshes=2
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/vrundavanGate.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/vrundavanGate.glb' loaded: meshes=7
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/well.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/well.glb' loaded: meshes=7
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmLand.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmLand.glb' loaded: meshes=22
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/hutHouse.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/hutHouse.glb' loaded: meshes=1
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmer2_bailgadi.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmer2_bailgadi.glb' loaded: meshes=1
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmer3.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmer3.glb' loaded: meshes=1
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/tree1.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/tree1.glb' loaded: meshes=23
-[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/bananaTree.glb'
-[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/bananaTree.glb' loaded: meshes=11
+[Core::Model::LoadModel]: './assets/models/scene2_models/Krishna_sleeping.glb': anim[0]='Armature.001|mixamo.com|Layer0' dur=66.67 tps=1000.00 targetT=0.00 bones=45
+[Core::Model::LoadModel]: './assets/models/scene2_models/Krishna_sleeping.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/mango_tree.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/mango_tree.glb' loaded: meshes=23
 ".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
@@ -137,7 +117,7 @@ InitalizeAudio() : alCOpenDevice() Failed.
 Initialize Successful...
 
 
-Variables  | OBJ 0.000000f, 0.000000f, 0.000000f | OBJ Angle 0.000000f | SCALE 2.000000f, -2.000000f, 1.000000f
+Variables  | OBJ 0.000000f, 0.000000f, 0.000000f | OBJ Angle 0.000000f | SCALE 1.000000f, 1.000000f, 1.000000f
 
 
 

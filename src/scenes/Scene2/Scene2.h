@@ -40,35 +40,15 @@ public:
     Terrain *terrain;
     // GLuint brdfLookUp;
     WaterMatrix *waterMatrix;
-    // Rain *rain = NULL;
-    
-    // moment of kaliya nag variables for translation
-    float kaliyaX = 7000.000f;
-    float kaliyaZ = -16000.000f;
 
-    // =========== vrundavan full scene models variables with smart pointer ==========
-    
-    std::unique_ptr<Core::Model> house1;
-    std::unique_ptr<Core::Model> house2;
-    std::unique_ptr<Core::Model> house3;
-    std::unique_ptr<Core::Model> hutHouse;
-    std::unique_ptr<Core::Model> vrundavanGate;
-    std::unique_ptr<Core::Model> cowHouse;
-    std::unique_ptr<Core::Model> well;
-    std::unique_ptr<Core::Model> farmLand;
-    std::unique_ptr<Core::AnimatedModel> farmer1;
-    std::unique_ptr<Core::Model> farmer2_bailgadi;
-    std::unique_ptr<Core::Model> farmer3;
-    std::unique_ptr<Core::Model> tree1;
-    std::unique_ptr<Core::Model> bananaTree;
+    // =========== Yamuna Side scene models variables with smart pointer ==========
+ 
+    std::unique_ptr<Core::Model> krishnaSleeping;
+    std::unique_ptr<Core::Model> mangoTree;
 
     // ==========================================================
     
-    // ==========================================================
-
     glshaderprogram *programStaticPBR;
-    // glmodel *churchModel;
-    // glmodel *roadModel;
     SceneLight *lightManager;
 
     // Shaders
@@ -109,20 +89,7 @@ public:
 
     bool initialize()
     {
-        // const char *facesLight[] =
-        //     {
-        //         ".\\assets\\textures\\DayCubeMap\\px.png",
-        //         ".\\assets\\textures\\DayCubeMap\\nx.png",
-        //         ".\\assets\\textures\\DayCubeMap\\py.png",
-        //         ".\\assets\\textures\\DayCubeMap\\ny.png",
-        //         ".\\assets\\textures\\DayCubeMap\\pz.png",
-        //         ".\\assets\\textures\\DayCubeMap\\nz.png"};
-        // if (!cubeMap[1]->initialize(facesLight))
-        // {
-        //     PrintLog("Failed to initialize CubeMap");
-        //     return FALSE;
-        // }
-
+    
         const char *facesLight2[] =
         {   
             ".\\assets\\textures\\modelCubeMap\\vrundavan\\px.png",
@@ -149,49 +116,12 @@ public:
         // Initializing GLB Model
         programStaticPBR = new glshaderprogram({"./src/shaders/modelgltf/pbrStatic.vert", "./src/shaders/modelgltf/pbrMain.frag"});
         
-        // churchModel = new glmodel("./assets/models/scene2/church.glb", aiProcessPreset_TargetRealtime_Quality, true);
-        // roadModel = new glmodel("./assets/models/scene2/road.glb", aiProcessPreset_TargetRealtime_Quality, true);
+        krishnaSleeping = std::make_unique<Core::Model>();
+        krishnaSleeping->LoadModel("./assets/models/scene2_models/Krishna_sleeping.glb");
 
-        cowHouse = std::make_unique<Core::Model>();
-        cowHouse->LoadModel("./assets/models/scene1_models/vrundavan/cowHouse.glb");
-        
-        house1 = std::make_unique<Core::Model>();
-        house1->LoadModel("./assets/models/scene1_models/vrundavan/house1.glb");
-
-        house2 = std::make_unique<Core::Model>();
-        house2->LoadModel("./assets/models/scene1_models/vrundavan/house2.glb");
-
-        house3 = std::make_unique<Core::Model>();
-        house3->LoadModel("./assets/models/scene1_models/vrundavan/house3.glb");
-
-        vrundavanGate = std::make_unique<Core::Model>();
-        vrundavanGate->LoadModel("./assets/models/scene1_models/vrundavan/vrundavanGate.glb");
-        
-        well = std::make_unique<Core::Model>();
-        well->LoadModel("./assets/models/scene1_models/vrundavan/well.glb");
-        //well->LoadModel("./assets/models/scene4_models/yamuna_side_tree.glb");
-
-        farmLand = std::make_unique<Core::Model>();
-        farmLand->LoadModel("./assets/models/scene1_models/vrundavan/farmLand.glb");
-
-        hutHouse = std::make_unique<Core::Model>();
-        hutHouse->LoadModel("./assets/models/scene1_models/vrundavan/hutHouse.glb");
-
-        farmer2_bailgadi = std::make_unique<Core::Model>();
-        farmer2_bailgadi->LoadModel("./assets/models/scene1_models/vrundavan/farmer2_bailgadi.glb");
-
-        farmer3 = std::make_unique<Core::Model>();
-        farmer3->LoadModel("./assets/models/scene1_models/vrundavan/farmer3.glb");
-
-        tree1 = std::make_unique<Core::Model>();
-        tree1->LoadModel("./assets/models/scene1_models/vrundavan/tree1.glb");
-
-        bananaTree = std::make_unique<Core::Model>();
-        bananaTree->LoadModel("./assets/models/scene1_models/vrundavan/bananaTree.glb");
-
-        // farmer1 = std::make_unique<Core::AnimatedModel>();
-        // farmer1->LoadModel("./assets/models/scene1_models/vrundavan/farmer1.fbx");
-
+        mangoTree = std::make_unique<Core::Model>();
+        mangoTree->LoadModel("./assets/models/scene2_models/mango_tree.glb");
+    
         lightManager = new SceneLight();
         lightManager->addDirectionalLights({
             DirectionalLight(vec3(0.55f), 10.0f, vec3(0.0f, -1.0f, -1.0f)),
@@ -379,7 +309,7 @@ public:
         }
         modelMatrix = popMatrix();
 
-        //drawVrundavanScene();
+        drawVrundavanScene();
 
         // RAIN RENDERING
         // pushMatrix(modelMatrix);
@@ -397,23 +327,16 @@ public:
 
     void drawVrundavanScene()
     {
-        drawHouse1();
-        drawHouse2();      
-        drawHouse3();
-        drawKaliyaModel();
-        drawCowHouse();
-        drawFarmLand();
-        drawHutHouse();
-        drawFarmers();
-        drawTree1();
-        drawBananaTree();
+        drawSleepingKrishna();
+        drawMangoTree();
     }
 
     // ==================== vrundavan scene models drawing functions ====================
-    
-    void drawHouse1(bool isBlack = false)
+
+
+    void drawSleepingKrishna(bool isBlack = false)
     {
-        if (!house1)
+        if (!krishnaSleeping)
             return;
 
         pushMatrix(modelMatrix);
@@ -421,157 +344,34 @@ public:
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            house1->mTextureShader->Use();
-            house1->mTextureShader->SetUniform("isBlack", isBlack);
+            krishnaSleeping->mTextureShader->Use();
+            krishnaSleeping->mTextureShader->SetUniform("isBlack", isBlack);
 
-            vmath::mat4 house1ModelMatrix =
-                vmath::translate(-40.0f, 0.0f, 42.0f) *
-                vmath::scale(30.0f, 20.0f, 30.0f) *
-                vmath::rotate(-32.0f, 0.0f, 1.0f, 0.0f);
-
-            // vmath::translate(kaliyaX, 600.000f, kaliyaZ) *
-            // vmath::scale(1000.000f, 1000.000f, 1000.000f) *
-            // vmath::rotate(130.000f, 0.000f, 1.000f, 0.000f);
-
-            house1->mTextureShader->SetUniform("u_model", house1ModelMatrix);
-            house1->mTextureShader->SetUniform("u_view", viewMatrix);
-            house1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            house1->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            house1->Draw(house1->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-
-        // draw same house with different scaling/ left side from first house - small
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            house1->mTextureShader->Use();
-            house1->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 house1ModelMatrix =
-                vmath::translate(633.0f, 0.0f, 220.0f) *
-                vmath::scale(15.0f, 15.0f, 15.0f) *
-                vmath::rotate(-0.0f, 0.0f, 1.0f, 0.0f);
+            vmath::mat4 krishnaSleepingModelMatrix =
+                vmath::translate(15880.0f, 650.0f, -9600.0f) *
+                vmath::scale(5.0f, 5.0f, 5.0f) *
+                vmath::rotate(50.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
                 // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
 
-            house1->mTextureShader->SetUniform("u_model", house1ModelMatrix);
-            house1->mTextureShader->SetUniform("u_view", viewMatrix);
-            house1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            house1->mTextureShader->SetUniform("u_ApplyToon", false); 
+            krishnaSleeping->mTextureShader->SetUniform("u_model", krishnaSleepingModelMatrix);
+            krishnaSleeping->mTextureShader->SetUniform("u_view", viewMatrix);
+            krishnaSleeping->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            krishnaSleeping->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            krishnaSleeping->mTextureShader->SetUniform("u_ApplyToon", false); 
 
-            house1->Draw(house1->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-        
-        // draw same house with different scaling/ in front of first house - small
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            house1->mTextureShader->Use();
-            house1->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 house1ModelMatrix =
-                vmath::translate(-30.0f, 0.0f, 1030.0f) *
-                vmath::scale(15.0f, 15.0f, 15.0f) *
-                vmath::rotate(-210.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            house1->mTextureShader->SetUniform("u_model", house1ModelMatrix);
-            house1->mTextureShader->SetUniform("u_view", viewMatrix);
-            house1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            house1->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            house1->Draw(house1->mTextureShader);
-
-            glDisable(GL_BLEND);
-            
-        }
-        modelMatrix = popMatrix();
-
-        // draw same house with different scaling/ in front and left side of first house - big
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            house1->mTextureShader->Use();
-            house1->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 house1ModelMatrix =
-                   vmath::translate(630.0f, 0.0f, 1420.0f) *
-                   vmath::scale(30.0f, 20.0f, 30.0f) *
-                   vmath::rotate(-190.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            house1->mTextureShader->SetUniform("u_model", house1ModelMatrix);
-            house1->mTextureShader->SetUniform("u_view", viewMatrix);
-            house1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            house1->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            house1->Draw(house1->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-         // draw same house with different scaling/ in front and left side of first house - big
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            house1->mTextureShader->Use();
-            house1->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 house1ModelMatrix =
-                   vmath::translate(1700.0f, 0.0f, 500.0f) *
-                   vmath::scale(30.0f, 20.0f, 30.0f) *
-                   vmath::rotate(-20.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            house1->mTextureShader->SetUniform("u_model", house1ModelMatrix);
-            house1->mTextureShader->SetUniform("u_view", viewMatrix);
-            house1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            house1->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            house1->Draw(house1->mTextureShader);
+            krishnaSleeping->Draw(krishnaSleeping->mTextureShader);
 
             glDisable(GL_BLEND);
         }
         modelMatrix = popMatrix();
     }
 
-    void drawHouse2(bool isBlack = false)
+    void drawMangoTree(bool isBlack = false)
     {
-        if (!house2)
+        if (!mangoTree)
             return;
 
         pushMatrix(modelMatrix);
@@ -579,686 +379,32 @@ public:
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            house2->mTextureShader->Use();
-            house2->mTextureShader->SetUniform("isBlack", isBlack);
+            mangoTree->mTextureShader->Use();
+            mangoTree->mTextureShader->SetUniform("isBlack", isBlack);
 
-            vmath::mat4 house2ModelMatrix =
-                vmath::translate(1110.0f, 110.0f, 500.0f) *
-                vmath::scale(40.0f, 40.0f, 40.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            house2->mTextureShader->SetUniform("u_model", house2ModelMatrix);
-            house2->mTextureShader->SetUniform("u_view", viewMatrix);
-            house2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house2->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            house2->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //house2->mTextureShader->exposure = 1.2f;
-            house2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            house2->Draw(house2->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-        
-    }
-
-    void drawHutHouse(bool isBlack = false)
-    {
-        if (!hutHouse)
-            return;
-
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            hutHouse->mTextureShader->Use();
-            hutHouse->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 hutHouseModelMatrix =
-                vmath::translate(833.0f, 10.0f, 200.0f) *
-                vmath::scale(60.0f, 60.0f, 60.0f) *
-                vmath::rotate(190.0f, 0.0f, 1.0f, 0.0f);
+            vmath::mat4 mangoTreeModelMatrix =
+                vmath::translate(14800.0f, 500.0f, -9000.0f) *
+                vmath::scale(250.0f, 250.0f, 250.0f) *
+                vmath::rotate(44.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
                 // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
 
-            hutHouse->mTextureShader->SetUniform("u_model", hutHouseModelMatrix);
-            hutHouse->mTextureShader->SetUniform("u_view", viewMatrix);
-            hutHouse->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            hutHouse->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            hutHouse->mTextureShader->SetUniform("u_ApplyToon", false); 
+            mangoTree->mTextureShader->SetUniform("u_model", mangoTreeModelMatrix);
+            mangoTree->mTextureShader->SetUniform("u_view", viewMatrix);
+            mangoTree->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            mangoTree->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            mangoTree->mTextureShader->SetUniform("u_ApplyToon", false); 
 
-            //hutHouse->mTextureShader->exposure = 1.2f;
-            hutHouse->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            hutHouse->Draw(hutHouse->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-        // 2nd hut house
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            hutHouse->mTextureShader->Use();
-            hutHouse->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 hutHouseModelMatrix =
-                //vmath::translate(833.0f, 50.0f, 200.0f) *
-                vmath::translate(-330.0f, 10.0f, 1000.0f) *
-                vmath::scale(60.0f, 60.0f, 60.0f) *
-                vmath::rotate(210.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            hutHouse->mTextureShader->SetUniform("u_model", hutHouseModelMatrix);
-            hutHouse->mTextureShader->SetUniform("u_view", viewMatrix);
-            hutHouse->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            hutHouse->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            hutHouse->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //hutHouse->mTextureShader->exposure = 1.2f;
-            hutHouse->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            hutHouse->Draw(hutHouse->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-         // 3rd hut house
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            hutHouse->mTextureShader->Use();
-            hutHouse->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 hutHouseModelMatrix =
-                vmath::translate(-330.0f, 10.0f, -200.0f) *
-                vmath::scale(60.0f, 60.0f, 60.0f) *
-                vmath::rotate(180.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            hutHouse->mTextureShader->SetUniform("u_model", hutHouseModelMatrix);
-            hutHouse->mTextureShader->SetUniform("u_view", viewMatrix);
-            hutHouse->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            hutHouse->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            hutHouse->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //hutHouse->mTextureShader->exposure = 1.2f;
-            hutHouse->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            hutHouse->Draw(hutHouse->mTextureShader);
+            mangoTree->Draw(mangoTree->mTextureShader);
 
             glDisable(GL_BLEND);
         }
         modelMatrix = popMatrix();
     }
 
-    void drawHouse3(bool isBlack = false)
-    {   
-        if (!house3)
-            return;
 
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            house3->mTextureShader->Use();
-            house3->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 house3ModelMatrix =
-                vmath::translate(400.0f, 0.0f, 200.0f) *
-                vmath::scale(50.0f, 30.0f, 50.0f) *
-                vmath::rotate(68.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            house3->mTextureShader->SetUniform("u_model", house3ModelMatrix);
-            house3->mTextureShader->SetUniform("u_view", viewMatrix);
-            house3->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house3->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            house3->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //house3->mTextureShader->exposure = 1.2f;
-            house3->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            house3->Draw(house3->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-        // 2nd house3
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            house3->mTextureShader->Use();
-            house3->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 house3ModelMatrix =
-                // vmath::translate(400.0f, 0.0f, 200.0f) *
-                // vmath::scale(50.0f, 30.0f, 50.0f) *
-                // vmath::rotate(68.0f, 0.0f, 1.0f, 0.0f);
-
-                vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            house3->mTextureShader->SetUniform("u_model", house3ModelMatrix);
-            house3->mTextureShader->SetUniform("u_view", viewMatrix);
-            house3->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house3->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            house3->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //house3->mTextureShader->exposure = 1.2f;
-            house3->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            house3->Draw(house3->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-    }
-
-    void drawKaliyaModel(bool isBlack = false)
-    {   
-        if (!vrundavanGate)
-            return;
-        
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            vrundavanGate->mTextureShader->Use();
-            vrundavanGate->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 vrundavanGateModelMatrix =
-                vmath::translate(1500.0f, -220.0f, 1500.0f) *
-                vmath::scale(10.0f, 10.0f, 10.0f) *
-                vmath::rotate(-130.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            vrundavanGate->mTextureShader->SetUniform("u_model", vrundavanGateModelMatrix);
-            vrundavanGate->mTextureShader->SetUniform("u_view", viewMatrix);
-            vrundavanGate->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            //vrundavanGate->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            vrundavanGate->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //vrundavanGate->mTextureShader->exposure = 1.2f;
-            vrundavanGate->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            vrundavanGate->Draw(vrundavanGate->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-    }
-
-    void drawCowHouse(bool isBlack = false)
-    {
-        if (!cowHouse)
-            return;
-
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            cowHouse->mTextureShader->Use();
-            cowHouse->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 cowHouseModelMatrix =
-                vmath::translate(1050.0f, 0.0f, 850.0f) *
-                vmath::scale(30.0f, 30.0f, 30.0f) *
-                vmath::rotate(70.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            cowHouse->mTextureShader->SetUniform("u_model", cowHouseModelMatrix);
-            cowHouse->mTextureShader->SetUniform("u_view", viewMatrix);
-            cowHouse->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            cowHouse->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            cowHouse->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            cowHouse->Draw(cowHouse->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-        // draw well here
-         if (!well)
-            return;
-
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            well->mTextureShader->Use();
-            well->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 wellModelMatrix =
-                vmath::translate(500.0f, 3.0f, 633.0f) *
-                vmath::scale(1.0f, 1.0f, 1.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            well->mTextureShader->SetUniform("u_model", wellModelMatrix);
-            well->mTextureShader->SetUniform("u_view", viewMatrix);
-            well->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            well->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            well->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            well->Draw(well->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-    }
-
-    void drawFarmLand(bool isBlack = false)
-    {       
-        if (!farmLand)
-            return;
-        
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            farmLand->mTextureShader->Use();
-            farmLand->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 farmLandModelMatrix =
-                vmath::translate(-533.0f, 20.0f, 232.0f) *
-                vmath::scale(40.0f, 20.0f, 40.0f) *
-                vmath::rotate(-30.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            farmLand->mTextureShader->SetUniform("u_model", farmLandModelMatrix);
-            farmLand->mTextureShader->SetUniform("u_view", viewMatrix);
-            farmLand->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            //farmLand->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            farmLand->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //farmLand->mTextureShader->exposure = 1.2f;
-            farmLand->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            farmLand->Draw(farmLand->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-        // second farm land
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            farmLand->mTextureShader->Use();
-            farmLand->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 farmLandModelMatrix =
-                vmath::translate(-710.0f, 20.0f, 530.0f) *
-                 vmath::scale(40.0f, 20.0f, 40.0f) *
-                vmath::rotate(-30.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            farmLand->mTextureShader->SetUniform("u_model", farmLandModelMatrix);
-            farmLand->mTextureShader->SetUniform("u_view", viewMatrix);
-            farmLand->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            //farmLand->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            farmLand->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //farmLand->mTextureShader->exposure = 1.2f;
-            farmLand->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            farmLand->Draw(farmLand->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-    }
-
-    void drawFarmers(bool isBlack = false)
-    {
-        // if (!farmer1)
-        //     return;
-
-        // // Advance the skinned animation once per frame (drawn once from display()).
-        // farmer1->Update((float)gDeltaTime);
-
-        // pushMatrix(modelMatrix);
-        // {
-        //     glEnable(GL_BLEND);
-        //     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        //     farmer1->mShader->Use();
-        //     farmer1->mShader->SetUniform("isBlack", isBlack);
-
-        //     vmath::mat4 farmer1ModelMatrix =
-        //         vmath::translate(0.0f, 245.0f, -40.0f) *
-        //         vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f) *
-        //         vmath::scale(0.18f, 0.18f, 0.18f);
-
-        //         // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-        //         // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-        //         // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-        //     farmer1->mShader->SetUniform("u_model", farmer1ModelMatrix);
-        //     farmer1->mShader->SetUniform("u_view", viewMatrix);
-        //     farmer1->mShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-        //     farmer1->mShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-        //     farmer1->mShader->SetUniform("u_ApplyToon", false);
-        //     farmer1->mShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-        //     farmer1->mShader->SetUniform("u_DebugMode", 0);
-
-        //     farmer1->Draw(farmer1->mShader);
-
-        //     glDisable(GL_BLEND);
-        // }
-        // modelMatrix = popMatrix();
-
-        if (!farmer2_bailgadi)
-            return;
-
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            farmer2_bailgadi->mTextureShader->Use();
-            farmer2_bailgadi->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 farmer2_bailgadiModelMatrix =
-                vmath::translate(1630.0f, 60.0f, 1400.0f) *
-                vmath::scale(70.0f, 70.0f, 70.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            farmer2_bailgadi->mTextureShader->SetUniform("u_model", farmer2_bailgadiModelMatrix);
-            farmer2_bailgadi->mTextureShader->SetUniform("u_view", viewMatrix);
-            farmer2_bailgadi->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            farmer2_bailgadi->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            farmer2_bailgadi->mTextureShader->SetUniform("u_ApplyToon", false); 
-            
-            farmer2_bailgadi->Draw(farmer2_bailgadi->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-        if (!farmer3)
-            return;
-
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            farmer3->mTextureShader->Use();
-            farmer3->mTextureShader->SetUniform("isBlack", isBlack);
-            
-            vmath::mat4 farmer3ModelMatrix =
-                vmath::translate(1000.0f, 28.0f, 1000.0f) *
-                vmath::scale(30.0f, 30.0f, 30.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);    
-
-            farmer3->mTextureShader->SetUniform("u_model", farmer3ModelMatrix);
-            farmer3->mTextureShader->SetUniform("u_view", viewMatrix);
-            farmer3->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            farmer3->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            farmer3->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            farmer3->Draw(farmer3->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-    }
-
-    void drawTree1(bool isBlack = false)
-    {   
-        if (!tree1)
-            return;
-        // first pair of trees - left side of scene
-        pushMatrix(modelMatrix);    
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            tree1->mTextureShader->Use();
-            tree1->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 tree1ModelMatrix =
-                vmath::translate(1050.0f, 0.0f, -400.0f) *
-                vmath::scale(50.0f, 50.0f, 50.0f) *
-                vmath::rotate(10.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            tree1->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            tree1->mTextureShader->SetUniform("u_view", viewMatrix);
-            tree1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            tree1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            tree1->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            tree1->Draw(tree1->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-        // second pair of trees - right side of scene
-        pushMatrix(modelMatrix);    
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            tree1->mTextureShader->Use();
-            tree1->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 tree1ModelMatrix =
-                vmath::translate(-433.0f, 0.0f, 1400.0f) *
-                vmath::scale(50.0f, 50.0f, 50.0f) *
-                vmath::rotate(-50.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            tree1->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            tree1->mTextureShader->SetUniform("u_view", viewMatrix);
-            tree1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            tree1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            tree1->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            tree1->Draw(tree1->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-        // third pair of trees - right side of scene - in front of second pair
-        pushMatrix(modelMatrix);    
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            tree1->mTextureShader->Use();
-            tree1->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 tree1ModelMatrix =
-                vmath::translate(2000.0f, 0.0f, 0000.0f) *
-                vmath::scale(50.0f, 50.0f, 50.0f) *
-                vmath::rotate(-30.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            tree1->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            tree1->mTextureShader->SetUniform("u_view", viewMatrix);
-            tree1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            tree1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            tree1->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            tree1->Draw(tree1->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-        // fourth pair of trees - right side of scene - in front of third pair
-        pushMatrix(modelMatrix);    
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            tree1->mTextureShader->Use();
-            tree1->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 tree1ModelMatrix =
-                vmath::translate(730.0f, 0.0f, 1940.0f) *
-                vmath::scale(50.0f, 50.0f, 50.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            tree1->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            tree1->mTextureShader->SetUniform("u_view", viewMatrix);
-            tree1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            tree1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            tree1->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            tree1->Draw(tree1->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-
-    }
-
-    void drawBananaTree(bool isBlack = false)
-    {   
-        // first tree - left side of vada
-        if (!bananaTree)
-            return;
-        // first pair of trees - left side of scene
-        pushMatrix(modelMatrix);    
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            bananaTree->mTextureShader->Use();
-            bananaTree->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 tree1ModelMatrix =
-                vmath::translate(1000.0f, 0.0f, 250.0f) *
-                vmath::scale(30.0f, 30.0f, 30.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            bananaTree->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            bananaTree->mTextureShader->SetUniform("u_view", viewMatrix);
-            bananaTree->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            bananaTree->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            bananaTree->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            bananaTree->Draw(bananaTree->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();  
-
-        // second tree - right side of vada
-        pushMatrix(modelMatrix);    
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            bananaTree->mTextureShader->Use();
-            bananaTree->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 tree1ModelMatrix =
-                vmath::translate(950.0f, 0.0f, 700.0f) *
-                vmath::scale(30.0f, 30.0f, 30.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
-                
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            bananaTree->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            bananaTree->mTextureShader->SetUniform("u_view", viewMatrix);
-            bananaTree->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            bananaTree->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            bananaTree->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            bananaTree->Draw(bananaTree->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-    }
 
     // ============================================================
 
@@ -1330,9 +476,6 @@ public:
     void update()
     {
         sceneCamera->time = globalTime;
-
-        kaliyaX += 150.5f; // Move Kaliya along the X-axis
-        kaliyaZ += 150.3f; // Move Kaliya along the Z-axis
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // terrain->setWaterHeight(85.0f);
@@ -1407,15 +550,9 @@ public:
             terrain = nullptr;
         }
 
-        //mSwing.reset();
-
-        house1.reset();
-        house2.reset();
-        house3.reset();
-        vrundavanGate.reset();
-        cowHouse.reset();
-        farmLand.reset();
-
+        krishnaSleeping.reset();
+        mangoTree.reset();
+        
         // // rain
         // if (rain->alpha > 0.0f)
         // {
