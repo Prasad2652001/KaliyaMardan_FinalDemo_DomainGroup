@@ -207,44 +207,44 @@ public:
     }
 
     void update()
-    {
+    {   
         if (!scene)
             return;
-
+        
         // scene->update();
 
-        if (START_E2E_DEMO && scene->isSceneComplete)
-        {
-            selected_scene++;
+        // if (START_E2E_DEMO && scene->isSceneComplete)
+        // {
+        //     selected_scene++;
 
-            // Lazy-init the next scene on first transition (keeps RAM low at startup).
-            initializeScenesUpTo(selected_scene);
+        //     // Lazy-init the next scene on first transition (keeps RAM low at startup).
+        //     initializeScenesUpTo(selected_scene);
 
-            switch (selected_scene)
-            {
-            case SCENE_00:
-                scene = scene0;
-                break;
-            case SCENE_01:
-                scene = scene1;
-                break;
-            case SCENE_02:
-                scene = scene2;
-                break;
-            case SCENE_03:
-                scene = scene3;
-                break;
-            case SCENE_04:
-                scene = scene4;
-                break;
-            case SCENE_OUTRO:
-                scene = outroScene;
-                break;
-            default:
-                scene = outroScene;
-                break;
-            }
-        }
+        //     switch (selected_scene)
+        //     {
+        //     case SCENE_00:
+        //         scene = scene0;
+        //         break;
+        //     case SCENE_01:
+        //         scene = scene1;
+        //         break;
+        //     case SCENE_02:
+        //         scene = scene2;
+        //         break;
+        //     case SCENE_03:
+        //         scene = scene3;
+        //         break;
+        //     case SCENE_04:
+        //         scene = scene4;
+        //         break;
+        //     case SCENE_OUTRO:
+        //         scene = outroScene;
+        //         break;
+        //     default:
+        //         scene = outroScene;
+        //         break;
+        //     }
+        // }
     }
 
     void uninitialize()

@@ -43,7 +43,11 @@ Shader Program Linking Succeeded.
 ".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
 ".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-ERROR::ASSIMP:: Failed To Load .\assets\models\boat\boat.obj Model.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
 ".\src\shaders\grid\grid.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\grid\grid.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
@@ -61,7 +65,8 @@ Shader Program Linking Succeeded.
 ".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-[Core::Model::LoadModel]: Failed to parse model file: Unable to open file "./assets/models/scene1_models/vrundavan/cowHouse.glb".
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/cowHouse.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/cowHouse.glb' loaded: meshes=5
 [Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house1.glb'
 [Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house1.glb' loaded: meshes=1
 [Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house2.glb'
@@ -76,7 +81,14 @@ Shader Program Linking Succeeded.
 [Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmLand.glb' loaded: meshes=22
 [Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/hutHouse.glb'
 [Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/hutHouse.glb' loaded: meshes=1
-[Core::Model::LoadModel]: Failed to parse model file: Unable to open file "./assets/models/scene1_models/vrundavan/farmer1.glb".
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmer2_bailgadi.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmer2_bailgadi.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmer3.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmer3.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/tree1.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/tree1.glb' loaded: meshes=23
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/bananaTree.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/bananaTree.glb' loaded: meshes=11
 ".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
@@ -86,44 +98,20 @@ Shader Program Linking Succeeded.
 ".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
 ".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
 Shader Program Linking Succeeded.
-[Core::Model::LoadModel]: Failed to parse model file: Unable to open file "./assets/models/Swing/scene.glb".
-".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
-".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
-Shader Program Linking Succeeded.
-".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
-".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
-Shader Program Linking Succeeded.
-[Core::AnimatedModel::LoadModel]: AnimatedModel './assets/models/scene3_models/Kaliya.glb': bones=0 meshes=1
-[Core::AnimatedModel::LoadModel]: AnimatedModel './assets/models/scene3_models/Krishna.fbx': anim='mixamo.com' dur=183.00 tps=30.00
-[Core::AnimatedModel::LoadModel]: AnimatedModel './assets/models/scene3_models/Krishna.fbx': bones=33 meshes=1
-[Core::AnimatedModel::SetBaseColorTexture]: AnimatedModel override base color './assets/models/scene3_models/Old/BalKrishna_fbx/Meshy_AI_Bal_Krishna_with_outs_0526221114_texture_fbx/Meshy_AI_Bal_Krishna_with_outs_0526221114_texture.png': id=128
-".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
-".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
-Shader Program Linking Succeeded.
-".\src\shaders\rain\rain.vs" : Vertex Shader Compilation Succeeded.
-".\src\shaders\rain\rain.gs" : Geometry Shader Compilation Succeeded.
-".\src\shaders\rain\rain.fs" : Fragment Shader Compilation Succeeded.
-Shader Program Linking Succeeded.
-rain shader initialized
-Rain texture file missing - generating white fallback
-".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
-".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
-Shader Program Linking Succeeded.
-".\src\shaders\tint\tint.vs" : Vertex Shader Compilation Succeeded.
-".\src\shaders\tint\tint.fs" : Fragment Shader Compilation Succeeded.
-Shader Program Linking Succeeded.
-
- FBO creation Sucessful!! 
-InitalizeAudio() : FindResource() Failed.
-Initialize Successful...
-
-
-Variables  | OBJ 0.000000f, 0.000000f, 0.000000f | OBJ Angle 0.000000f | SCALE 1.000000f, 1.000000f, 1.000000f
-
-
-
-
-light_objX : 0.000000 , light_objY : 0.000000 , light_objZ : 0.000000
- ============================================================
-Log File "Log.txt" Has Been Closed Successfully !!!
-============================================================
+[Core::Model::LoadModel]: './assets/models/scene2_models/Krishna_sleeping.glb': anim[0]='Armature.001|mixamo.com|Layer0' dur=66.67 tps=1000.00 targetT=0.00 bones=45
+[Core::Model::LoadModel]: './assets/models/scene2_models/Krishna_sleeping.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/mango_tree.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/mango_tree.glb' loaded: meshes=23
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/stone1.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/stone1.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/stone2.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/stone2.glb' loaded: meshes=1
+[Core::Model::LoadModel]: './assets/models/scene2_models/krishnaFriend/friend1.glb': anim[0]='Armature|Seated_Fist_Pump|baselayer' dur=3291.67 tps=1000.00 targetT=0.00 bones=26
+[Core::Model::LoadModel]: './assets/models/scene2_models/krishnaFriend/friend1.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/krishnaFriend/friend2.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/krishnaFriend/friend2.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/krishnaFriend/balram.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/krishnaFriend/balram.glb' loaded: meshes=1
+[Core::AnimatedModel::LoadModel]: AnimatedModel './assets/models/scene2_models/eagle/eagle.fbx': anim='CINEMA_4D_Principal' dur=18.00 tps=30.00
+[Core::AnimatedModel::LoadModel]: AnimatedModel './assets/models/scene2_models/eagle/eagle.fbx': bones=50 meshes=1
+[Core::AnimatedModel::SetBaseColorTexture]: AnimatedModel override base color './assets/models/scene2_models/eagle/baseTexture.png': id=298

@@ -3,7 +3,7 @@
 // *******************************
 #pragma once
 #include "../../utils/common.h"
-#include "../../shaders/model/Model_Shader.h"
+#include "../../shaders/model/Model_Shader.h"   
 #include "../../effects/cubemap/Cubemap.h"
 #include "../../effects/terrain/Terrain.h"
 #include "../../effects/water_matrix/WaterMatrix.h"
@@ -42,9 +42,18 @@ public:
     WaterMatrix *waterMatrix;
 
     // =========== Yamuna Side scene models variables with smart pointer ==========
- 
+    
+    // static models
     std::unique_ptr<Core::Model> krishnaSleeping;
     std::unique_ptr<Core::Model> mangoTree;
+    std::unique_ptr<Core::Model> stone1;
+    std::unique_ptr<Core::Model> stone2;
+    std::unique_ptr<Core::Model> krishnaFriend1;
+    std::unique_ptr<Core::Model> krishnaFriend2;
+    std::unique_ptr<Core::Model> balram;
+
+    // dynamic models
+    std::unique_ptr<Core::AnimatedModel> eagle;
 
     // ==========================================================
     
@@ -115,13 +124,34 @@ public:
 
         // Initializing GLB Model
         programStaticPBR = new glshaderprogram({"./src/shaders/modelgltf/pbrStatic.vert", "./src/shaders/modelgltf/pbrMain.frag"});
-        
+
+        // static model
         krishnaSleeping = std::make_unique<Core::Model>();
         krishnaSleeping->LoadModel("./assets/models/scene2_models/Krishna_sleeping.glb");
 
         mangoTree = std::make_unique<Core::Model>();
         mangoTree->LoadModel("./assets/models/scene2_models/mango_tree.glb");
-    
+
+        stone1 = std::make_unique<Core::Model>();
+        stone1->LoadModel("./assets/models/scene2_models/stone1.glb");
+
+        stone2 = std::make_unique<Core::Model>();
+        stone2->LoadModel("./assets/models/scene2_models/stone2.glb");
+
+        krishnaFriend1 = std::make_unique<Core::Model>();
+        krishnaFriend1->LoadModel("./assets/models/scene2_models/krishnaFriend/friend1.glb");
+
+        krishnaFriend2 = std::make_unique<Core::Model>();
+        krishnaFriend2->LoadModel("./assets/models/scene2_models/krishnaFriend/friend2.glb");
+
+        balram = std::make_unique<Core::Model>();
+        balram->LoadModel("./assets/models/scene2_models/krishnaFriend/balram.glb");
+
+        // dynamic model
+        eagle = std::make_unique<Core::AnimatedModel>();
+        eagle->LoadModel("./assets/models/scene2_models/eagle/eagle.fbx");
+        eagle->SetBaseColorTexture("./assets/models/scene2_models/eagle/baseTexture.png");
+
         lightManager = new SceneLight();
         lightManager->addDirectionalLights({
             DirectionalLight(vec3(0.55f), 10.0f, vec3(0.0f, -1.0f, -1.0f)),
@@ -258,7 +288,6 @@ public:
         sc1.update();
     }
 
-   
     void display()
     {
         // Camera
@@ -309,7 +338,7 @@ public:
         }
         modelMatrix = popMatrix();
 
-        drawVrundavanScene();
+        drawYamunaSideScene();
 
         // RAIN RENDERING
         // pushMatrix(modelMatrix);
@@ -325,15 +354,21 @@ public:
         // sceneCamera->displayBezierCurve();
     }
 
-    void drawVrundavanScene()
-    {
+    void drawYamunaSideScene()
+    {   
         drawSleepingKrishna();
         drawMangoTree();
-    }
+        drawFlyingEagle();
+        drawStone1();
+        drawStone2();
+        drawKrishnaFriend1();
+        drawKrishnaFriend2();
+        drawBalram();
+    }   
 
-    // ==================== vrundavan scene models drawing functions ====================
+    // ==================== yamuna side scene models drawing functions ====================
 
-
+    // static models function
     void drawSleepingKrishna(bool isBlack = false)
     {
         if (!krishnaSleeping)
@@ -404,9 +439,225 @@ public:
         modelMatrix = popMatrix();
     }
 
+    void drawStone1(bool isBlack = false)
+    {
+        if (!stone1)
+            return;
 
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+            stone1->mTextureShader->Use();
+            stone1->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 stone1ModelMatrix =
+                vmath::translate(15000.0f, 400.0f, -9000.0f) *
+                vmath::scale(2000.0f, 2000.0f, 2000.0f) *
+                vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            stone1->mTextureShader->SetUniform("u_model", stone1ModelMatrix);
+            stone1->mTextureShader->SetUniform("u_view", viewMatrix);
+            stone1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            stone1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            stone1->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            stone1->Draw(stone1->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    void drawStone2(bool isBlack = false)
+    {
+        if (!stone2)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            stone2->mTextureShader->Use();
+            stone2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 stone2ModelMatrix =
+                vmath::translate(16200.0f, 650.0f, -11000.0f) *
+                vmath::scale(1.0f, 1.0f, 1.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            stone2->mTextureShader->SetUniform("u_model", stone2ModelMatrix);
+            stone2->mTextureShader->SetUniform("u_view", viewMatrix);
+            stone2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            stone2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            stone2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            stone2->Draw(stone2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    void drawKrishnaFriend1(bool isBlack = false)
+    {
+         if (!krishnaFriend1)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            krishnaFriend1->mTextureShader->Use();
+            krishnaFriend1->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 krishnaFriend1ModelMatrix =
+                vmath::translate(15000.0f, 700.0f, -8840.0f) *
+                vmath::scale(5.0f, 5.0f, 5.0f) *
+                vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f);
+                
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            krishnaFriend1->mTextureShader->SetUniform("u_model", krishnaFriend1ModelMatrix);
+            krishnaFriend1->mTextureShader->SetUniform("u_view", viewMatrix);
+            krishnaFriend1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            krishnaFriend1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            krishnaFriend1->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            krishnaFriend1->Draw(krishnaFriend1->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+    
+    void drawKrishnaFriend2(bool isBlack = false)
+    {
+         if (!krishnaFriend2)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            krishnaFriend2->mTextureShader->Use();
+            krishnaFriend2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 krishnaFriend2ModelMatrix =
+                vmath::translate(16000.0f, 650.0f, -9000.0f) *
+                vmath::scale(90.0f, 90.0f, 90.0f) *
+                vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f);
+                
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            krishnaFriend2->mTextureShader->SetUniform("u_model", krishnaFriend2ModelMatrix);
+            krishnaFriend2->mTextureShader->SetUniform("u_view", viewMatrix);
+            krishnaFriend2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            krishnaFriend2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            krishnaFriend2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            krishnaFriend2->Draw(krishnaFriend2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    void drawBalram(bool isBlack = false)
+    {
+         if (!balram)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            balram->mTextureShader->Use();
+            balram->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 balramModelMatrix =
+                vmath::translate(15300.0f, 410.0f, -7000.0f) *
+                vmath::scale(120.0f, 120.0f, 120.0f) *
+                vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f);
+                
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            balram->mTextureShader->SetUniform("u_model", balramModelMatrix);
+            balram->mTextureShader->SetUniform("u_view", viewMatrix);
+            balram->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            balram->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            balram->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            balram->Draw(balram->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
     // ============================================================
+
+    // dynamic models functions
+    void drawFlyingEagle(bool isBlack = false)
+    {
+        if (!eagle)
+            return;
+
+        // Advance the skinned animation once per frame (drawn once from display()).
+        eagle->Update((float)gDeltaTime);
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            eagle->mShader->Use();
+            eagle->mShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 eagleModelMatrix =
+                vmath::translate(16000.0f, 2000.0f, -9000.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f) *
+                vmath::scale(20.0f, 20.0f, 20.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            eagle->mShader->SetUniform("u_model", eagleModelMatrix);
+            eagle->mShader->SetUniform("u_view", viewMatrix);
+            eagle->mShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            eagle->mShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
+            eagle->mShader->SetUniform("u_ApplyToon", false);
+            eagle->mShader->SetSampler2D("u_GGXLUT", 0, 5);
+
+            eagle->mShader->SetUniform("u_DebugMode", 0);
+
+            eagle->Draw(eagle->mShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    // =======================================================
 
     // RAIN RELATED
     // void drawRain(void)
