@@ -298,6 +298,12 @@ namespace Core
         mTicksPerSec   = 25.0;
         mBoneMatrices.assign(ANIM_MAX_BONES, glm::mat4(1.0f));
 
+        // Store the directory so external texture paths can be resolved relative to it.
+        {
+            size_t lastSlash = path.find_last_of("/\\");
+            mModelDirectory = (lastSlash != std::string::npos) ? path.substr(0, lastSlash + 1) : "./";
+        }
+
         mShader = std::make_unique<Core::Shader>();
         mShader->CompileShader(".\\src\\utils\\gltf\\shader\\model\\skinned.vert", Core::Shader::Type::VERTEX);
         mShader->CompileShader(".\\src\\utils\\gltf\\shader\\model\\skinned.frag",   Core::Shader::Type::FRAGMENT);
@@ -445,13 +451,23 @@ namespace Core
         if (mesh->mMaterialIndex >= 0)
         {
             const aiMaterial* mat = mScene->mMaterials[mesh->mMaterialIndex];
-            auto d  = LoadMaterialTextures(mat, aiTextureType_BASE_COLOR, TextureType::DiffuseMap);
+
+            // Try PBR base color first; FBX/Mixamo files store diffuse under
+            // aiTextureType_DIFFUSE so fall back to that if BASE_COLOR is empty.
+            auto d = LoadMaterialTextures(mat, aiTextureType_BASE_COLOR, TextureType::DiffuseMap);
+            if (d.empty())
+                d = LoadMaterialTextures(mat, aiTextureType_DIFFUSE, TextureType::DiffuseMap);
             textures.insert(textures.end(), d.begin(), d.end());
-            auto n  = LoadMaterialTextures(mat, aiTextureType_NORMALS,     TextureType::NormalMap);
+
+            auto n  = LoadMaterialTextures(mat, aiTextureType_NORMALS,    TextureType::NormalMap);
+            if (n.empty())
+                n = LoadMaterialTextures(mat, aiTextureType_HEIGHT,       TextureType::NormalMap);
             textures.insert(textures.end(), n.begin(), n.end());
+
             auto mr = LoadMaterialTextures(mat, aiTextureType_METALNESS,  TextureType::MetallicRoughnessMap);
             textures.insert(textures.end(), mr.begin(), mr.end());
-            auto e  = LoadMaterialTextures(mat, aiTextureType_EMISSIVE,    TextureType::EmissiveMap);
+
+            auto e  = LoadMaterialTextures(mat, aiTextureType_EMISSIVE,   TextureType::EmissiveMap);
             textures.insert(textures.end(), e.begin(), e.end());
         }
 
@@ -558,11 +574,35 @@ namespace Core
             tex.path = str;
 
             if (embedded)
+            {
                 tex.id = LoadEmbeddedTexture(embedded);
+            }
             else
-                tex.id = TextureModel::LoadTextureModel(str.C_Str());
+            {
+                // The path stored in the FBX is often an absolute path from the
+                // artist's machine (e.g. "C:\Users\...\texture.png"). Strip it
+                // down to just the filename and resolve it next to the model file.
+                std::string rawPath = str.C_Str();
+                size_t slash = rawPath.find_last_of("/\\");
+                std::string filename = (slash != std::string::npos)
+                    ? rawPath.substr(slash + 1) : rawPath;
 
-            textures.push_back(tex);
+                // 1. Try next to the model file.
+                std::string fullPath = mModelDirectory + filename;
+                tex.id = TextureModel::LoadTextureModel(fullPath.c_str());
+
+                // 2. Try raw path as-is (in case it's already a valid relative path).
+                if (!tex.id)
+                    tex.id = TextureModel::LoadTextureModel(rawPath.c_str());
+
+                if (!tex.id)
+                    PrintLogFunction(__FUNCTION__,
+                        "Could not load texture '%s' (also tried '%s')",
+                        fullPath.c_str(), rawPath.c_str());
+            }
+
+            if (tex.id)
+                textures.push_back(tex);
         }
         return textures;
     }

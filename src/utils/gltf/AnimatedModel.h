@@ -63,6 +63,8 @@ namespace Core
         double  mAnimDuration  = 0.0;
         double  mTicksPerSec   = 25.0;
 
+        std::string mModelDirectory; // directory of the loaded model file
+
         void ProcessNode(const aiNode* node);
         SkinnedMesh ProcessMesh(const aiMesh* mesh);
         void UpdateBoneMatrices();

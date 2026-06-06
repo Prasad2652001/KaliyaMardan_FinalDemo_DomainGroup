@@ -24,6 +24,9 @@ uniform float interpolateDarkToBright = 0.0;
 
 uniform int waterColor_JisDesh = 0;
 
+// 0.0 = calm (default, unchanged look); 1.0 = full storm chop.
+uniform float u_stormStrength = 0.0;
+
 float waveStrength = 0.04;
 float shininess = 10.0;
 float reflectivity = 0.001;
@@ -59,6 +62,13 @@ void main(void) {
         reflectivity = 0.001;
     }
 
+    // Storm amplifies surface chop. Keep specular broad so the fixed light
+    // does not bake a hard steady streak.
+    float storm = clamp(u_stormStrength, 0.0, 1.0);
+    waveStrength *= (1.0 + storm * 6.0);
+    shininess     = mix(shininess, 18.0, storm);
+    reflectivity  = mix(reflectivity, 0.12, storm);
+
     //Convert Clip-space coordinates to Screen-space coordinates
     vec2 screenSpaceCoords;
     screenSpaceCoords.x = clipSpaceCoords.x / clipSpaceCoords.w;
@@ -72,6 +82,19 @@ void main(void) {
     vec2 distortedTexCoords = texture(u_waterDUDVMapTextureSampler, vec2(a_texcoords_out.x + u_moveFactorOffset, a_texcoords_out.y)).rg * 0.1;
     distortedTexCoords = a_texcoords_out + vec2(distortedTexCoords.x, distortedTexCoords.y + u_moveFactorOffset);
     vec2 totalDistortions = (texture(u_waterDUDVMapTextureSampler, distortedTexCoords).rg * 2.0 - 1.0) * waveStrength;
+
+    // Second, finer-and-faster DUDV layer drifting the other way: stacks with the
+    // base layer to create the chaotic, choppy look of a stormy surface.
+    // Second, finer-and-faster DUDV layer drifting the other way: stacks with the
+    // base layer to create the chaotic, choppy look of a stormy surface.
+    if (storm > 0.0) {
+        vec2 dc2 = texture(u_waterDUDVMapTextureSampler,
+                           vec2(a_texcoords_out.x * 2.7 - u_moveFactorOffset * 1.9,
+                                a_texcoords_out.y * 2.7)).rg * 0.1;
+        dc2 = a_texcoords_out * 2.7 + vec2(dc2.x, dc2.y - u_moveFactorOffset * 1.9);
+        vec2 td2 = (texture(u_waterDUDVMapTextureSampler, dc2).rg * 2.0 - 1.0) * waveStrength * 1.6;
+        totalDistortions += td2 * storm;
+    }
 
     //Reflection texcoords
     vec2 reflectTexcoords = vec2(ndcCoords.x, -ndcCoords.y);
@@ -103,7 +126,12 @@ void main(void) {
 
     //For Specular HighLights
     vec4 normalMapColor = texture(u_waterNormalMapTextureSampler, distortedTexCoords);
-    vec3 normal = vec3(normalMapColor.r * 2.0 - 1.0, normalMapColor.b, normalMapColor.g * 2.0 - 1.0);
+    // Slightly steepen the normals for a choppier read, but keep the up (b)
+    // component dominant so the surface stays roughly upward-facing (a near-flat
+    // normal across the whole quad is what produced the steady specular line).
+    vec3 normal = vec3((normalMapColor.r * 2.0 - 1.0) * (1.0 + storm * 0.6),
+                       normalMapColor.b,
+                       (normalMapColor.g * 2.0 - 1.0) * (1.0 + storm * 0.6));
     normal = normalize(normal);
 
     vec3 reflectedLight = reflect(normalize(lightDirection), normal);
@@ -122,7 +150,12 @@ void main(void) {
     vec4 darkColor = vec4(red, green, blue, 0.5);
     vec4 brightBlue = vec4(0.2, 0.71, 0.85, 1.0);
     vec4 finalWaterColor = mix(darkColor, brightBlue, interpolateDarkToBright);
-    waterColor = mix(color, finalWaterColor, 0.2) + vec4(specularHighlights, 1.0);
+
+    // Pull the tint toward a cold, dark grey-green for an overcast storm mood.
+    vec4 stormColor = vec4(0.06, 0.11, 0.12, 1.0);
+    finalWaterColor = mix(finalWaterColor, stormColor, storm * 0.65);
+
+    waterColor = mix(color, finalWaterColor, 0.2 + storm * 0.15) + vec4(specularHighlights, 1.0);
 
     FragColor = mix(waterColor, waterColor, 1.0);
 }
