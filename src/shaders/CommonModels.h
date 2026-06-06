@@ -40,7 +40,7 @@ public:
     // Member Functions
     BOOL initialize(int selected_scene, bool isE2E)
     {
-        ModelShoes->initializeModel(".\\assets\\models\\boat\\boat.obj");
+        //ModelShoes->initializeModel(".\\assets\\models\\boat\\boat.obj");
         // model_shloka1->initializeModel(".\\assets\\models\\toyroom\\toyroom.obj");
         // model_shloka1->initializeModel(".\\assets\\models\\sloka1\\untitled.obj");
         // model_shloka2->initializeModel(".\\assets\\models\\sloka2\\untitled.obj");

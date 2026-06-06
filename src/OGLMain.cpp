@@ -234,13 +234,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 
 	/* Register Above wndclass */
 	RegisterClassEx(&wndclass);
-
+	
 	iHeightOfWindow = GetSystemMetrics(SM_CYSCREEN); // Height of Window Screen
 	iWidthOfWindow = GetSystemMetrics(SM_CXSCREEN);	 // Width Of Window Screen
 
 	/* Create Window */
 	hwnd = CreateWindowEx(WS_EX_APPWINDOW, szAppName,
-						  TEXT("Vivid Voxel"),
+						  TEXT("DOMAIN GROUP - KALIYA MARDAN"),
 						  WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
 						  (iWidthOfWindow - WINWIDTH) / 2,
 						  (iHeightOfWindow - WINHEIGHT) / 2,
@@ -846,9 +846,9 @@ void drawImGui(void)
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		// Terrain Controls for Scene3
-		if (mainScene && mainScene->scene3 && mainScene->scene3->terrain)
+		if (mainScene && mainScene->scene2 && mainScene->scene2->terrain)
 		{
-			Terrain* t = mainScene->scene3->terrain;
+			Terrain* t = mainScene->scene2->terrain;
 			
 			ImGui::Separator();
 			ImGui::Text("Scene3 Terrain Controls");
