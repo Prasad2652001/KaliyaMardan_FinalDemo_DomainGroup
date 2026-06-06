@@ -150,7 +150,15 @@ public:
 
         shreeKrishna = std::make_unique<Core::AnimatedModel>();
         shreeKrishna->LoadModel("./assets/models/scene3_models/Krishna.fbx");
-        shreeKrishna->SetBaseColorTexture("./assets/models/scene3_models/Old/BalKrishna_fbx/Meshy_AI_Bal_Krishna_with_outs_0526221114_texture_fbx/Meshy_AI_Bal_Krishna_with_outs_0526221114_texture.png");
+        // Krishna.fbx is a Mixamo rig export - Mixamo strips all material
+        // texture references from the FBX, so automatic texture resolution
+        // finds nothing. We set the base color explicitly here. For any FBX
+        // that does carry texture references (embedded or relative paths),
+        // AnimatedModel::LoadMaterialTextures will pick them up automatically.
+        shreeKrishna->SetBaseColorTexture(
+            "./assets/models/scene3_models/Old/BalKrishna_fbx/"
+            "Meshy_AI_Bal_Krishna_with_outs_0526221114_texture_fbx/"
+            "Meshy_AI_Bal_Krishna_with_outs_0526221114_texture.png");
 
         lightManager = new SceneLight();
         lightManager->addDirectionalLights({
@@ -177,6 +185,9 @@ public:
 
         waterMatrix->interpolateWaterColor = 1.0f;
         waterMatrix->moveFactor = 0.0f;
+
+        // Kaliya Mardan happens on a turbulent river - drive the water stormy.
+        waterMatrix->stormStrength = 1.0f;
 
         if (!rain->initialize(2))
         {

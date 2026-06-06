@@ -59,6 +59,9 @@ public:
 
 	GLfloat moveFactor = 0.0f;
 
+	// 0.0 = calm water (default), 1.0 = full storm. Set per scene.
+	float stormStrength = 0.0f;
+
 	WaterQuadShader waterQuadShader;
 	// WaterBedQuadShader waterBedQuadShader;
 	float waterHeight = 0.0f;
@@ -417,8 +420,11 @@ public:
 			glUniform3fv(waterQuadShader.lightPositionUniform_waterQuad, 1, lightPosition);
 			glUniform3fv(waterQuadShader.lightColorUniform_waterQuad, 1, lightColor);
 
-			moveFactor = moveFactor + WATER_WAVE_SPEED;
+			// Storm pushes the surface scroll faster for a more violent motion.
+			moveFactor = moveFactor + WATER_WAVE_SPEED * (1.0f + stormStrength * 3.0f);
 			glUniform1f(waterQuadShader.moveFactorOffsetUniform_waterQuad, moveFactor);
+
+			glUniform1f(waterQuadShader.stormStrengthUniform, stormStrength);
 
 			glUniform1f(waterQuadShader.interpolateDarkToBright_uniform, interpolateWaterColor);
 
