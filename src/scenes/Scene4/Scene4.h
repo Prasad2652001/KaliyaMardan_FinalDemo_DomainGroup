@@ -311,7 +311,7 @@ public:
         // Water Bed
         pushMatrix(modelMatrix);
         {
-            modelMatrix = modelMatrix * translate(0.0f, (float)terrain->getWaterHeight() + 1.0f, 0.0f);
+            modelMatrix = modelMatrix * translate(0.0f, (float)terrain->getWaterHeight() + objY, 0.0f);
             waterMatrix->renderWaterQuad(terrain->getWaterHeight());
         }
         modelMatrix = popMatrix();

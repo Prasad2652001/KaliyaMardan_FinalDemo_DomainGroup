@@ -38,14 +38,14 @@ out vec3 viewerVector;
 // GS for billboard technique (make two triangles from point).
 void main(void)                                                                         
 {
-    //streak size
-    float height = 0.6;
-    float width = height/60.0;
+    // Scale up the streaks so they are visible from far away over the massive terrain
+    float height = 15.0; 
+    float width = height / 40.0;
                                                                                  
     vec3 pos = gl_in[0].gl_Position.xyz;                                            
     vec3 toCamera = normalize(eyePosition - pos);                                    
     vec3 up = vec3(0.0, 1.0, 0.0);                                                  
-    vec3 right = cross(toCamera, up) * width * length(eyePosition - pos) * 0.5;
+    vec3 right = cross(toCamera, up) * width * 0.5; // removed length() to keep size consistent
 
     // For light
     vec4 eyeCoordinates = u_viewMatrix * u_modelMatrix * vec4(pos, 1.0);
@@ -82,7 +82,7 @@ void main(void)
 
     //bottom right
     pos.y -= height;
-    pos += right;
+    pos += right * 2.0;
     fragmentTexCoords.xy = vec2(1, 0);
     fragmentTexCoords.z = texArrayIDin[0];
     randEnlight = velocity[0].w;

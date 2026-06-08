@@ -102,7 +102,7 @@ CommonModels *commonModels;
 float objX = 0.0f;
 float objY = 0.0f;
 float objZ = 0.0f;
-float objIncrement = 10.0f;
+float objIncrement = 1.0f;
 
 // Scale
 float scaleX = 1.0;
@@ -234,13 +234,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 
 	/* Register Above wndclass */
 	RegisterClassEx(&wndclass);
-
+	
 	iHeightOfWindow = GetSystemMetrics(SM_CYSCREEN); // Height of Window Screen
 	iWidthOfWindow = GetSystemMetrics(SM_CXSCREEN);	 // Width Of Window Screen
 
 	/* Create Window */
 	hwnd = CreateWindowEx(WS_EX_APPWINDOW, szAppName,
-						  TEXT("Vivid Voxel"),
+						  TEXT("DOMAIN GROUP - KALIYA MARDAN"),
 						  WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
 						  (iWidthOfWindow - WINWIDTH) / 2,
 						  (iHeightOfWindow - WINHEIGHT) / 2,

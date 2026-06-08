@@ -103,8 +103,8 @@ public:
         // cubeMap[1] = new CubeMap();
         terrain = new Terrain(20. * 60.);
         waterMatrix = new WaterMatrix(300. * 400.);
-        sceneCamera = new BezierCamera();
-        rain = new Rain(40000);
+        sceneCamera = new BezierCamera();        // Drastically reduce the number of particles from 40000 to 10000 to reduce intensity
+        rain = new Rain(10000);
         // godRaysShader = new GodRaysShader();
     }
 
@@ -196,6 +196,7 @@ public:
             return FALSE;
         }
 
+        // Use texture 1 (rain-light.png) to further reduce visual intensity
         if (!rain->initialize(2))
         {
             PrintLog("Failed to initialize Rain");

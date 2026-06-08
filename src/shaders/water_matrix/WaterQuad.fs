@@ -29,6 +29,45 @@ float shininess = 10.0;
 float reflectivity = 0.001;
 out vec4 FragColor;
 
+// --- Procedural Rain Ripples ---
+vec2 hash2(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.xx+p3.yz)*p3.zy);
+}
+
+float rainRipples(vec2 uv, float time, out float rawIntensity) {
+    vec2 p = floor(uv);
+    vec2 f = fract(uv);
+    float v = 0.0;
+    float maxInt = 0.0;
+    for(int j=-1; j<=1; j++) {
+        for(int i=-1; i<=1; i++) {
+            vec2 b = vec2(i, j);
+            vec2 randObj = hash2(p + b);
+            
+            // Further reduce droplet density to about 5% of cells
+            if(randObj.y > 0.05) continue;
+            
+            vec2 r = b - f + randObj;
+            float d = length(r);
+            float t = fract(time + randObj.x);
+            float maxRad = 0.4; // Smaller ripples
+            if(d < maxRad && t > 0.01) {
+                float wave = sin((d - t * maxRad) * 35.0); // Slightly lower frequency
+                // Smooth, non-linear fade out for more realism
+                float fade = smoothstep(1.0, 0.0, t) * smoothstep(1.0, 0.5, d / maxRad);
+                float intensity = wave * fade;
+                v += intensity * 0.25; // More subtle normal distortion
+                maxInt = max(maxInt, abs(intensity)); 
+            }
+        }
+    }
+    rawIntensity = maxInt;
+    return v;
+}
+// -------------------------------
+
 float vignette_main(void) {
     // A - Final Fragment Color Before Vignette
     vec4 color = a_color_out;
@@ -104,6 +143,13 @@ void main(void) {
     //For Specular HighLights
     vec4 normalMapColor = texture(u_waterNormalMapTextureSampler, distortedTexCoords);
     vec3 normal = vec3(normalMapColor.r * 2.0 - 1.0, normalMapColor.b, normalMapColor.g * 2.0 - 1.0);
+    
+    // Add Rain Droplets to the Normal
+    float rippleHighlight;
+    float rippleIntensity = rainRipples(a_texcoords_out * 80.0, u_moveFactorOffset * 2.0, rippleHighlight);
+    normal.x += rippleIntensity;
+    normal.z += rippleIntensity;
+    
     normal = normalize(normal);
 
     vec3 reflectedLight = reflect(normalize(lightDirection), normal);
@@ -117,12 +163,15 @@ void main(void) {
     vec4 waterColor;
 
     red = 10.0 / 255.0;
-    green = 10.0 / 255.0;
-    blue = 10.0 / 255.0;
+    green = 15.0 / 255.0;
+    blue = 35.0 / 255.0;
     vec4 darkColor = vec4(red, green, blue, 0.5);
-    vec4 brightBlue = vec4(0.2, 0.71, 0.85, 1.0);
+    vec4 brightBlue = vec4(0.05, 0.20, 0.45, 1.0);
     vec4 finalWaterColor = mix(darkColor, brightBlue, interpolateDarkToBright);
     waterColor = mix(color, finalWaterColor, 0.2) + vec4(specularHighlights, 1.0);
+    
+    // Add artificial brightness at the sharp crests of the ripples so they show up on dark water
+    waterColor += vec4(0.3, 0.4, 0.5, 0.0) * (rippleHighlight * 0.4);
 
     FragColor = mix(waterColor, waterColor, 1.0);
 }

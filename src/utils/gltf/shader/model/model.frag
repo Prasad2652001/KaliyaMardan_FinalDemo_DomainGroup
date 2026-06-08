@@ -5,6 +5,7 @@ in vec3 v_Normal;
 in vec2 v_texcoord;
 in vec3 v_LightDirection; 
 in vec3 v_ViewerVector; 
+in vec4 FragPosLightSpace;
 
 uniform vec3 u_LD;
 uniform vec3 u_LS;
@@ -43,6 +44,9 @@ uniform float u_Exposure;
 uniform float u_MetallicFactor;
 uniform float u_RoughnessFactor;
 uniform float u_alpha = 1.0;
+
+uniform sampler2D shadowMap;
+uniform bool isShadow = false;
 
 struct PBRInfo {
     float NdotL;                  // cos angle between normal and light direction
@@ -136,6 +140,39 @@ vec3 RRTAndODTFit(vec3 color) {
     return a / b;
 }
 
+float ShadowCalculation(vec4 fragPosLightSpace) {
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(shadowMap, projCoords.xy).r; 
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // calculate bias (based on depth map resolution and slope)
+    vec3 normal = normalize(v_Normal);
+    vec3 lightDir = normalize(v_LightDirection);
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    // PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
+        }    
+    }
+    shadow /= 9.0;
+    
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if(projCoords.z > 1.0)
+        shadow = 0.0;
+        
+    return shadow;
+}
+
 void main(void) {
     
     vec3 albedo = texture(u_BaseColorSampler, v_texcoord).rgb;
@@ -150,6 +187,8 @@ void main(void) {
     } 
     else 
     {
+        float shadow = isShadow ? ShadowCalculation(FragPosLightSpace) : 0.0;
+
         // Sample textures
         vec4 baseColor = SRGBtoLINEAR(texture(u_BaseColorSampler, v_texcoord));
         vec4 mrSample = texture(u_MetallicRoughnessSampler, v_texcoord);
@@ -164,7 +203,7 @@ void main(void) {
         vec3 diffuseColor = baseColor.rgb;
         if(u_ApplyToon ==  false)
         {
-            FragColor = vec4((diffuseColor * u_Exposure), baseColor.a * u_alpha);
+            FragColor = vec4((diffuseColor * u_Exposure * (1.0 - shadow)), baseColor.a * u_alpha);
         }
         else{
             // TOON SHADER PART
@@ -195,7 +234,7 @@ void main(void) {
             }
 
             // Final toon color
-            vec3 finalColor = (toonDiffuse + toonSpecular + rimLight) * u_Exposure;
+            vec3 finalColor = (toonDiffuse * (1.0 - shadow) + toonSpecular * (1.0 - shadow) + rimLight) * u_Exposure;
 
             FragColor = vec4(finalColor, baseColor.a * u_alpha);
         }
