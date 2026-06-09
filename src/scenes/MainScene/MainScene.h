@@ -45,7 +45,7 @@ public:
 
         START_E2E_DEMO = true;
         // selected_scene = SCENE_INTRO;
-        selected_scene = SCENE_02;
+        selected_scene = SCENE_01;
         scene = nullptr;
     }
 
@@ -53,12 +53,12 @@ public:
     // duplicate terrains/models/water FBOs for every scene at once).
     void initializeScenesUpTo(int maxScene)
     {
-        if (maxScene >= SCENE_00 && !scene0->isInitialized) scene0->initialize();
+        // if (maxScene >= SCENE_00 && !scene0->isInitialized) scene0->initialize();
         if (maxScene >= SCENE_01 && !scene1->isInitialized) scene1->initialize();
         if (maxScene >= SCENE_02 && !scene2->isInitialized) scene2->initialize();
-        if (maxScene >= SCENE_03 && !scene3->isInitialized) scene3->initialize();
-        if (maxScene >= SCENE_04 && !scene4->isInitialized) scene4->initialize();
-        if (maxScene >= SCENE_OUTRO && !outroScene->isInitialized) outroScene->initialize();
+        // if (maxScene >= SCENE_03 && !scene3->isInitialized) scene3->initialize();
+        // if (maxScene >= SCENE_04 && !scene4->isInitialized) scene4->initialize();
+        // if (maxScene >= SCENE_OUTRO && !outroScene->isInitialized) outroScene->initialize();
     }
 
     void initializeActiveSceneOnly()
@@ -148,15 +148,15 @@ public:
         }
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        // setGlobalBezierCamera(scene->sceneCamera);
+        setGlobalBezierCamera(scene->sceneCamera);
 
-        // if (scene->sceneCamera && scene->sceneCamera->bezierPoints.size() > 0)
-        // {
-        //     if (!USE_FPV_CAM)
-        //         scene->sceneCamera->update();
+        if (scene->sceneCamera && scene->sceneCamera->bezierPoints.size() > 0)
+        {
+            if (!USE_FPV_CAM)
+                scene->sceneCamera->update();
 
-        //     updateGlobalViewMatrix(); // uncomment this to run simultaniuously scnee
-        // }
+            updateGlobalViewMatrix(); // uncomment this to run simultaniuously scnee
+        }
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
@@ -208,10 +208,8 @@ public:
 
     void update()
     {   
-        if (!scene)
-            return;
         
-        // scene->update();
+        scene->update();
 
         // if (START_E2E_DEMO && scene->isSceneComplete)
         // {

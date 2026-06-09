@@ -102,7 +102,7 @@ CommonModels *commonModels;
 float objX = 0.0f;
 float objY = 0.0f;
 float objZ = 0.0f;
-float objIncrement = 1.0f;
+float objIncrement = 10.0f;
 
 // Scale
 float scaleX = 1.0;
@@ -123,9 +123,9 @@ float objAngleIncrement = 1.0f;
 bool isMovementStarted = true;
 
 // =============================== GLOBAL CONTROLS
-BOOL USE_FPV_CAM = FALSE;
+BOOL USE_FPV_CAM = TRUE;
 BOOL playMusic = TRUE;
-BOOL enableBezierCameraControl = FALSE;
+BOOL enableBezierCameraControl = TRUE;
 BOOL spaceBarIsPressed = FALSE;
 float VOLUME_LEVEL = 0.8f;
 // ==============================================//
@@ -453,11 +453,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		case 'l':
 			if (enableBezierCameraControl)
 			{
-				bezierPoints.erase(--bezierPoints.end());
-				yawGlobal.erase(--yawGlobal.end());
-				pitchGlobal.erase(pitchGlobal.end());
-				fovGlobal.erase(fovGlobal.end());
-				vectorIndex = bezierPoints.size() - 1;
+				if (bezierPoints.size() > 0)
+				{
+					bezierPoints.erase(--bezierPoints.end());
+					yawGlobal.erase(--yawGlobal.end());
+					pitchGlobal.erase(--pitchGlobal.end());
+					fovGlobal.erase(--fovGlobal.end());
+					vectorIndex = bezierPoints.size() - 1;
+				}
 			}
 			break;
 		case 'G':
@@ -585,18 +588,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case 27:
+			PrintLog("ESC Pressed. Starting log dump...\n");
 			PrintLog("\n\nVariables  | OBJ %ff, %ff, %ff | OBJ Angle %ff | SCALE %ff, %ff, %ff\n\n\n\n", objX, objY, objZ, objAngle, scaleX, scaleY, scaleZ);
 			PrintLog("\nlight_objX : %f , light_objY : %f , light_objZ : %f\n ", light_objX, light_objY, light_objZ);
 
 			if (enableBezierCameraControl)
 			{
-				// Required  for camera
+				PrintLog("Logging bezierPoints. Size: %zu\n", bezierPoints.size());
 				PrintLog("\n\nstd::vector<std::vector<float>> bezierPoints = {\n");
 				for (int i = 0; i < bezierPoints.size(); i++)
 				{
 					PrintLog("{%ff, %ff, %ff},\n", bezierPoints[i][0], bezierPoints[i][1], bezierPoints[i][2]);
 				}
 				PrintLog("};\n");
+				
+				PrintLog("Logging yawGlobal. Size: %zu\n", yawGlobal.size());
 				PrintLog("\n\n// YAW GLOBAL\n");
 				PrintLog("std::vector<float> yawGlobal = {\n");
 				for (int i = 0; i < yawGlobal.size(); i++)
@@ -604,6 +610,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 					PrintLog("%ff,\n", yawGlobal[i]);
 				}
 				PrintLog("};\n");
+				
+				PrintLog("Logging pitchGlobal. Size: %zu\n", pitchGlobal.size());
 				PrintLog("\n\n// PITCH GLOBAL\n");
 				PrintLog("std::vector<float> pitchGlobal = {\n");
 				for (int i = 0; i < pitchGlobal.size(); i++)
@@ -611,6 +619,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 					PrintLog("%ff,\n\t", pitchGlobal[i]);
 				}
 				PrintLog("};\n");
+				
+				PrintLog("Logging fovGlobal. Size: %zu\n", fovGlobal.size());
 				PrintLog("\n\n// FOV GLOBAL\n");
 				PrintLog("std::vector<float> fovGlobal = {\n");
 				for (int i = 0; i < fovGlobal.size(); i++)
@@ -619,6 +629,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 				}
 				PrintLog("};\n");
 			}
+			PrintLog("Finished ESC log dump. Posting quit message...\n");
 			PostQuitMessage(0);
 		}
 		break;

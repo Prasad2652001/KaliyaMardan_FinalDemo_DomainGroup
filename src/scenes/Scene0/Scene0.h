@@ -84,6 +84,28 @@ public:
     BezierCamera sc2;
     BezierCamera sc3;
 
+    // Shadow Variables
+    GLuint depthMapFBO;
+    GLuint depthMapTexture;
+    const GLuint SHADOW_WIDTH = 4096;
+    const GLuint SHADOW_HEIGHT = 4096;
+    mat4 lightSpaceMatrix;
+    vec3 shadowLightPos = vec3(0.0f, 4000.0f, 4000.0f);
+    bool isDepthPass = false;
+
+    void bindShadowUniforms(Core::Shader* shader) {
+        if (!shader) return;
+        shader->SetUniform("u_isDepthPass", isDepthPass);
+        shader->SetUniform("u_lightSpaceMatrix", lightSpaceMatrix);
+        if (!isDepthPass) {
+            shader->SetUniform("u_enableShadow", true);
+            shader->SetUniform("u_shadowLightPos", shadowLightPos);
+            glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+            shader->SetUniform("u_shadowMap", 6);
+        }
+    }
+
     // EVENT
     enum sceneEventIds
     {
@@ -142,6 +164,23 @@ public:
             PrintLog("Failed to initialize Terrain");
             return FALSE;
         }
+
+        // Create depth FBO
+        glGenFramebuffers(1, &depthMapFBO);
+        glGenTextures(1, &depthMapTexture);
+        glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMapTexture, 0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         mSwing = std::make_unique<Core::Model>();
         mSwing->LoadModel("./assets/models/scene1_models/Kaliya.glb");
@@ -299,6 +338,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             mSwing->mTextureShader->Use();
+            bindShadowUniforms(mSwing->mTextureShader.get());
             mSwing->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 swingModelMatrix =
@@ -324,6 +364,28 @@ public:
     
     void display()
     {
+        // Shadow Depth Pass
+        mat4 lightProjectionMatrix = vmath::ortho(-6000.0f, 6000.0f, -6000.0f, 6000.0f, -10000.0f, 10000.0f);
+        mat4 lightViewMatrix = vmath::lookat(shadowLightPos, vec3(0.0f, 0.0f, 0.0f), vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+
+        isDepthPass = true;
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        
+        drawSwingModel();
+        
+        glCullFace(GL_BACK);
+        glDisable(GL_CULL_FACE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        isDepthPass = false;
+
+        glViewport(0, 0, giWindowWidth, giWindowHeight);
+
         // Camera
         modelMatrix = mat4::identity();
         perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)giWindowWidth / (GLfloat)giWindowHeight, 10.0f, 10000000.0f);
@@ -334,7 +396,10 @@ public:
 
         pushMatrix(modelMatrix);
         {
-            terrain->draw(false);
+            terrain->shadowMap = depthMapTexture;
+            terrain->shadowLightSpaceMatrix = lightSpaceMatrix;
+            terrain->shadowLightPosition = shadowLightPos;
+            terrain->draw(1.0f);
         }
         modelMatrix = popMatrix();
 

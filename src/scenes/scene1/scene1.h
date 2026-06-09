@@ -85,6 +85,28 @@ public:
     BezierCamera sc2;
     BezierCamera sc3;
 
+    // Shadow variables
+    GLuint depthMapFBO;
+    GLuint depthMapTexture;
+    const GLuint SHADOW_WIDTH = 4096;
+    const GLuint SHADOW_HEIGHT = 4096;
+    mat4 lightSpaceMatrix;
+    vec3 shadowLightPos = vec3(0.0f, 4000.0f, 4000.0f); // Adjust light pos to cover the scene
+    bool isDepthPass = false;
+
+    void bindShadowUniforms(Core::Shader* shader) {
+        if (!shader) return;
+        shader->SetUniform("u_isDepthPass", isDepthPass);
+        shader->SetUniform("u_lightSpaceMatrix", lightSpaceMatrix);
+        if (!isDepthPass) {
+            shader->SetUniform("u_enableShadow", true);
+            shader->SetUniform("u_shadowLightPos", shadowLightPos);
+            glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+            shader->SetUniform("u_shadowMap", 6);
+        }
+    }
+
     // EVENT
     enum sceneEventIds
     {   
@@ -101,7 +123,7 @@ public:
         cubeMap = new CubeMap();
         // cubeMap[1] = new CubeMap();
         terrain = new Terrain(20.0f * 80.0f);
-        waterMatrix = new WaterMatrix(300. * 400.);
+        // waterMatrix = new WaterMatrix(300. * 400.);
         sceneCamera = new BezierCamera();
         // rain = new Rain(40000);
         // godRaysShader = new GodRaysShader();
@@ -205,7 +227,7 @@ public:
         lightManager->setAmbient(vec3(0.05f));
 
         // Water
-        waterMatrix->initialize();
+        // waterMatrix->initialize();
 
         // IMPortanttt
         terrain->setFreq(0.020f);            // broad beach hills
@@ -215,8 +237,8 @@ public:
         terrain->setGrassCoverage(0.0f);     // >1.0 avoids grass branch
         terrain->setWaterHeight(-20.0f);       // keep your sea level
 
-        waterMatrix->interpolateWaterColor = 1.0f;
-        waterMatrix->moveFactor = 0.0f;
+        // waterMatrix->interpolateWaterColor = 1.0f;
+        // waterMatrix->moveFactor = 0.0f;
 
         // if (!rain->initialize(2))
         // {
@@ -232,10 +254,26 @@ public:
              {END_T, {30.0f, 0.0f}}},
             true);
 
+        // Create depth FBO
+        glGenFramebuffers(1, &depthMapFBO);
+        glGenTextures(1, &depthMapTexture);
+        glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMapTexture, 0);
+        glDrawBuffer(GL_NONE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         setupCamera();
         // sceneCamera->initialize();
         // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
-        // sceneCamera->handlePerspective = true;
+        sceneCamera->handlePerspective = true;
 
         isInitialized = true;
         isSceneComplete = false;
@@ -245,83 +283,247 @@ public:
     void setupCamera()
     {
         std::vector<std::vector<float>> bezierPointsSC1 = {
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {-1648.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -12814.500000f},
-            {-3558.600098f, 8713.500000f, -9584.500000f},
-            {-5008.600098f, 7733.500000f, -9584.500000f},
-            {-5568.600098f, 7733.500000f, -6804.500000f},
-            {-5568.600098f, 6433.500000f, -5954.500000f},
-            {-5568.600098f, 6693.500000f, -5764.500000f},
-            {-5568.600098f, 7063.500000f, -4514.500000f},
-            {-5568.600098f, 7063.500000f, -2684.500000f},
-            {-5568.600098f, 7063.500000f, -1564.500000f},
-            {-5568.600098f, 7063.500000f, 1805.500000f},
-            {-5568.600098f, 7063.500000f, 3915.500000f},
-            {-5568.600098f, 7063.500000f, 5015.500000f},
-        };
+{7591.399902f, 3313.500000f, 5725.500000f},
+{7341.399902f, 3313.500000f, 5455.500000f},
+{6851.399902f, 3113.500000f, 5175.500000f},
+{6851.399902f, 2563.500000f, 5175.500000f},
+{6051.399902f, 2563.500000f, 4295.500000f},
+{6051.399902f, 2233.500000f, 4295.500000f},
+{5211.399902f, 1583.500000f, 3305.500000f},
+{4741.399902f, 1583.500000f, 3305.500000f},
+{4501.399902f, 1093.500000f, 3305.500000f},
+{3771.399902f, 893.500000f, 2795.500000f},
+{3771.399902f, 583.500000f, 2795.500000f},
+{3771.399902f, 323.500000f, 2795.500000f},
+{2621.399902f, 183.500000f, 2105.500000f},
+{2621.399902f, 133.500000f, 2105.500000f},
+{2171.399902f, 93.500000f, 1805.500000f},
+{2051.399902f, 93.500000f, 1695.500000f},
+{1941.399902f, 93.500000f, 1615.500000f},
+{1741.399902f, 93.500000f, 1615.500000f},
+{1741.399902f, 113.500000f, 1595.500000f},
+{1741.399902f, 113.500000f, 1525.500000f},
+{1741.399902f, 113.500000f, 1475.500000f},
+{1741.399902f, 113.500000f, 1475.500000f},
+{1741.399902f, 113.500000f, 1385.500000f},
+{1741.399902f, 113.500000f, 1145.500000f},
+{1741.399902f, 113.500000f, 875.500000f},
+{1551.399902f, 113.500000f, 515.500000f},
+{1401.399902f, 113.500000f, 405.500000f},
+{1331.399902f, 113.500000f, 235.500000f},
+{1211.399902f, 113.500000f, 135.500000f},
+{1081.399902f, 113.500000f, 5.500000f},
+{751.399902f, 113.500000f, -134.500000f},
+{341.399902f, 163.500000f, -84.500000f},
+{51.399902f, 153.500000f, 145.500000f},
+{51.399902f, 103.500000f, 145.500000f},
+{51.399902f, 103.500000f, 155.500000f},
+{51.399902f, 103.500000f, 225.500000f},
+{41.399902f, 103.500000f, 375.500000f},
+{41.399902f, 103.500000f, 535.500000f},
+{41.399902f, 103.500000f, 895.500000f},
+{41.399902f, 103.500000f, 905.500000f},
+{411.399902f, 103.500000f, 1175.500000f},
+{621.399902f, 103.500000f, 1175.500000f},
+{1041.399902f, 103.500000f, 1175.500000f},
+{1231.399902f, 103.500000f, 1175.500000f},
+{1231.399902f, 223.500000f, 1175.500000f},
+{1231.399902f, 713.500000f, 1175.500000f},
+{1231.399902f, 1213.500000f, 1175.500000f},
+{1231.399902f, 1953.500000f, 1175.500000f},
+{1231.399902f, 3143.500000f, 1175.500000f},
+{1231.399902f, 3983.500000f, 1175.500000f},
+{1231.399902f, 4463.500000f, 1175.500000f},
+{1231.399902f, 4793.500000f, 1175.500000f},
+{1231.399902f, 5273.500000f, 1175.500000f},
+{1231.399902f, 5963.500000f, 1175.500000f},
+{1231.399902f, 6673.500000f, 1175.500000f},
+{1231.399902f, 6673.500000f, 1175.500000f},
+};
 
-        // YAW GLOBAL
-        std::vector<float> yawGlobalSC1 = {
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            49.000000f,
-            49.000000f,
-            79.000000f,
-            109.000000f,
-        };
 
-        // PITCH GLOBAL
-        std::vector<float> pitchGlobalSC1 = {
-            32.000000f,
-            12.000000f,
-            12.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-        };
+// YAW GLOBAL
+std::vector<float> yawGlobalSC1 = {
+219.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+214.000000f,
+215.000000f,
+219.000000f,
+220.000000f,
+220.000000f,
+219.000000f,
+219.000000f,
+217.000000f,
+217.000000f,
+215.000000f,
+215.000000f,
+209.000000f,
+205.000000f,
+197.000000f,
+176.000000f,
+166.000000f,
+159.000000f,
+155.000000f,
+142.000000f,
+134.000000f,
+128.000000f,
+152.000000f,
+171.000000f,
+178.000000f,
+189.000000f,
+197.000000f,
+207.000000f,
+207.000000f,
+156.000000f,
+156.000000f,
+194.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+};
 
-        // FOV GLOBAL
-        std::vector<float> fovGlobalSC1 = {
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-        };
+
+// PITCH GLOBAL
+std::vector<float> pitchGlobalSC1 = {
+-34.000000f,
+	-34.000000f,
+	-31.000000f,
+	-28.000000f,
+	-28.000000f,
+	-25.000000f,
+	-25.000000f,
+	-25.000000f,
+	-25.000000f,
+	-21.000000f,
+	-17.000000f,
+	-12.000000f,
+	-11.000000f,
+	-9.000000f,
+	-6.000000f,
+	-6.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-1.000000f,
+	-7.000000f,
+	-11.000000f,
+	-11.000000f,
+	-10.000000f,
+	-7.000000f,
+	-7.000000f,
+	-2.000000f,
+	-2.000000f,
+	-2.000000f,
+	-2.000000f,
+	-2.000000f,
+	-2.000000f,
+	-26.000000f,
+	-38.000000f,
+	-52.000000f,
+	-69.000000f,
+	-82.000000f,
+	-82.000000f,
+	-86.000000f,
+	-83.000000f,
+	-83.000000f,
+	-85.000000f,
+	-85.000000f,
+	-85.000000f,
+	-85.000000f,
+	};
+
+
+
+// FOV GLOBAL
+std::vector<float> fovGlobalSC1 = {
+-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	};    
 
         sc1.initialize();
         sc1.setBezierPoints(bezierPointsSC1, yawGlobalSC1, pitchGlobalSC1, fovGlobalSC1);
@@ -330,6 +532,28 @@ public:
 
     void display()
     {
+        // Shadow Depth Pass
+        mat4 lightProjectionMatrix = vmath::ortho(-6000.0f, 6000.0f, -6000.0f, 6000.0f, -10000.0f, 10000.0f);
+        mat4 lightViewMatrix = vmath::lookat(shadowLightPos, vec3(0.0f, 0.0f, 0.0f), vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+
+        isDepthPass = true;
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        
+        drawVrundavanScene();
+        
+        glCullFace(GL_BACK);
+        glDisable(GL_CULL_FACE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        isDepthPass = false;
+
+        glViewport(0, 0, giWindowWidth, giWindowHeight);
+
         // Camera
         modelMatrix = mat4::identity();
         perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)giWindowWidth / (GLfloat)giWindowHeight, 10.0f, 10000000.0f);
@@ -340,35 +564,38 @@ public:
 
         pushMatrix(modelMatrix);
         {
-            terrain->draw(false);
+            terrain->shadowMap = depthMapTexture;
+            terrain->shadowLightSpaceMatrix = lightSpaceMatrix;
+            terrain->shadowLightPosition = shadowLightPos;
+            terrain->draw(1.0f);
         }
         modelMatrix = popMatrix();
 
-        pushMatrix(modelMatrix);
-        {
-             // Refraction
-            waterMatrix->bindRefractionFBO(1920, 1080);
-            {
-                displayScene(-1.0);
-            }
-            waterMatrix->unbindRefractionFBO();
+        // pushMatrix(modelMatrix);
+        // {
+        //      // Refraction
+        //     // waterMatrix->bindRefractionFBO(1920, 1080);
+        //     {
+        //         displayScene(-1.0);
+        //     }
+        //     waterMatrix->unbindRefractionFBO();
 
-            // Refraction
-            waterMatrix->bindReflectionFBO(1920, 1080);
-            {
-                displayScene(1.0);
-            }
-            waterMatrix->unbindReflectionFBO();
-        }
-        modelMatrix = popMatrix();
+        //     // Refraction
+        //     waterMatrix->bindReflectionFBO(1920, 1080);
+        //     {
+        //         displayScene(1.0);
+        //     }
+        //     waterMatrix->unbindReflectionFBO();
+        // }
+        // modelMatrix = popMatrix();
 
         // Water Bed
-        pushMatrix(modelMatrix);
-        {
-            modelMatrix = modelMatrix * translate(0.0f, (float)terrain->getWaterHeight() + 1.0f, 0.0f);
-            waterMatrix->renderWaterQuad(terrain->getWaterHeight());
-        }
-        modelMatrix = popMatrix();
+        // pushMatrix(modelMatrix);
+        // {
+        //     modelMatrix = modelMatrix * translate(0.0f, (float)terrain->getWaterHeight() + 1.0f, 0.0f);
+        //     waterMatrix->renderWaterQuad(terrain->getWaterHeight());
+        // }
+        // modelMatrix = popMatrix();
 
         pushMatrix(modelMatrix);
         {
@@ -391,7 +618,7 @@ public:
         // }
         // modelMatrix = popMatrix();
 
-        // sceneCamera->displayBezierCurve();
+        sceneCamera->displayBezierCurve();
     }
 
     void drawVrundavanScene()
@@ -421,6 +648,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
@@ -448,6 +676,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
@@ -479,6 +708,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
@@ -510,6 +740,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
@@ -540,6 +771,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
@@ -575,6 +807,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house2->mTextureShader->Use();
+            bindShadowUniforms(house2->mTextureShader.get());
             house2->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house2ModelMatrix =
@@ -614,6 +847,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             hutHouse->mTextureShader->Use();
+            bindShadowUniforms(hutHouse->mTextureShader.get());
             hutHouse->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 hutHouseModelMatrix =
@@ -647,6 +881,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             hutHouse->mTextureShader->Use();
+            bindShadowUniforms(hutHouse->mTextureShader.get());
             hutHouse->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 hutHouseModelMatrix =
@@ -681,6 +916,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             hutHouse->mTextureShader->Use();
+            bindShadowUniforms(hutHouse->mTextureShader.get());
             hutHouse->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 hutHouseModelMatrix =
@@ -719,6 +955,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             
             house3->mTextureShader->Use();
+            bindShadowUniforms(house3->mTextureShader.get());
             house3->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house3ModelMatrix =
@@ -752,6 +989,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house3->mTextureShader->Use();
+            bindShadowUniforms(house3->mTextureShader.get());
             house3->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house3ModelMatrix =
@@ -790,6 +1028,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             vrundavanGate->mTextureShader->Use();
+            bindShadowUniforms(vrundavanGate->mTextureShader.get());
             vrundavanGate->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 vrundavanGateModelMatrix =
@@ -828,6 +1067,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             cowHouse->mTextureShader->Use();
+            bindShadowUniforms(cowHouse->mTextureShader.get());
             cowHouse->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 cowHouseModelMatrix =
@@ -861,6 +1101,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             well->mTextureShader->Use();
+            bindShadowUniforms(well->mTextureShader.get());
             well->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 wellModelMatrix =
@@ -896,6 +1137,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             farmLand->mTextureShader->Use();
+            bindShadowUniforms(farmLand->mTextureShader.get());
             farmLand->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 farmLandModelMatrix =
@@ -929,6 +1171,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             farmLand->mTextureShader->Use();
+            bindShadowUniforms(farmLand->mTextureShader.get());
             farmLand->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 farmLandModelMatrix =
@@ -1005,6 +1248,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             farmer2_bailgadi->mTextureShader->Use();
+            bindShadowUniforms(farmer2_bailgadi->mTextureShader.get());
             farmer2_bailgadi->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 farmer2_bailgadiModelMatrix =
@@ -1037,6 +1281,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             farmer3->mTextureShader->Use();
+            bindShadowUniforms(farmer3->mTextureShader.get());
             farmer3->mTextureShader->SetUniform("isBlack", isBlack);
             
             vmath::mat4 farmer3ModelMatrix =
@@ -1073,6 +1318,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             tree1->mTextureShader->Use();
+            bindShadowUniforms(tree1->mTextureShader.get());
             tree1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 tree1ModelMatrix =
@@ -1103,6 +1349,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             tree1->mTextureShader->Use();
+            bindShadowUniforms(tree1->mTextureShader.get());
             tree1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 tree1ModelMatrix =
@@ -1133,6 +1380,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             tree1->mTextureShader->Use();
+            bindShadowUniforms(tree1->mTextureShader.get());
             tree1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 tree1ModelMatrix =
@@ -1163,6 +1411,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             tree1->mTextureShader->Use();
+            bindShadowUniforms(tree1->mTextureShader.get());
             tree1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 tree1ModelMatrix =
@@ -1201,6 +1450,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             bananaTree->mTextureShader->Use();
+            bindShadowUniforms(bananaTree->mTextureShader.get());
             bananaTree->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 tree1ModelMatrix =
@@ -1231,6 +1481,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             bananaTree->mTextureShader->Use();
+            bindShadowUniforms(bananaTree->mTextureShader.get());
             bananaTree->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 tree1ModelMatrix =
@@ -1325,6 +1576,8 @@ public:
     void update()
     {
         sceneCamera->time = globalTime;
+        // sceneCamera->time = 1;
+        // sceneCamera->update();
 
         kaliyaX += 150.5f; // Move Kaliya along the X-axis
         kaliyaZ += 150.3f; // Move Kaliya along the Z-axis
