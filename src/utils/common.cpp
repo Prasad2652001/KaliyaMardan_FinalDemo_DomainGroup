@@ -209,30 +209,37 @@ BOOL Load1DPNGImage(GLuint *texture, float *data)
 
 unsigned int loadCubemap(const char *faces[])
 {
-    unsigned int textureID;
+    unsigned int textureID = 0;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
     int width, height, nrChannels;
+    int loadedFaces = 0;
     for (unsigned int i = 0; i < 6; i++)
     {
-        // PrintLog("FIle name = %s\n", faces[i]);
         unsigned char *data = stbi_load(faces[i], &width, &height, &nrChannels, 0);
         if (data)
         {
+            GLenum format = GL_RGB;
+            GLenum internal = GL_RGB;
+            if (nrChannels == 1)       { format = GL_RED;  internal = GL_RED; }
+            else if (nrChannels == 2)  { format = GL_RG;   internal = GL_RG; }
+            else if (nrChannels == 4)  { format = GL_RGBA; internal = GL_RGBA; }
+
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                         0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                         0, internal, width, height, 0, format, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
-            // PrintLog("Cubemap tex Success to load at path: %s\n", faces[i]);
+            loadedFaces++;
         }
         else
         {
-            // std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
-            // PrintLog("Cubemap tex failed to load at path: %s\n", faces[i]);
-            stbi_image_free(data);
+            PrintLog("Cubemap face failed to load: '%s'\n", faces[i]);
         }
     }
+    if (loadedFaces < 6)
+        PrintLog("Cubemap: only %d/6 faces loaded.\n", loadedFaces);
+
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

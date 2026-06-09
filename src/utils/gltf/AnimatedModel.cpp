@@ -4,6 +4,7 @@
 #include <assimp/config.h>
 #include "../OpenGL/GLLog.h"
 #include "../../includes/stb_image.h"
+#include <glm/gtc/quaternion.hpp>
 #include <cmath>
 #include <map>
 
@@ -13,6 +14,20 @@ static glm::mat4 AiMat4ToGlm(const aiMatrix4x4& m)
                      m.a2, m.b2, m.c2, m.d2,
                      m.a3, m.b3, m.c3, m.d3,
                      m.a4, m.b4, m.c4, m.d4);
+}
+
+// Catmull-Rom spline through p1->p2 using neighbours p0,p3 as tangents.
+// Gives C1-continuous (smooth velocity) interpolation, so a looping pose
+// sequence flows continuously instead of stopping at every keyframe.
+static glm::vec3 CatmullRom(const glm::vec3& p0, const glm::vec3& p1,
+                            const glm::vec3& p2, const glm::vec3& p3, float t)
+{
+    const float t2 = t * t;
+    const float t3 = t2 * t;
+    return 0.5f * ((2.0f * p1) +
+                   (-p0 + p2) * t +
+                   (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * t2 +
+                   (-p0 + 3.0f * p1 - 3.0f * p2 + p3) * t3);
 }
 
 namespace Core
@@ -207,12 +222,61 @@ namespace Core
         return ch->mScalingKeys[i].mValue + (ch->mScalingKeys[j].mValue - ch->mScalingKeys[i].mValue) * f;
     }
 
+    std::string AnimatedModel::LogicalBoneName(const std::string& nodeName)
+    {
+        size_t colon = nodeName.find_last_of(':');
+        return (colon != std::string::npos) ? nodeName.substr(colon + 1) : nodeName;
+    }
+
     void AnimatedModel::BuildGlobalTransforms(
         const aiNode* node, const aiAnimation* anim, double tick,
         const aiMatrix4x4& parent, std::map<std::string, aiMatrix4x4>& out)
     {
         std::string name(node->mName.C_Str());
         aiMatrix4x4 nodeT = node->mTransformation;
+
+        // ----- Procedural dance: override the bind local rotation with a
+        // hand-authored delta (applied in the bone's local space). -----
+        if (mUseProceduralPose)
+        {
+            auto pit = mProceduralPose.find(LogicalBoneName(name));
+            if (pit != mProceduralPose.end())
+            {
+                aiVector3D   bindScl(1, 1, 1);
+                aiQuaternion bindRot(1, 0, 0, 0);
+                aiVector3D   bindPos(0, 0, 0);
+                node->mTransformation.Decompose(bindScl, bindRot, bindPos);
+
+                glm::quat bind(bindRot.w, bindRot.x, bindRot.y, bindRot.z);
+                glm::quat fin = glm::normalize(bind * pit->second);
+
+                const float x = fin.x, y = fin.y, z = fin.z, w = fin.w;
+                const float xx = x * x, yy = y * y, zz = z * z;
+                const float xy = x * y, xz = x * z, yz = y * z;
+                const float wx = w * x, wy = w * y, wz = w * z;
+
+                const float R00 = 1.0f - 2.0f * (yy + zz);
+                const float R01 = 2.0f * (xy - wz);
+                const float R02 = 2.0f * (xz + wy);
+                const float R10 = 2.0f * (xy + wz);
+                const float R11 = 1.0f - 2.0f * (xx + zz);
+                const float R12 = 2.0f * (yz - wx);
+                const float R20 = 2.0f * (xz - wy);
+                const float R21 = 2.0f * (yz + wx);
+                const float R22 = 1.0f - 2.0f * (xx + yy);
+
+                nodeT.a1 = R00 * bindScl.x; nodeT.a2 = R01 * bindScl.y; nodeT.a3 = R02 * bindScl.z; nodeT.a4 = bindPos.x;
+                nodeT.b1 = R10 * bindScl.x; nodeT.b2 = R11 * bindScl.y; nodeT.b3 = R12 * bindScl.z; nodeT.b4 = bindPos.y;
+                nodeT.c1 = R20 * bindScl.x; nodeT.c2 = R21 * bindScl.y; nodeT.c3 = R22 * bindScl.z; nodeT.c4 = bindPos.z;
+                nodeT.d1 = 0.0f;            nodeT.d2 = 0.0f;            nodeT.d3 = 0.0f;            nodeT.d4 = 1.0f;
+            }
+
+            aiMatrix4x4 globalT = parent * nodeT;
+            out[name] = globalT;
+            for (unsigned int i = 0; i < node->mNumChildren; i++)
+                BuildGlobalTransforms(node->mChildren[i], anim, tick, globalT, out);
+            return;
+        }
 
         const aiNodeAnim* ch = anim ? FindChannel(anim, name) : nullptr;
         if (ch)
@@ -364,6 +428,7 @@ namespace Core
 
         PrintLogFunction(__FUNCTION__, "AnimatedModel '%s': bones=%d meshes=%zu",
             path.c_str(), mNumBones, meshes.size());
+
         return true;
     }
 
@@ -479,6 +544,13 @@ namespace Core
         if (!mScene)
             return;
 
+        if (mUseProceduralPose)
+        {
+            EvaluateProceduralPose(deltaSeconds);
+            UpdateBoneMatrices();
+            return;
+        }
+
         const aiAnimation* anim = mScene->HasAnimations() ? mScene->mAnimations[0] : nullptr;
         if (anim)
         {
@@ -488,6 +560,147 @@ namespace Core
         }
 
         UpdateBoneMatrices();
+    }
+
+    void AnimatedModel::EnableProceduralDance(bool enable)
+    {
+        mUseProceduralPose = enable;
+        mDanceTime = 0.0f;
+        if (enable && mDancePoses.empty())
+            BuildTandavPoses();
+    }
+
+    // Author the looping Tandav dance as a sequence of expressive key poses.
+    // Each value is a local-space rotation delta (XYZ Euler degrees) applied on
+    // top of the bind (T) pose. Because Mixamo bone local axes are not world
+    // aligned, these were tuned visually; tweak the numbers to restyle the dance.
+    void AnimatedModel::BuildTandavPoses()
+    {
+        mDancePoses.clear();
+
+        // Pose 0 - grounded ready stance, both arms raised outward/up.
+        {
+            DancePose p; p.blendIn = 0.8f; p.holdAfter = 0.3f;
+            p.euler["Spine"]        = glm::vec3( 0,  0,   0);
+            p.euler["Spine1"]       = glm::vec3( 0,  0,   0);
+            p.euler["Neck"]         = glm::vec3( 0,  0,   0);
+            p.euler["LeftArm"]      = glm::vec3( 0,  0,  60);
+            p.euler["LeftForeArm"]  = glm::vec3( 0,  0,  30);
+            p.euler["RightArm"]     = glm::vec3( 0,  0, -60);
+            p.euler["RightForeArm"] = glm::vec3( 0,  0, -30);
+            p.euler["LeftUpLeg"]    = glm::vec3( 0,  0,  10);
+            p.euler["RightUpLeg"]   = glm::vec3( 0,  0, -10);
+            mDancePoses.push_back(p);
+        }
+
+        // Pose 1 - Nataraja: left knee lifts & crosses, right arm sweeps across.
+        {
+            DancePose p; p.blendIn = 0.7f; p.holdAfter = 0.4f;
+            p.euler["Spine"]        = glm::vec3( 0,  0,  -8);
+            p.euler["Spine1"]       = glm::vec3( 0, 15,  -6);
+            p.euler["Neck"]         = glm::vec3( 0, 10,   0);
+            p.euler["LeftArm"]      = glm::vec3( 0,  0,  95);
+            p.euler["LeftForeArm"]  = glm::vec3( 0, 40,  20);
+            p.euler["RightArm"]     = glm::vec3( 0,  0, -35);
+            p.euler["RightForeArm"] = glm::vec3( 0,-60, -10);
+            p.euler["LeftUpLeg"]    = glm::vec3(70,  0,  25);
+            p.euler["LeftLeg"]      = glm::vec3(-90, 0,   0);
+            p.euler["RightUpLeg"]   = glm::vec3( 0,  0, -8);
+            mDancePoses.push_back(p);
+        }
+
+        // Pose 2 - open both arms wide, slight back-bend (peak of the beat).
+        {
+            DancePose p; p.blendIn = 0.6f; p.holdAfter = 0.25f;
+            p.euler["Spine"]        = glm::vec3(-10, 0,   0);
+            p.euler["Spine1"]       = glm::vec3(-8,  0,   0);
+            p.euler["Neck"]         = glm::vec3(-12, 0,   0);
+            p.euler["LeftArm"]      = glm::vec3( 0,  0, 100);
+            p.euler["LeftForeArm"]  = glm::vec3( 0,  0,  10);
+            p.euler["RightArm"]     = glm::vec3( 0,  0,-100);
+            p.euler["RightForeArm"] = glm::vec3( 0,  0, -10);
+            p.euler["LeftUpLeg"]    = glm::vec3( 0,  0,  12);
+            p.euler["RightUpLeg"]   = glm::vec3( 0,  0, -12);
+            mDancePoses.push_back(p);
+        }
+
+        // Pose 3 - mirror of pose 1: right knee lifts, left arm sweeps across.
+        {
+            DancePose p; p.blendIn = 0.7f; p.holdAfter = 0.4f;
+            p.euler["Spine"]        = glm::vec3( 0,  0,   8);
+            p.euler["Spine1"]       = glm::vec3( 0,-15,   6);
+            p.euler["Neck"]         = glm::vec3( 0,-10,   0);
+            p.euler["RightArm"]     = glm::vec3( 0,  0, -95);
+            p.euler["RightForeArm"] = glm::vec3( 0,-40, -20);
+            p.euler["LeftArm"]      = glm::vec3( 0,  0,  35);
+            p.euler["LeftForeArm"]  = glm::vec3( 0, 60,  10);
+            p.euler["RightUpLeg"]   = glm::vec3(70,  0, -25);
+            p.euler["RightLeg"]     = glm::vec3(-90, 0,   0);
+            p.euler["LeftUpLeg"]    = glm::vec3( 0,  0,  8);
+            mDancePoses.push_back(p);
+        }
+    }
+
+    void AnimatedModel::EvaluateProceduralPose(float dt)
+    {
+        const int n = (int)mDancePoses.size();
+        if (n == 0)
+            return;
+
+        mDanceTime += dt * mDanceSpeed;
+
+        // Equal-length, continuously looping segments. No holds -> the body
+        // never freezes, which is what kills the robotic stop-go feeling.
+        const float segDur = 1.0f;                 // seconds per pose->pose hop
+        const float total  = (float)n * segDur;
+        float t = fmodf(mDanceTime, total);
+        if (t < 0.0f) t += total;
+
+        const int   seg   = ((int)(t / segDur)) % n;
+        const float local = (t - seg * segDur) / segDur; // 0..1 within segment
+
+        const int i0 = (seg - 1 + n) % n;
+        const int i1 =  seg;
+        const int i2 = (seg + 1) % n;
+        const int i3 = (seg + 2) % n;
+
+        // Union of every bone used anywhere in the loop, so bones fade in/out
+        // smoothly (absent in a pose == zero delta) across the whole spline.
+        std::map<std::string, int> bones;
+        for (auto& p : mDancePoses)
+            for (auto& kv : p.euler) bones[kv.first] = 1;
+        bones["Hips"] = 1; // always present for a gentle full-body weight shift
+
+        auto eulerAt = [&](int idx, const std::string& bone) -> glm::vec3
+        {
+            auto it = mDancePoses[idx].euler.find(bone);
+            return (it != mDancePoses[idx].euler.end()) ? it->second : glm::vec3(0.0f);
+        };
+
+        // Continuous secondary motion (breathing sway) layered on top so the
+        // performance always has organic life, even mid-hold of a limb.
+        const float ph = mDanceTime;
+
+        mProceduralPose.clear();
+        for (auto& kv : bones)
+        {
+            const std::string& b = kv.first;
+            glm::vec3 e = CatmullRom(eulerAt(i0, b), eulerAt(i1, b),
+                                     eulerAt(i2, b), eulerAt(i3, b), local);
+
+            // Per-bone organic sway (degrees). Different freqs/phases avoid a
+            // mechanical look; amplitudes kept small so poses stay readable.
+            if (b == "Hips")         e += glm::vec3(1.5f * sinf(ph * 0.9f), 4.0f * sinf(ph * 0.7f),        3.0f * sinf(ph * 0.9f));
+            else if (b == "Spine")   e += glm::vec3(2.0f * sinf(ph * 1.3f), 5.0f * sinf(ph * 0.9f),        3.0f * sinf(ph * 1.1f));
+            else if (b == "Spine1")  e += glm::vec3(2.0f * sinf(ph * 1.1f + 0.6f), 4.0f * sinf(ph * 0.9f + 0.4f), 2.5f * sinf(ph * 1.2f));
+            else if (b == "Neck")    e += glm::vec3(3.0f * sinf(ph * 1.6f), 5.0f * sinf(ph * 0.8f),        2.0f * sinf(ph * 1.0f));
+            else if (b == "LeftForeArm")  e += glm::vec3(0.0f, 6.0f * sinf(ph * 1.7f),        4.0f * sinf(ph * 1.4f));
+            else if (b == "RightForeArm") e += glm::vec3(0.0f, 6.0f * sinf(ph * 1.7f + 3.14f), 4.0f * sinf(ph * 1.4f + 3.14f));
+            else if (b == "LeftArm")      e += glm::vec3(0.0f, 0.0f, 3.0f * sinf(ph * 1.0f));
+            else if (b == "RightArm")     e += glm::vec3(0.0f, 0.0f, 3.0f * sinf(ph * 1.0f + 3.14f));
+
+            mProceduralPose[b] = glm::quat(glm::radians(e));
+        }
     }
 
     void AnimatedModel::SetBaseColorTexture(const std::string& path)

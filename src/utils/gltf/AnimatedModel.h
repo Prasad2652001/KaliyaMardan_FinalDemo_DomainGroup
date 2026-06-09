@@ -5,6 +5,7 @@
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <map>
 #include <string>
 #include <vector>
@@ -69,9 +70,30 @@ namespace Core
         SkinnedMesh ProcessMesh(const aiMesh* mesh);
         void UpdateBoneMatrices();
 
-        static void BuildGlobalTransforms(
+        void BuildGlobalTransforms(
             const aiNode* node, const aiAnimation* anim, double tick,
             const aiMatrix4x4& parent, std::map<std::string, aiMatrix4x4>& out);
+
+        // ----- Procedural keyframe-pose animation (e.g. Tandav dance) -----
+        // A single dance pose: per-bone local-space rotation deltas (applied on
+        // top of the bind pose). Keyed by "logical" bone name (the part after
+        // the last ':' so it works with or without the "mixamorig:" prefix).
+        struct DancePose
+        {
+            std::map<std::string, glm::vec3> euler; // bone -> XYZ degrees
+            float holdAfter = 0.0f;                 // seconds to hold this pose
+            float blendIn   = 0.6f;                 // seconds to blend into it
+        };
+
+        std::vector<DancePose>             mDancePoses;
+        bool                               mUseProceduralPose = false;
+        float                              mDanceTime         = 0.0f;
+        float                              mDanceSpeed        = 2.6f; // playback multiplier
+        std::map<std::string, glm::quat>   mProceduralPose;   // logical name -> delta quat
+
+        void BuildTandavPoses();
+        void EvaluateProceduralPose(float dt);
+        static std::string LogicalBoneName(const std::string& nodeName);
 
         std::vector<ModelTexture> LoadMaterialTextures(
             const aiMaterial* mat, aiTextureType type, TextureType texType);
@@ -95,6 +117,13 @@ namespace Core
         // Force a base-color (diffuse) texture for models whose FBX carries no
         // embedded skin (e.g. Mixamo exports). Bound as u_BaseColorSampler.
         void SetBaseColorTexture(const std::string& path);
+
+        // Replace the embedded clip with a hand-authored procedural dance that
+        // drives the rig bones through a looping sequence of Tandav poses.
+        void EnableProceduralDance(bool enable);
+
+        // Playback speed multiplier for the procedural dance (1.0 = authored).
+        void SetDanceSpeed(float speed) { mDanceSpeed = speed; }
 
     private:
         unsigned int mOverrideBaseColor = 0;

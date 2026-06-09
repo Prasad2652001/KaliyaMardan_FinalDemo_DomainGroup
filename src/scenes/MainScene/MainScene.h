@@ -45,8 +45,50 @@ public:
 
         START_E2E_DEMO = true;
         // selected_scene = SCENE_INTRO;
-        selected_scene = SCENE_02;
+        selected_scene = SCENE_03;
         scene = nullptr;
+    }
+
+    void switchToScene(int newScene)
+    {
+        if (newScene < SCENE_INTRO || newScene > SCENE_OUTRO)
+            return;
+
+        selected_scene = newScene;
+
+        if (START_E2E_DEMO)
+            initializeScenesUpTo(selected_scene);
+        else
+            initializeActiveSceneOnly();
+
+        switch (selected_scene)
+        {
+        case SCENE_INTRO:
+            break;
+        case SCENE_00:
+            scene = scene0;
+            break;
+        case SCENE_01:
+            scene = scene1;
+            break;
+        case SCENE_02:
+            scene = scene2;
+            break;
+        case SCENE_03:
+            scene = scene3;
+            break;
+        case SCENE_04:
+            scene = scene4;
+            break;
+        case SCENE_OUTRO:
+            scene = outroScene;
+            break;
+        default:
+            break;
+        }
+
+        if (scene && scene->sceneCamera)
+            setGlobalBezierCamera(scene->sceneCamera);
     }
 
     // Initialize only scenes that will actually be used (avoids loading
@@ -138,11 +180,13 @@ public:
         {
             setGlobalBezierCamera(scene->sceneCamera);
 
-            if (scene->sceneCamera && scene->sceneCamera->bezierPoints.size() > 0)
+            if (USE_FPV_CAM)
             {
-                if (!USE_FPV_CAM)
-                    scene->sceneCamera->update();
-
+                updateGlobalViewMatrix();
+            }
+            else if (scene->sceneCamera && scene->sceneCamera->bezierPoints.size() > 0)
+            {
+                scene->sceneCamera->update();
                 updateGlobalViewMatrix();
             }
         }

@@ -763,6 +763,19 @@ void drawImGui(void)
 
 	ImGui::Begin("Model Controls");
 	{
+		if (mainScene)
+		{
+			static int uiScene = SCENE_03;
+			const char *sceneNames[] = {
+				"INTRO", "SCENE_00", "SCENE_01", "SCENE_02",
+				"SCENE_03", "SCENE_04", "OUTRO"
+			};
+			uiScene = mainScene->selected_scene;
+			if (ImGui::Combo("Active Scene", &uiScene, sceneNames, IM_ARRAYSIZE(sceneNames)))
+				mainScene->switchToScene(uiScene);
+			ImGui::Separator();
+		}
+
 		ImGui::Text("Selected Model");
 
 		ImGui::DragFloat3("Translate", gModelTranslate, 1.0f, -5000.0f, 5000.0f);
@@ -845,10 +858,15 @@ void drawImGui(void)
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		// Terrain Controls for Scene3
-		if (mainScene && mainScene->scene2 && mainScene->scene2->terrain)
+		// Terrain controls for the active scene
+		Terrain *t = nullptr;
+		if (mainScene && mainScene->selected_scene == SCENE_03 && mainScene->scene3)
+			t = mainScene->scene3->terrain;
+		else if (mainScene && mainScene->scene2)
+			t = mainScene->scene2->terrain;
+
+		if (t)
 		{
-			Terrain* t = mainScene->scene2->terrain;
 			
 			ImGui::Separator();
 			ImGui::Text("Scene3 Terrain Controls");
@@ -1320,8 +1338,8 @@ void setGlobalBezierCamera(BezierCamera *bezierCamera)
 
 void setSelectedScene(int selScene)
 {
-	// if (mainScene->START_E2E_DEMO == true)
-	mainScene->selected_scene = selScene;
+	if (mainScene)
+		mainScene->switchToScene(selScene);
 }
 
 void updateGlobalViewMatrix()

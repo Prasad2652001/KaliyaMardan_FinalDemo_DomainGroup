@@ -96,6 +96,7 @@ void PrintLog(const char *fmt, ...)
 	va_start(arg, fmt);
 	ret = vfprintf(gpFile, fmt, arg);
 	va_end(arg);
+	fflush(gpFile);
 }
 
 void CloseLogFile(void)

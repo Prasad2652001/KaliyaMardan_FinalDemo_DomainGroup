@@ -1,6 +1,6 @@
-// *******************************
+// ***********
 // Kaliya Mardan scene 
-// *******************************
+// ***********
 #pragma once
 #include "../../utils/common.h"
 #include "../../shaders/model/Model_Shader.h"
@@ -61,6 +61,12 @@ public:
     std::unique_ptr<Core::Model> hutHouse;
     std::unique_ptr<Core::AnimatedModel> vrundavanGate;
     std::unique_ptr<Core::AnimatedModel> shreeKrishna;
+
+    // Three Krishna Tandav "position" models cross-faded to animate the dance.
+    static const int KRISHNA_POSE_COUNT = 3;
+    std::unique_ptr<Core::AnimatedModel> krishnaPoses[KRISHNA_POSE_COUNT];
+    float krishnaFadeTime = 0.0f;
+
     std::unique_ptr<Core::Model> cowHouse;
     std::unique_ptr<Core::Model> well;
     std::unique_ptr<Core::Model> farmLand;
@@ -103,14 +109,13 @@ public:
     DemoScene3()
     {   
         cubeMap = new CubeMap();
-        // cubeMap[1] = new CubeMap();
         terrain = new Terrain(20.0f * 80.0f);
         waterMatrix = new WaterMatrix(300. * 400.);
         sceneCamera = new BezierCamera();
         rain = new Rain(40000);
         // godRaysShader = new GodRaysShader();
     }
-
+    
     bool initialize()
     {
         if (isInitialized)
@@ -118,12 +123,12 @@ public:
 
         const char *facesLight2[] =
         {
-            ".\\assets\\textures\\modelCubeMap\\px.png",
-            ".\\assets\\textures\\modelCubeMap\\nx.png",
-            ".\\assets\\textures\\modelCubeMap\\py.png",
-            ".\\assets\\textures\\modelCubeMap\\ny.png",
-            ".\\assets\\textures\\modelCubeMap\\pz.png",
-            ".\\assets\\textures\\modelCubeMap\\nz.png"
+            ".\\assets\\textures\\modelCubeMapJpg\\px.jpg",
+            ".\\assets\\textures\\modelCubeMapJpg\\nx.jpg",
+            ".\\assets\\textures\\modelCubeMapJpg\\py.jpg",
+            ".\\assets\\textures\\modelCubeMapJpg\\ny.jpg",
+            ".\\assets\\textures\\modelCubeMapJpg\\pz.jpg",
+            ".\\assets\\textures\\modelCubeMapJpg\\nz.jpg"
         };
         if (!cubeMap->initialize(facesLight2))
         {
@@ -148,17 +153,24 @@ public:
         // loads quickly. AnimatedModel renders it statically (no bones).
         vrundavanGate->LoadModel("./assets/models/scene3_models/Kaliya.glb");
 
-        shreeKrishna = std::make_unique<Core::AnimatedModel>();
-        shreeKrishna->LoadModel("./assets/models/scene3_models/Krishna.fbx");
-        // Krishna.fbx is a Mixamo rig export - Mixamo strips all material
-        // texture references from the FBX, so automatic texture resolution
-        // finds nothing. We set the base color explicitly here. For any FBX
-        // that does carry texture references (embedded or relative paths),
-        // AnimatedModel::LoadMaterialTextures will pick them up automatically.
-        shreeKrishna->SetBaseColorTexture(
-            "./assets/models/scene3_models/Old/BalKrishna_fbx/"
-            "Meshy_AI_Bal_Krishna_with_outs_0526221114_texture_fbx/"
-            "Meshy_AI_Bal_Krishna_with_outs_0526221114_texture.png");
+        // Three static "position" poses of dancing Krishna (Meshy AI exports).
+        // We cross-fade between them (fade in / fade out) to animate the Tandav.
+        const char *krishnaPosePaths[KRISHNA_POSE_COUNT] = {
+            "./assets/models/scene3_models/KrishnaTandav/1stPosition/Meshy_AI_Dancing_Krishna_0608195926_texture.fbx",
+            "./assets/models/scene3_models/KrishnaTandav/2ndPosition/Meshy_AI_Dancing_Krishna_0608200008_texture.fbx",
+            "./assets/models/scene3_models/KrishnaTandav/3rdPosition/Meshy_AI_Dancing_Krishna_0608201008_texture.fbx",
+        };
+        const char *krishnaPoseTextures[KRISHNA_POSE_COUNT] = {
+            "./assets/models/scene3_models/KrishnaTandav/1stPosition/Meshy_AI_Dancing_Krishna_0608195926_texture.png",
+            "./assets/models/scene3_models/KrishnaTandav/2ndPosition/Meshy_AI_Dancing_Krishna_0608200008_texture.png",
+            "./assets/models/scene3_models/KrishnaTandav/3rdPosition/Meshy_AI_Dancing_Krishna_0608201008_texture.png",
+        };
+        for (int i = 0; i < KRISHNA_POSE_COUNT; ++i)
+        {
+            krishnaPoses[i] = std::make_unique<Core::AnimatedModel>();
+            krishnaPoses[i]->LoadModel(krishnaPosePaths[i]);
+            krishnaPoses[i]->SetBaseColorTexture(krishnaPoseTextures[i]);
+        }
 
         lightManager = new SceneLight();
         lightManager->addDirectionalLights({
@@ -205,9 +217,12 @@ public:
             true);
 
         setupCamera();
-        // sceneCamera->initialize();
-        // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
-        // sceneCamera->handlePerspective = true;
+
+        // Default free-camera preset near Kaliya/Krishna so the sky and models are in frame.
+        camera.position = vmath::vec3(150.0f, 280.0f, 160.0f);
+        camera.yaw = 205.0f;
+        camera.pitch = -6.0f;
+        camera.updateCameraVectors();
 
         isInitialized = true;
         isSceneComplete = false;
@@ -216,88 +231,38 @@ public:
 
     void setupCamera()
     {
+        // Close orbit around Kaliya/Krishna (not the distant Scene 1/2 flyover path).
         std::vector<std::vector<float>> bezierPointsSC1 = {
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {-1648.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -12814.500000f},
-            {-3558.600098f, 8713.500000f, -9584.500000f},
-            {-5008.600098f, 7733.500000f, -9584.500000f},
-            {-5568.600098f, 7733.500000f, -6804.500000f},
-            {-5568.600098f, 6433.500000f, -5954.500000f},
-            {-5568.600098f, 6693.500000f, -5764.500000f},
-            {-5568.600098f, 7063.500000f, -4514.500000f},
-            {-5568.600098f, 7063.500000f, -2684.500000f},
-            {-5568.600098f, 7063.500000f, -1564.500000f},
-            {-5568.600098f, 7063.500000f, 1805.500000f},
-            {-5568.600098f, 7063.500000f, 3915.500000f},
-            {-5568.600098f, 7063.500000f, 5015.500000f},
+            {150.0f, 380.0f, 120.0f},
+            {120.0f, 350.0f, 80.0f},
+            {80.0f, 330.0f, 40.0f},
+            {30.0f, 320.0f, 0.0f},
+            {0.0f, 310.0f, -20.0f},
+            {-30.0f, 305.0f, -50.0f},
+            {-20.0f, 300.0f, -80.0f},
+            {0.0f, 295.0f, -100.0f},
         };
 
-        // YAW GLOBAL
         std::vector<float> yawGlobalSC1 = {
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            49.000000f,
-            49.000000f,
-            79.000000f,
-            109.000000f,
+            200.0f, 200.0f, 200.0f, 200.0f,
+            200.0f, 200.0f, 200.0f, 200.0f,
         };
 
-        // PITCH GLOBAL
         std::vector<float> pitchGlobalSC1 = {
-            32.000000f,
-            12.000000f,
-            12.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
+            -4.0f, -4.0f, -4.0f, -4.0f,
+            -4.0f, -4.0f, -4.0f, -4.0f,
         };
 
-        // FOV GLOBAL
         std::vector<float> fovGlobalSC1 = {
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
+            45.0f, 45.0f, 45.0f, 45.0f,
+            45.0f, 45.0f, 45.0f, 45.0f,
         };
 
         sc1.initialize();
         sc1.setBezierPoints(bezierPointsSC1, yawGlobalSC1, pitchGlobalSC1, fovGlobalSC1);
         sc1.update();
+
+        sceneCamera = &sc1;
     }
 
    
@@ -310,6 +275,14 @@ public:
         // modelLoader.display();
         // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
         // sceneCamera->update();
+
+        // Skybox FIRST as the background (depth test disabled inside display()).
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::scale(1000000.0f, 1000000.0f, 1000000.0f);
+            cubeMap->display();
+        }
+        modelMatrix = popMatrix();
 
         pushMatrix(modelMatrix);
         {
@@ -346,14 +319,6 @@ public:
         }
         modelMatrix = popMatrix();
 
-        pushMatrix(modelMatrix);
-        {
-            modelMatrix = modelMatrix * vmath::scale(1000000.0f, 1000000.0f, 1000000.0f);
-            // Cubemap_Alpha = 1.0f;
-            cubeMap->display();
-        }
-        modelMatrix = popMatrix();
-
         drawKaliyaMardanScene();
 
         // RAIN RENDERING
@@ -371,197 +336,13 @@ public:
 
     void drawKaliyaMardanScene()
     {
-        // drawHouse1();
-        // drawHouse2();      
-        // drawHouse3();
         drawKaliyaModel();
-        drawShreeKrishnaModel();
-        // drawCowHouse();
-        // drawFarmLand();
-        // drawHutHouse();
+        drawKrishnaPosesFade();
     }
 
 
     // ==================== kaliya mardan scene models drawing functions ====================
     
-    void drawHouse1(bool isBlack = false)
-    {
-        if (!house1)
-            return;
-
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            house1->mTextureShader->Use();
-            house1->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 house1ModelMatrix =
-                vmath::translate(-40.0f, 0.0f, 42.0f) *
-                vmath::scale(30.0f, 20.0f, 30.0f) *
-                vmath::rotate(-32.0f, 0.0f, 1.0f, 0.0f);
-
-            // vmath::translate(kaliyaX, 600.000f, kaliyaZ) *
-            // vmath::scale(1000.000f, 1000.000f, 1000.000f) *
-            // vmath::rotate(130.000f, 0.000f, 1.000f, 0.000f);
-
-            house1->mTextureShader->SetUniform("u_model", house1ModelMatrix);
-            house1->mTextureShader->SetUniform("u_view", viewMatrix);
-            house1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            house1->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            house1->Draw(house1->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-         if (!house1)
-            return;
-
-        // draw same house with different scaling
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            house1->mTextureShader->Use();
-            house1->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 house1ModelMatrix =
-                vmath::translate(633.0f, 0.0f, 220.0f) *
-                vmath::scale(15.0f, 15.0f, 15.0f) *
-                vmath::rotate(-0.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            house1->mTextureShader->SetUniform("u_model", house1ModelMatrix);
-            house1->mTextureShader->SetUniform("u_view", viewMatrix);
-            house1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            house1->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            house1->Draw(house1->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-    }
-
-    void drawHouse2(bool isBlack = false)
-    {
-        if (!house2)
-            return;
-
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            house2->mTextureShader->Use();
-            house2->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 house2ModelMatrix =
-                vmath::translate(1110.0f, 50.0f, 500.0f) *
-                vmath::scale(30.0f, 20.0f, 30.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            house2->mTextureShader->SetUniform("u_model", house2ModelMatrix);
-            house2->mTextureShader->SetUniform("u_view", viewMatrix);
-            house2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house2->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            house2->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //house2->mTextureShader->exposure = 1.2f;
-            house2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            house2->Draw(house2->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-    }
-
-    void drawHutHouse(bool isBlack = false)
-    {
-        if (!hutHouse)
-            return;
-
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            hutHouse->mTextureShader->Use();
-            hutHouse->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 hutHouseModelMatrix =
-                vmath::translate(1110.0f, 50.0f, 500.0f) *
-                vmath::scale(30.0f, 20.0f, 30.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
-
-            hutHouse->mTextureShader->SetUniform("u_model", hutHouseModelMatrix);
-            hutHouse->mTextureShader->SetUniform("u_view", viewMatrix);
-            hutHouse->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            hutHouse->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            hutHouse->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //hutHouse->mTextureShader->exposure = 1.2f;
-            hutHouse->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            hutHouse->Draw(hutHouse->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-    }
-
-    void drawHouse3(bool isBlack = false)
-    {   
-        if (!house3)
-            return;
-
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            house3->mTextureShader->Use();
-            house3->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 house3ModelMatrix =
-                vmath::translate(400.0f, 0.0f, 200.0f) *
-                vmath::scale(50.0f, 30.0f, 50.0f) *
-                vmath::rotate(68.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            house3->mTextureShader->SetUniform("u_model", house3ModelMatrix);
-            house3->mTextureShader->SetUniform("u_view", viewMatrix);
-            house3->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            house3->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            house3->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //house3->mTextureShader->exposure = 1.2f;
-            house3->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            house3->Draw(house3->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-    }
-
     void drawKaliyaModel(bool isBlack = false)
     {   
         if (!vrundavanGate)
@@ -591,6 +372,7 @@ public:
             vrundavanGate->mShader->SetUniform("u_ApplyToon", false);
             vrundavanGate->mShader->SetSampler2D("u_GGXLUT", 0, 5);
             vrundavanGate->mShader->SetUniform("u_DebugMode", 0);
+            vrundavanGate->mShader->SetUniform("u_Alpha", 1.0f);
 
             vrundavanGate->Draw(vrundavanGate->mShader);
 
@@ -599,147 +381,80 @@ public:
         modelMatrix = popMatrix();
     }
 
-    void drawShreeKrishnaModel(bool isBlack = false)
+    // Cross-fade the three Krishna pose models: each pose holds fully opaque,
+    // then dissolves into the next (fade out current + fade in next) on a loop.
+    void drawKrishnaPosesFade(bool isBlack = false)
     {
-        if (!shreeKrishna)
-            return;
+        // Advance the fade timeline here (Scene::update() is not called by the
+        // main loop, so the display path owns per-frame time like the models).
+        krishnaFadeTime += (float)gDeltaTime;
 
-        // Advance the skinned animation once per frame (drawn once from display()).
-        shreeKrishna->Update((float)gDeltaTime);
+        // Per-pose alpha from a looping timeline (1.5x faster than the base
+        // 1.4s hold / 1.0s fade timing).
+        const float holdDur = 0.933f; // seconds a pose stays fully visible
+        const float fadeDur = 0.667f; // seconds of cross-dissolve into next pose
+        const float slotDur = holdDur + fadeDur;
+        const float cycle   = slotDur * KRISHNA_POSE_COUNT;
 
-        pushMatrix(modelMatrix);
+        float t = fmodf(krishnaFadeTime, cycle);
+        if (t < 0.0f) t += cycle;
+
+        int   slot  = (int)(t / slotDur) % KRISHNA_POSE_COUNT;
+        float local = t - slot * slotDur;            // time within current slot
+        int   next  = (slot + 1) % KRISHNA_POSE_COUNT;
+
+        float alpha[KRISHNA_POSE_COUNT] = { 0.0f, 0.0f, 0.0f };
+        if (local < holdDur)
         {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            shreeKrishna->mShader->Use();
-            shreeKrishna->mShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 shreeKrishnaModelMatrix =
-                vmath::translate(0.0f, 245.0f, -40.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f) *
-                vmath::scale(0.18f, 0.18f, 0.18f);
-
-            shreeKrishna->mShader->SetUniform("u_model", shreeKrishnaModelMatrix);
-            shreeKrishna->mShader->SetUniform("u_view", viewMatrix);
-            shreeKrishna->mShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            shreeKrishna->mShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            shreeKrishna->mShader->SetUniform("u_ApplyToon", false);
-            shreeKrishna->mShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            shreeKrishna->mShader->SetUniform("u_DebugMode", 0);
-
-            shreeKrishna->Draw(shreeKrishna->mShader);
-
-            glDisable(GL_BLEND);
+            alpha[slot] = 1.0f;                       // fully showing this pose
         }
-        modelMatrix = popMatrix();
-    }
-
-    void drawCowHouse(bool isBlack = false)
-    {
-        if (!cowHouse)
-            return;
-
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            cowHouse->mTextureShader->Use();
-            cowHouse->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 cowHouseModelMatrix =
-                vmath::translate(1050.0f, 0.0f, 700.0f) *
-                vmath::scale(10.0f, 10.0f, 10.0f) *
-                vmath::rotate(70.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            cowHouse->mTextureShader->SetUniform("u_model", cowHouseModelMatrix);
-            cowHouse->mTextureShader->SetUniform("u_view", viewMatrix);
-            cowHouse->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            cowHouse->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            cowHouse->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            cowHouse->Draw(cowHouse->mTextureShader);
-
-            glDisable(GL_BLEND);
+        else
+        {
+            float f = (local - holdDur) / fadeDur;    // 0..1 cross-dissolve
+            f = f < 0.0f ? 0.0f : (f > 1.0f ? 1.0f : f);
+            f = f * f * (3.0f - 2.0f * f);            // smoothstep ease
+            alpha[slot] = 1.0f - f;
+            alpha[next] = f;
         }
-        modelMatrix = popMatrix();
 
-        // draw well here
-         if (!well)
-            return;
+        // Shared placement for all three poses (same spot, same facing).
+        // Meshy models are Z-up, so rotate -90 about X to stand them upright.
+        // Extra -90 about Y turns Krishna 90 degrees clockwise (viewed top-down).
+        vmath::mat4 krishnaModelMatrix =
+            vmath::translate(0.0f, 262.0f, -40.0f) *
+            vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f) *
+            vmath::rotate(-90.0f, 1.0f, 0.0f, 0.0f) *
+            vmath::scale(18.0f, 18.0f, 18.0f);
 
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE); // let overlapping fading poses blend together
 
-            well->mTextureShader->Use();
-            well->mTextureShader->SetUniform("isBlack", isBlack);
+        for (int i = 0; i < KRISHNA_POSE_COUNT; ++i)
+        {
+            if (!krishnaPoses[i] || alpha[i] <= 0.001f)
+                continue;
 
-            vmath::mat4 wellModelMatrix =
-                vmath::translate(500.0f, 3.0f, 633.0f) *
-                vmath::scale(1.0f, 1.0f, 1.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+            pushMatrix(modelMatrix);
+            {
+                krishnaPoses[i]->mShader->Use();
+                krishnaPoses[i]->mShader->SetUniform("isBlack", isBlack);
+                krishnaPoses[i]->mShader->SetUniform("u_model", krishnaModelMatrix);
+                krishnaPoses[i]->mShader->SetUniform("u_view", viewMatrix);
+                krishnaPoses[i]->mShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+                krishnaPoses[i]->mShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
+                krishnaPoses[i]->mShader->SetUniform("u_ApplyToon", false);
+                krishnaPoses[i]->mShader->SetSampler2D("u_GGXLUT", 0, 5);
+                krishnaPoses[i]->mShader->SetUniform("u_DebugMode", 0);
+                krishnaPoses[i]->mShader->SetUniform("u_Alpha", alpha[i]);
 
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            well->mTextureShader->SetUniform("u_model", wellModelMatrix);
-            well->mTextureShader->SetUniform("u_view", viewMatrix);
-            well->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            well->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            well->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            well->Draw(well->mTextureShader);
-
-            glDisable(GL_BLEND);
+                krishnaPoses[i]->Draw(krishnaPoses[i]->mShader);
+            }
+            modelMatrix = popMatrix();
         }
-        modelMatrix = popMatrix();
-    }
 
-    void drawFarmLand(bool isBlack = false)
-    {   
-        if (!farmLand)
-            return;
-        
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            farmLand->mTextureShader->Use();
-            farmLand->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 farmLandModelMatrix =
-                vmath::translate(-533.0f, 20.0f, 232.0f) *
-                vmath::scale(40.0f, 20.0f, 40.0f) *
-                vmath::rotate(-30.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            farmLand->mTextureShader->SetUniform("u_model", farmLandModelMatrix);
-            farmLand->mTextureShader->SetUniform("u_view", viewMatrix);
-            farmLand->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            //farmLand->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            farmLand->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //farmLand->mTextureShader->exposure = 1.2f;
-            farmLand->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            farmLand->Draw(farmLand->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
     }
 
     // ============================================================
@@ -775,21 +490,21 @@ public:
         }
         modelMatrix = popMatrix();
     }
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // ~~~~~~~~~~~~~~~~~~~~
 
     void displayScene(float terrainUp)
     {
         pushMatrix(modelMatrix);
         {
-            terrain->up = terrainUp;
-            terrain->draw(false);
+            modelMatrix = modelMatrix * vmath::scale(1000000.0f, 1000000.0f, 1000000.0f);
+            cubeMap->display();
         }
         modelMatrix = popMatrix();
 
         pushMatrix(modelMatrix);
         {
-            modelMatrix = modelMatrix * vmath::scale(1000000.0f, 1000000.0f, 1000000.0f);
-            cubeMap->display();
+            terrain->up = terrainUp;
+            terrain->draw(false);
         }
         modelMatrix = popMatrix();
     }
@@ -812,11 +527,11 @@ public:
         kaliyaX += 150.5f; // Move Kaliya along the X-axis
         kaliyaZ += 150.3f; // Move Kaliya along the Z-axis
 
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~
         // terrain->setWaterHeight(85.0f);
         // waterMatrix->interpolateWaterColor = 1.0f;
         // terrain->setTextureTransitionFactor(1.0f);
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~
 
 
         // if (terrain->getTextureTransitionFactor() < 1.0f)
@@ -892,6 +607,8 @@ public:
         house3.reset();
         vrundavanGate.reset();
         shreeKrishna.reset();
+        for (int i = 0; i < KRISHNA_POSE_COUNT; ++i)
+            krishnaPoses[i].reset();
         cowHouse.reset();
         farmLand.reset();
 
