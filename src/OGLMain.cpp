@@ -768,7 +768,7 @@ void drawImGui(void)
 			static int uiScene = SCENE_03;
 			const char *sceneNames[] = {
 				"INTRO", "SCENE_00", "SCENE_01", "SCENE_02",
-				"SCENE_03", "SCENE_04", "OUTRO"
+				"SCENE_2_5", "SCENE_03", "SCENE_04", "OUTRO"
 			};
 			uiScene = mainScene->selected_scene;
 			if (ImGui::Combo("Active Scene", &uiScene, sceneNames, IM_ARRAYSIZE(sceneNames)))
@@ -1153,7 +1153,8 @@ void display(void)
 	mainScene->display();
 
 	// ==================================== Gizmo and Grid
-	if (showGrid)
+	// Scene 2.5 is an isolated underwater shot - skip the debug grid there.
+	if (showGrid && mainScene && mainScene->selected_scene != SCENE_2_5)
 	{
 		pushMatrix(modelMatrix);
 		{
@@ -1194,6 +1195,9 @@ void display(void)
 			break;
 		case SCENE_02:
 			sceneName = "SCENE_02";
+			break;
+		case SCENE_2_5:
+			sceneName = "SCENE_2_5";
 			break;
 		case SCENE_03:
 			sceneName = "SCENE_03";

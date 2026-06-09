@@ -16,6 +16,7 @@ enum SCENE
     SCENE_00,
     SCENE_01,
     SCENE_02,
+    SCENE_2_5,
     SCENE_03,
     SCENE_04,
     SCENE_OUTRO

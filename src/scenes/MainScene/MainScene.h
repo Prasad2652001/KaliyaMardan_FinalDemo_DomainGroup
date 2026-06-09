@@ -9,6 +9,7 @@
 #include "../Scene0/Scene0.h"
 #include "../Scene1/Scene1.h"
 #include "../Scene2/Scene2.h"
+#include "../Scene2_5/Scene2_5.h"
 #include "../Scene3/Scene3.h"
 #include "../Scene4/Scene4.h"
 #include "../Outro/Outro.h"
@@ -27,6 +28,7 @@ public:
     DemoScene0 *scene0;
     DemoScene1 *scene1;
     DemoScene2 *scene2;
+    DemoScene2_5 *scene2_5;
     DemoScene3 *scene3;
     DemoScene4 *scene4;
     OutroScene *outroScene;
@@ -38,6 +40,7 @@ public:
         scene0 = new DemoScene0();
         scene1 = new DemoScene1();
         scene2 = new DemoScene2();
+        scene2_5 = new DemoScene2_5();
         scene3 = new DemoScene3();
         scene4 = new DemoScene4();
         outroScene = new OutroScene();
@@ -45,7 +48,7 @@ public:
 
         START_E2E_DEMO = true;
         // selected_scene = SCENE_INTRO;
-        selected_scene = SCENE_03;
+        selected_scene = SCENE_2_5;
         scene = nullptr;
     }
 
@@ -74,6 +77,9 @@ public:
         case SCENE_02:
             scene = scene2;
             break;
+        case SCENE_2_5:
+            scene = scene2_5;
+            break;
         case SCENE_03:
             scene = scene3;
             break;
@@ -98,6 +104,7 @@ public:
         if (maxScene >= SCENE_00 && !scene0->isInitialized) scene0->initialize();
         if (maxScene >= SCENE_01 && !scene1->isInitialized) scene1->initialize();
         if (maxScene >= SCENE_02 && !scene2->isInitialized) scene2->initialize();
+        if (maxScene >= SCENE_2_5 && !scene2_5->isInitialized) scene2_5->initialize();
         if (maxScene >= SCENE_03 && !scene3->isInitialized) scene3->initialize();
         if (maxScene >= SCENE_04 && !scene4->isInitialized) scene4->initialize();
         if (maxScene >= SCENE_OUTRO && !outroScene->isInitialized) outroScene->initialize();
@@ -110,6 +117,7 @@ public:
         case SCENE_00: if (!scene0->isInitialized) scene0->initialize(); break;
         case SCENE_01: if (!scene1->isInitialized) scene1->initialize(); break;
         case SCENE_02: if (!scene2->isInitialized) scene2->initialize(); break;
+        case SCENE_2_5: if (!scene2_5->isInitialized) scene2_5->initialize(); break;
         case SCENE_03: if (!scene3->isInitialized) scene3->initialize(); break;
         case SCENE_04: if (!scene4->isInitialized) scene4->initialize(); break;
         case SCENE_OUTRO: if (!outroScene->isInitialized) outroScene->initialize(); break;
@@ -149,6 +157,9 @@ public:
             break;
         case SCENE_02:
             scene = scene2;
+            break;
+        case SCENE_2_5:
+            scene = scene2_5;
             break;
         case SCENE_03:
             scene = scene3;
@@ -326,6 +337,13 @@ public:
             scene2->uninitialize();
             delete scene2;
             scene2 = nullptr;
+        }
+
+        if (scene2_5)
+        {
+            scene2_5->uninitialize();
+            delete scene2_5;
+            scene2_5 = nullptr;
         }
 
         if (scene3)
