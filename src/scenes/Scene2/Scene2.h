@@ -51,6 +51,10 @@ public:
     std::unique_ptr<Core::Model> krishnaFriend1;
     std::unique_ptr<Core::Model> krishnaFriend2;
     std::unique_ptr<Core::Model> balram;
+    std::unique_ptr<Core::Model> cow1;
+    std::unique_ptr<Core::Model> cow2;
+     std::unique_ptr<Core::Model> cow3;
+
 
     // dynamic models
     std::unique_ptr<Core::AnimatedModel> eagle;
@@ -185,6 +189,15 @@ public:
 
         balram = std::make_unique<Core::Model>();
         balram->LoadModel("./assets/models/scene2_models/krishnaFriend/balram.glb");
+
+        cow1 = std::make_unique<Core::Model>();
+        cow1->LoadModel("./assets/models/scene2_models/cow1.glb");
+
+        cow2 = std::make_unique<Core::Model>();
+        cow2->LoadModel("./assets/models/scene2_models/cow2.glb");
+
+        cow3 = std::make_unique<Core::Model>();
+        cow3->LoadModel("./assets/models/scene2_models/cow3.glb");
 
         // dynamic model
         eagle = std::make_unique<Core::AnimatedModel>();
@@ -428,7 +441,10 @@ public:
         drawKrishnaFriend1();
         drawKrishnaFriend2();
         drawBalram();
-    }   
+        drawCow1();
+        drawCow2();
+        drawCow3();
+    }  
 
     // ==================== yamuna side scene models drawing functions ====================
 
@@ -684,6 +700,116 @@ public:
         }
         modelMatrix = popMatrix();
     }
+
+    void drawCow1(bool isBlack = false)
+    {
+         if (!cow1)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            cow1->mTextureShader->Use();
+            bindShadowUniforms(cow1->mTextureShader.get());
+            cow1->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 cow1ModelMatrix =
+                vmath::translate(15000.0f, 190.0f, -2500.0f) *
+                vmath::scale(2.0f, 2.0f, 2.0f) *
+                vmath::rotate(120.0f, 0.0f, 1.0f, 0.0f);
+                
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            cow1->mTextureShader->SetUniform("u_model", cow1ModelMatrix);
+            cow1->mTextureShader->SetUniform("u_view", viewMatrix);
+            cow1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            cow1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            cow1->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            cow1->Draw(cow1->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    void drawCow2(bool isBlack = false)
+    {
+         if (!cow2)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            cow2->mTextureShader->Use();
+            bindShadowUniforms(cow2->mTextureShader.get());
+            cow2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 cow2ModelMatrix =
+                vmath::translate(16500.0f, 120.0f, -3500.0f) *
+                vmath::scale(2.0f, 2.0f, 2.0f) *
+                vmath::rotate(20.0f, 0.0f, 1.0f, 0.0f);
+                
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            cow2->mTextureShader->SetUniform("u_model", cow2ModelMatrix);
+            cow2->mTextureShader->SetUniform("u_view", viewMatrix);
+            cow2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            cow2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            cow2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            cow2->Draw(cow2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    void drawCow3(bool isBlack = false)
+    {
+         if (!cow3)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            cow3->mTextureShader->Use();
+            bindShadowUniforms(cow3->mTextureShader.get());
+            cow3->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 cow3ModelMatrix =
+                vmath::translate(17000.0f, 190.0f, -2500.0f) *
+                vmath::scale(2.0f, 2.0f, 2.0f) *
+                vmath::rotate(-120.0f, 0.0f, 1.0f, 0.0f);
+                
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            cow3->mTextureShader->SetUniform("u_model", cow3ModelMatrix);
+            cow3->mTextureShader->SetUniform("u_view", viewMatrix);
+            cow3->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            cow3->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            cow3->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            cow3->Draw(cow3->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+
     // ============================================================
 
     // dynamic models functions

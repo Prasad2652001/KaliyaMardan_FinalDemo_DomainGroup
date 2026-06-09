@@ -1032,9 +1032,9 @@ std::vector<float> fovGlobalSC1 = {
             vrundavanGate->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 vrundavanGateModelMatrix =
-                vmath::translate(1500.0f, -220.0f, 1500.0f) *
-                vmath::scale(10.0f, 10.0f, 10.0f) *
-                vmath::rotate(-130.0f, 0.0f, 1.0f, 0.0f);
+                vmath::translate(1800.0f, 170.0f, 1450.0f) *
+                vmath::scale(300.0f, 300.0f, 300.0f) *
+                vmath::rotate(60.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
