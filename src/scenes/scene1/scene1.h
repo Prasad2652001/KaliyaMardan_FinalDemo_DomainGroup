@@ -695,7 +695,7 @@ std::vector<float> fovGlobalSC1 = {
 
             vmath::mat4 house1ModelMatrix =
                 vmath::translate(-40.0f, 0.0f, 42.0f) *
-                vmath::scale(30.0f, 20.0f, 30.0f) *
+                vmath::scale(43.0f, 33.0f, 43.0f) *
                 vmath::rotate(-32.0f, 0.0f, 1.0f, 0.0f);
 
             house1->mTextureShader->SetUniform("u_model", house1ModelMatrix);
