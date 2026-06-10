@@ -203,15 +203,15 @@ public:
         }
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        // setGlobalBezierCamera(scene->sceneCamera);
+        setGlobalBezierCamera(scene->sceneCamera);
 
-        // if (scene->sceneCamera && scene->sceneCamera->bezierPoints.size() > 0)
-        // {
-        //     if (!USE_FPV_CAM)
-        //         scene->sceneCamera->update();
+        if (scene->sceneCamera && scene->sceneCamera->bezierPoints.size() > 0)
+        {
+            if (!USE_FPV_CAM)
+                scene->sceneCamera->update();
 
-        //     updateGlobalViewMatrix(); // uncomment this to run simultaniuously scnee
-        // }
+            updateGlobalViewMatrix(); // uncomment this to run simultaniuously scnee
+        }
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
@@ -266,7 +266,7 @@ public:
         if (!scene)
             return;
         
-        // scene->update();
+        scene->update();
 
         // if (START_E2E_DEMO && scene->isSceneComplete)
         // {

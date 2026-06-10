@@ -12,8 +12,6 @@ uniform bool      isBlack;
 // 0 = normal shading
 // 1 = false-color by dominant bone id (uses v_debug)
 uniform int       u_DebugMode;
-// Overall opacity for fade in / fade out cross-dissolves (1.0 = fully opaque).
-uniform float     u_Alpha;
 
 out vec4 FragColor;
 
@@ -39,5 +37,5 @@ void main(void)
     vec3 color = base * (0.2 + 0.8 * diff) + vec3(0.3) * spec;
     if (isBlack) color = vec3(0.0);
 
-    FragColor = vec4(color, u_Alpha);
+    FragColor = vec4(color, 1.0);
 }

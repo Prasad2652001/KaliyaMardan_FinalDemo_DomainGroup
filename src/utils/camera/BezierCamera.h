@@ -103,6 +103,12 @@ public:
 
     float deCasteljau(float t, vector<float> coefs)
     {
+        // Guard against an empty control-point set (e.g. a bezier path that was
+        // never populated via setBezierPoints). Without this, the final
+        // "return beta[0]" dereferences an empty vector and crashes.
+        if (coefs.empty())
+            return 0.0f;
+
         vector<float> beta = coefs;
         int n = beta.size();
         for (int j = 1; j < n; j++)
