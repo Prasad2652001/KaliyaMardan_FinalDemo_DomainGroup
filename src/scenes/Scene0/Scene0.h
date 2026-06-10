@@ -146,7 +146,7 @@ public:
         }
 
         mSwing = std::make_unique<Core::Model>();
-        mSwing->LoadModel("./assets/models/scene1_models/Kaliya_intro.glb");
+        mSwing->LoadModel("./assets/models/scene1_models/Kaliya_Final.glb");
 
         mKaliaMardan = std::make_unique<Core::Model>();
         mKaliaMardan->LoadModel("./assets/models/scene1_models/KaliyaMardan.glb");
@@ -377,8 +377,8 @@ std::vector<float> fovGlobalSC1 = {
             mSwing->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 swingModelMatrix =
-                vmath::translate(8000.0f + -7980.000000f, 800.0f + 240.000000f, -9000.0f + 11460.000000f)     *
-                vmath::scale(1000.0f, 1000.0f, 1000.0f) *
+                vmath::translate(8000.0f + -7980.000000f + 871.399902f + -68.600082f, 800.0f + 240.000000f + -236.499939f + 183.500046f, -9000.0f + 11460.000000f + -1034.500000f + 695.500000f )     *
+                vmath::scale(1500.0f, 1500.0f, 1500.0f) *
                 vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
@@ -409,7 +409,7 @@ std::vector<float> fovGlobalSC1 = {
             mKaliaMardan->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 swingModelMatrix =
-                vmath::translate(5180.0f , 3830.0f -150.000000f , 1290.0f -1810.000000f)     *
+                vmath::translate(5180.0f + -68.600082f, 3830.0f -150.000000f + 183.500046f, 1290.0f -1810.000000f + 695.500000f)     *
                 vmath::scale(-300.0f, -300.0f, -300.0f) *
                 vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f) * 
                 vmath::rotate(180.0f , 1.0f , 0.0f , 0.0f);
