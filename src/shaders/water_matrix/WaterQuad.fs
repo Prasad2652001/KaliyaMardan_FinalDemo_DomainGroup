@@ -24,13 +24,49 @@ uniform float interpolateDarkToBright = 0.0;
 
 uniform int waterColor_JisDesh = 0;
 
-// 0.0 = calm (default, unchanged look); 1.0 = full storm chop.
-uniform float u_stormStrength = 0.0;
-
 float waveStrength = 0.04;
 float shininess = 10.0;
 float reflectivity = 0.001;
 out vec4 FragColor;
+
+// --- Procedural Rain Ripples ---
+vec2 hash2(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.xx+p3.yz)*p3.zy);
+}
+
+float rainRipples(vec2 uv, float time, out float rawIntensity) {
+    vec2 p = floor(uv);
+    vec2 f = fract(uv);
+    float v = 0.0;
+    float maxInt = 0.0;
+    for(int j=-1; j<=1; j++) {
+        for(int i=-1; i<=1; i++) {
+            vec2 b = vec2(i, j);
+            vec2 randObj = hash2(p + b);
+            
+            // Further reduce droplet density to about 5% of cells
+            if(randObj.y > 0.05) continue;
+            
+            vec2 r = b - f + randObj;
+            float d = length(r);
+            float t = fract(time + randObj.x);
+            float maxRad = 0.4; // Smaller ripples
+            if(d < maxRad && t > 0.01) {
+                float wave = sin((d - t * maxRad) * 35.0); // Slightly lower frequency
+                // Smooth, non-linear fade out for more realism
+                float fade = smoothstep(1.0, 0.0, t) * smoothstep(1.0, 0.5, d / maxRad);
+                float intensity = wave * fade;
+                v += intensity * 0.25; // More subtle normal distortion
+                maxInt = max(maxInt, abs(intensity)); 
+            }
+        }
+    }
+    rawIntensity = maxInt;
+    return v;
+}
+// -------------------------------
 
 float vignette_main(void) {
     // A - Final Fragment Color Before Vignette
@@ -62,13 +98,6 @@ void main(void) {
         reflectivity = 0.001;
     }
 
-    // Storm amplifies surface chop. Keep specular broad so the fixed light
-    // does not bake a hard steady streak.
-    float storm = clamp(u_stormStrength, 0.0, 1.0);
-    waveStrength *= (1.0 + storm * 6.0);
-    shininess     = mix(shininess, 18.0, storm);
-    reflectivity  = mix(reflectivity, 0.12, storm);
-
     //Convert Clip-space coordinates to Screen-space coordinates
     vec2 screenSpaceCoords;
     screenSpaceCoords.x = clipSpaceCoords.x / clipSpaceCoords.w;
@@ -82,19 +111,6 @@ void main(void) {
     vec2 distortedTexCoords = texture(u_waterDUDVMapTextureSampler, vec2(a_texcoords_out.x + u_moveFactorOffset, a_texcoords_out.y)).rg * 0.1;
     distortedTexCoords = a_texcoords_out + vec2(distortedTexCoords.x, distortedTexCoords.y + u_moveFactorOffset);
     vec2 totalDistortions = (texture(u_waterDUDVMapTextureSampler, distortedTexCoords).rg * 2.0 - 1.0) * waveStrength;
-
-    // Second, finer-and-faster DUDV layer drifting the other way: stacks with the
-    // base layer to create the chaotic, choppy look of a stormy surface.
-    // Second, finer-and-faster DUDV layer drifting the other way: stacks with the
-    // base layer to create the chaotic, choppy look of a stormy surface.
-    if (storm > 0.0) {
-        vec2 dc2 = texture(u_waterDUDVMapTextureSampler,
-                           vec2(a_texcoords_out.x * 2.7 - u_moveFactorOffset * 1.9,
-                                a_texcoords_out.y * 2.7)).rg * 0.1;
-        dc2 = a_texcoords_out * 2.7 + vec2(dc2.x, dc2.y - u_moveFactorOffset * 1.9);
-        vec2 td2 = (texture(u_waterDUDVMapTextureSampler, dc2).rg * 2.0 - 1.0) * waveStrength * 1.6;
-        totalDistortions += td2 * storm;
-    }
 
     //Reflection texcoords
     vec2 reflectTexcoords = vec2(ndcCoords.x, -ndcCoords.y);
@@ -126,12 +142,14 @@ void main(void) {
 
     //For Specular HighLights
     vec4 normalMapColor = texture(u_waterNormalMapTextureSampler, distortedTexCoords);
-    // Slightly steepen the normals for a choppier read, but keep the up (b)
-    // component dominant so the surface stays roughly upward-facing (a near-flat
-    // normal across the whole quad is what produced the steady specular line).
-    vec3 normal = vec3((normalMapColor.r * 2.0 - 1.0) * (1.0 + storm * 0.6),
-                       normalMapColor.b,
-                       (normalMapColor.g * 2.0 - 1.0) * (1.0 + storm * 0.6));
+    vec3 normal = vec3(normalMapColor.r * 2.0 - 1.0, normalMapColor.b, normalMapColor.g * 2.0 - 1.0);
+    
+    // Add Rain Droplets to the Normal
+    float rippleHighlight;
+    float rippleIntensity = rainRipples(a_texcoords_out * 80.0, u_moveFactorOffset * 2.0, rippleHighlight);
+    normal.x += rippleIntensity;
+    normal.z += rippleIntensity;
+    
     normal = normalize(normal);
 
     vec3 reflectedLight = reflect(normalize(lightDirection), normal);
@@ -145,17 +163,15 @@ void main(void) {
     vec4 waterColor;
 
     red = 10.0 / 255.0;
-    green = 10.0 / 255.0;
-    blue = 10.0 / 255.0;
+    green = 15.0 / 255.0;
+    blue = 35.0 / 255.0;
     vec4 darkColor = vec4(red, green, blue, 0.5);
-    vec4 brightBlue = vec4(0.2, 0.71, 0.85, 1.0);
+    vec4 brightBlue = vec4(0.05, 0.20, 0.45, 1.0);
     vec4 finalWaterColor = mix(darkColor, brightBlue, interpolateDarkToBright);
-
-    // Pull the tint toward a cold, dark grey-green for an overcast storm mood.
-    vec4 stormColor = vec4(0.06, 0.11, 0.12, 1.0);
-    finalWaterColor = mix(finalWaterColor, stormColor, storm * 0.65);
-
-    waterColor = mix(color, finalWaterColor, 0.2 + storm * 0.15) + vec4(specularHighlights, 1.0);
+    waterColor = mix(color, finalWaterColor, 0.2) + vec4(specularHighlights, 1.0);
+    
+    // Add artificial brightness at the sharp crests of the ripples so they show up on dark water
+    waterColor += vec4(0.3, 0.4, 0.5, 0.0) * (rippleHighlight * 0.4);
 
     FragColor = mix(waterColor, waterColor, 1.0);
 }

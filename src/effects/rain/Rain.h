@@ -27,13 +27,13 @@ public:
     GLuint modelMatrixUniform;
 
     int maxParticles;
-    float *posBuffer  = nullptr;
-    float *seedBuffer = nullptr;
-    float *veloBuffer = nullptr;
-    float clusterScale = 20.0f;
-    float veloFactor = 250.0f;
+    float posBuffer[280000] = {0};
+    float seedBuffer[280000] = {0};
+    float veloBuffer[280000] = {0};
+    float clusterScale = 1000.0f;
+    float veloFactor = 1500.0f;
 
-    float *dataBuffer = nullptr;
+    float dataBuffer[4 * 50000] = {0};
     vec3 eyePos = vec3(0.2f, 0.3f, 4.0f);
     vec3 winDir[512];
     float windForce = 10.0f;
@@ -104,10 +104,6 @@ public:
     Rain(int particleSize)
     {
         maxParticles = particleSize;
-        posBuffer  = new float[4 * maxParticles]();
-        seedBuffer = new float[4 * maxParticles]();
-        veloBuffer = new float[4 * maxParticles]();
-        dataBuffer = new float[4 * maxParticles]();
     }
 
     BOOL initialize(GLuint textureNumber)
@@ -193,77 +189,81 @@ public:
             return FALSE;
         }
 
-        const char *rainTexPath = (textureNumber == 1)
-            ? "./assets/textures/Rain/rain-light.png"
-            : "./assets/textures/Rain/rain-heavy.png";
-
-        if (LoadPNGImage(&texture_rain, rainTexPath) == FALSE)
+        if (textureNumber == 1)
         {
-            PrintLog("Rain texture file missing - generating white fallback\n");
-            // Generate a simple 1x1 white texture so rain can still render
-            glGenTextures(1, &texture_rain);
-            glBindTexture(GL_TEXTURE_2D, texture_rain);
-            unsigned char white[4] = {255, 255, 255, 255};
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, white);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glBindTexture(GL_TEXTURE_2D, 0);
+            if (LoadPNGImage(&texture_rain, "./assets/textures/Rain/rain-light.png") == FALSE)
+            {
+                PrintLog("Failed to load Rain texture\n");
+                return FALSE;
+            }
         }
+        if (textureNumber == 2 || textureNumber == 4)
+        {
+            if (LoadPNGImage(&texture_rain, "./assets/textures/Rain/rain-heavy.png") == FALSE)
+            {
+                PrintLog("Failed to load Rain texture\n");
+                return FALSE;
+            }
+        }
+
+        createRainData();
 
         return TRUE;
     }
 
     void createRainData(void)
     {
+        // code
+        posBuffer[4 * maxParticles * sizeof(float)];
+        seedBuffer[4 * maxParticles * sizeof(float)];
+        veloBuffer[4 * maxParticles * sizeof(float)];
+
+        dataBuffer[sizeof(posBuffer) * 3];
+
         int numLodLv1 = 8;
-        eyePos = (USE_FPV_CAM ? camera.getEye() : globalBezierCamera->getEye());
+        // eyePos = (USE_FPV_CAM ? camera.getEye() : globalBezierCamera->getEye());
+        eyePos = camera.getEye();
         // eyePos = vec3(1.0f, 1.0f, 1.0f);
 
         for (int lodLv1 = 0; lodLv1 < numLodLv1; lodLv1++)
         {
             for (int i = 0; i < (maxParticles / numLodLv1); i++)
             {
+                int idx = (lodLv1 * (maxParticles / numLodLv1) + i) * 4;
+
                 // spawning position
                 float x, y, z;
-                do
-                {
-                    x = (randFloat(0.0f, 1.0f) - 0.5f) * (clusterScale + lodLv1 * 0.3);
-                    // x = (randomf() - 0.5f) * (clusterScale +  5);
-                    y = (randFloat(0.0f, 1.0f) + 0.1f) * (clusterScale * 0.8);
-                    z = (randFloat(0.0f, 1.0f) - 0.5f) * (clusterScale + lodLv1 * 5);
-                    // z = (randomf() - 0.5f) * (clusterScale +  5);
-                } while ((z < 0.2f && z > -0.2f) && (x < 0.2f && x > -0.2f));
-                // respawn if particle is too close to viewer
+                x = (randFloat(0.0f, 1.0f) - 0.5f) * clusterScale;
+                y = (randFloat(0.0f, 1.0f) - 0.2f) * clusterScale;
+                z = (randFloat(0.0f, 1.0f) - 0.5f) * clusterScale;
 
                 // add to position buffer
-                posBuffer[i] = x + eyePos[0];
-                posBuffer[i + 1] = y + eyePos[1];
-                posBuffer[i + 2] = z + eyePos[2];
-                posBuffer[i + 3] = 1.0f;
+                posBuffer[idx + 0] = x + eyePos[0];
+                posBuffer[idx + 1] = y + eyePos[1];
+                posBuffer[idx + 2] = z + eyePos[2];
+                posBuffer[idx + 3] = 1.0f;
 
                 // add to seed buffer
                 // add random type to w coordinate in buffer
                 // type is for choosing 1 out of 8 different textures
-                seedBuffer[i] = x;
-                seedBuffer[i + 1] = y;
-                seedBuffer[i + 2] = z;
-                seedBuffer[i + 3] = (float)randInt(1, 8);
+                seedBuffer[idx + 0] = x;
+                seedBuffer[idx + 1] = y;
+                seedBuffer[idx + 2] = z;
+                seedBuffer[idx + 3] = (float)randInt(1, 8);
 
                 // add spawning velocity (small random velocity in x- and z-direction for variety and AA
-                veloBuffer[i] = veloFactor * (randFloat(0.0f, 1.0f) / 100.0f);
-                veloBuffer[i + 1] = veloFactor * ((randFloat(0.0f, 1.0f) + 1.0f) / 20.0f);
-                veloBuffer[i + 2] = veloFactor * (randFloat(0.0f, 1.0f) / 100.0f);
+                veloBuffer[idx + 0] = veloFactor * (randFloat(0.0f, 1.0f) / 100.0f);
+                veloBuffer[idx + 1] = veloFactor * ((randFloat(0.0f, 1.0f) + 1.0f) / 20.0f);
+                veloBuffer[idx + 2] = veloFactor * (randFloat(0.0f, 1.0f) / 100.0f);
                 // add random number in w coordinate, used to light up random streaks
-                //  float tmpR = randomf();
                 float tmpR = randFloat(0.0f, 1.0f);
                 if (tmpR > 0.8f)
                 {
-                    // *(veloBuffer+3) = 1.0f + (1.0f - tmpR); // 1.0 to 1.2
-                    veloBuffer[i + 3] = 1.0f + (1.0f - tmpR);
+                    veloBuffer[idx + 3] = 1.0f + (1.0f - tmpR);
                 }
                 else
                 {
-                    veloBuffer[i + 3] = 1.0f;
+                    veloBuffer[idx + 3] = 1.0f;
                 }
             }
         }
@@ -284,21 +284,46 @@ public:
         }
     }
 
+    void updateRainData(void)
+    {
+        // Extract true world-space camera eye position from the global viewMatrix
+        // (R^T * T) where columns of R are viewMatrix[0], viewMatrix[1], viewMatrix[2]
+        eyePos[0] = -(viewMatrix[0][0] * viewMatrix[3][0] + viewMatrix[0][1] * viewMatrix[3][1] + viewMatrix[0][2] * viewMatrix[3][2]);
+        eyePos[1] = -(viewMatrix[1][0] * viewMatrix[3][0] + viewMatrix[1][1] * viewMatrix[3][1] + viewMatrix[1][2] * viewMatrix[3][2]);
+        eyePos[2] = -(viewMatrix[2][0] * viewMatrix[3][0] + viewMatrix[2][1] * viewMatrix[3][1] + viewMatrix[2][2] * viewMatrix[3][2]);
+
+        for (int i = 0; i < maxParticles; i++)
+        {
+            int idx = i * 4;
+            posBuffer[idx + 1] -= veloBuffer[idx + 1] * 0.05f; // falling
+
+            // Respawn particle if it falls too far below or goes out of range
+            if (posBuffer[idx + 1] < eyePos[1] - clusterScale ||
+                abs(posBuffer[idx + 0] - eyePos[0]) > clusterScale + 5.0f ||
+                abs(posBuffer[idx + 2] - eyePos[2]) > clusterScale + 5.0f)
+            {
+                posBuffer[idx + 0] = eyePos[0] + (randFloat(0.0f, 1.0f) - 0.5f) * (clusterScale + 5.0f);
+                posBuffer[idx + 1] = eyePos[1] + (randFloat(0.0f, 1.0f) + 0.1f) * (clusterScale * 0.8f);
+                posBuffer[idx + 2] = eyePos[2] + (randFloat(0.0f, 1.0f) - 0.5f) * (clusterScale + 5.0f);
+            }
+        }
+    }
+
     void display(void)
     {
 
         pushMatrix(modelMatrix);
         {
-            // Variable Declarations
-            createRainData();
+            // Update rain position on CPU
+            updateRainData();
 
             glUseProgram(rainShader->shaderProgramObject);
 
             glUniformMatrix4fv(rainShader->modelMatrixUniform, 1, GL_FALSE, vmath::translate(0.0f, -1.0f, 0.0f));
-            glUniformMatrix4fv(rainShader->viewMatrixUniform, 1, GL_FALSE, mat4::identity());
+            glUniformMatrix4fv(rainShader->viewMatrixUniform, 1, GL_FALSE, viewMatrix);
             glUniformMatrix4fv(rainShader->projectionMatrixUniform, 1, GL_FALSE, perspectiveProjectionMatrix);
 
-                glUniform3fv(rainShader->eyePosUniform, 1, (USE_FPV_CAM ? camera.getEye() : globalBezierCamera->getEye()));
+            glUniform3fv(rainShader->eyePosUniform, 1, eyePos);
             // glUniform3fv(rainShader->windDirUniform, 1, winDir[windPtr]);
             glUniform3fv(rainShader->windDirUniform, 1, vec3(5.0f, 0.0f, 0.0f));
             glUniform1f(rainShader->dtUniform, dt);
@@ -407,11 +432,6 @@ public:
 
     void uninitialize(void)
     {
-        delete[] posBuffer;  posBuffer  = nullptr;
-        delete[] seedBuffer; seedBuffer = nullptr;
-        delete[] veloBuffer; veloBuffer = nullptr;
-        delete[] dataBuffer; dataBuffer = nullptr;
-
         if (rainShader)
         {
             rainShader->uninitialize();

@@ -1,6 +1,6 @@
-// *************************************
-// INTRO SCENE WITH TITLE + KALIYA AND OCEAN
-// *************************************
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// we will use this scene for showing their stay near the bank of the lake 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #pragma once
 #include "../../utils/common.h"
 #include "../../shaders/model/Model_Shader.h"
@@ -9,16 +9,11 @@
 #include "../../effects/water_matrix/WaterMatrix.h"
 #include "../../utils/camera/BezierCamera.h"
 #include "../../utils/camera/Camera.h"
-
-// =========== kaliya mardan model related headers ===========
 #include "../../utils/gltf/Model.h"
 #include "../../utils/gltf/TextureModel.h"
 #include "../../shaders/modelgltf/glshaderloader.h"
 #include "../../shaders/modelgltf/glLight.h"
 #include "../../shaders/modelgltf/glmodelloader.h"
-
-// ===========================================================
-
 #include "../../utils/EventManager.h"
 #include "../Scene.h"
 
@@ -26,8 +21,8 @@
 #include "../../effects/terrain/Terrain.h"
 #include "../../shaders/terrain/TerrainShader.h"
 #include "../../shaders/godRays/GodRaysShader.h"
-// #include "../../effects/rain/Rain.h"
-// #include "../../shaders/rain/RainShader.h"
+#include "../../effects/rain/Rain.h"
+#include "../../shaders/rain/RainShader.h"
 
 // #include "../../../scenes/howtoloadmodel/HowToLoadModel.h"
 
@@ -45,7 +40,7 @@ public:
     Terrain *terrain;
     // GLuint brdfLookUp;
     WaterMatrix *waterMatrix;
-    // Rain *rain = NULL;
+    Rain *rain = NULL;
 
     // HowToLoadModel modelLoader;
     // std::unique_ptr<Core::Shader> mCubeMapShader;
@@ -65,6 +60,8 @@ public:
 
     std::unique_ptr<Core::Model> mSwing;
 
+    std::unique_ptr<Core::Model> mKaliaMardan;
+
     glshaderprogram *programStaticPBR;
     // glmodel *churchModel;
     // glmodel *roadModel;
@@ -72,6 +69,11 @@ public:
 
     // Shaders
     GodRaysShader *godRaysShader;
+
+    // Lightning
+    GLuint texture_lightning1 = 0;
+    GLuint texture_lightning2 = 0;
+    float cloudNoiseAlpha = 1.0f;
 
     // Fadein Fadeout
     // float scaleFactor = 2.0f;
@@ -83,28 +85,6 @@ public:
     BezierCamera sc1;
     BezierCamera sc2;
     BezierCamera sc3;
-
-    // Shadow Variables
-    GLuint depthMapFBO;
-    GLuint depthMapTexture;
-    const GLuint SHADOW_WIDTH = 4096;
-    const GLuint SHADOW_HEIGHT = 4096;
-    mat4 lightSpaceMatrix;
-    vec3 shadowLightPos = vec3(0.0f, 4000.0f, 4000.0f);
-    bool isDepthPass = false;
-
-    void bindShadowUniforms(Core::Shader* shader) {
-        if (!shader) return;
-        shader->SetUniform("u_isDepthPass", isDepthPass);
-        shader->SetUniform("u_lightSpaceMatrix", lightSpaceMatrix);
-        if (!isDepthPass) {
-            shader->SetUniform("u_enableShadow", true);
-            shader->SetUniform("u_shadowLightPos", shadowLightPos);
-            glActiveTexture(GL_TEXTURE6);
-            glBindTexture(GL_TEXTURE_2D, depthMapTexture);
-            shader->SetUniform("u_shadowMap", 6);
-        }
-    }
 
     // EVENT
     enum sceneEventIds
@@ -123,8 +103,8 @@ public:
         // cubeMap[1] = new CubeMap();
         terrain = new Terrain(20. * 60.);
         waterMatrix = new WaterMatrix(300. * 400.);
-        sceneCamera = new BezierCamera();
-        // rain = new Rain(40000);
+        sceneCamera = new BezierCamera();        // Drastically reduce the number of particles from 40000 to 10000 to reduce intensity
+        rain = new Rain(10000);
         // godRaysShader = new GodRaysShader();
     }
 
@@ -165,25 +145,11 @@ public:
             return FALSE;
         }
 
-        // Create depth FBO
-        glGenFramebuffers(1, &depthMapFBO);
-        glGenTextures(1, &depthMapTexture);
-        glBindTexture(GL_TEXTURE_2D, depthMapTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMapTexture, 0);
-        glDrawBuffer(GL_NONE);
-        glReadBuffer(GL_NONE);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
         mSwing = std::make_unique<Core::Model>();
-        mSwing->LoadModel("./assets/models/scene1_models/Kaliya.glb");
+        mSwing->LoadModel("./assets/models/scene1_models/Kaliya_intro.glb");
+
+        mKaliaMardan = std::make_unique<Core::Model>();
+        mKaliaMardan->LoadModel("./assets/models/scene1_models/KaliyaMardan.glb");
 
         // // Camera
 
@@ -208,8 +174,8 @@ public:
         waterMatrix->initialize();
 
         // IMPortantt
-        terrain->setFreq(0.031f);            // broad beach hills
-        terrain->setDispFactor(13.000f);        // softer hill height
+        terrain->setFreq(0.042f);            // broad beach hills
+        terrain->setDispFactor(15.130f);        // softer hill height
         terrain->setTessMultiplier(1.625f);
         terrain->setTextureTransitionFactor(1.0f); // use green texture set onl y
         terrain->setGrassCoverage(0.716f);     // >1.0 avoids grass branch
@@ -218,18 +184,31 @@ public:
         waterMatrix->interpolateWaterColor = 1.0f;
         waterMatrix->moveFactor = 0.0f;
 
-        // if (!rain->initialize(2))
-        // {
-        //     PrintLog("Failed to initialize Rain");
-        // }
+        // Lightning
+        if (LoadPNGImage(&texture_lightning1, "./assets/textures/lightning/lightning1.png") == FALSE)
+        {
+            PrintLog("Failed to load Lightning 1 texture\n");
+            return FALSE;
+        }
+        if (LoadPNGImage(&texture_lightning2, "./assets/textures/lightning/lightning2.png") == FALSE)
+        {
+            PrintLog("Failed to load Lightning 2 texture\n");
+            return FALSE;
+        }
+
+        // Use texture 1 (rain-light.png) to further reduce visual intensity
+        if (!rain->initialize(2))
+        {
+            PrintLog("Failed to initialize Rain");
+        }
 
         // Event System
         sceneEvents = new EventManager(
             {{START_T, {0.0f, 30.0f}},
              {FADE_IN, {0.0f, 3.0f}},
-             {SC_T1, {0.0f, 28.0f}},
-             {FADE_OUT, {28.0f, 2.0f}},
-             {END_T, {30.0f, 0.0f}}},
+             {SC_T1, {0.0f, 35.0f}},
+             {FADE_OUT, {35.0f, 2.0f}},
+             {END_T, {37.0f, 0.0f}}},
             true);
 
         setupCamera();
@@ -244,83 +223,142 @@ public:
     void setupCamera()
     {
         std::vector<std::vector<float>> bezierPointsSC1 = {
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {-1648.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -12814.500000f},
-            {-3558.600098f, 8713.500000f, -9584.500000f},
-            {-5008.600098f, 7733.500000f, -9584.500000f},
-            {-5568.600098f, 7733.500000f, -6804.500000f},
-            {-5568.600098f, 6433.500000f, -5954.500000f},
-            {-5568.600098f, 6693.500000f, -5764.500000f},
-            {-5568.600098f, 7063.500000f, -4514.500000f},
-            {-5568.600098f, 7063.500000f, -2684.500000f},
-            {-5568.600098f, 7063.500000f, -1564.500000f},
-            {-5568.600098f, 7063.500000f, 1805.500000f},
-            {-5568.600098f, 7063.500000f, 3915.500000f},
-            {-5568.600098f, 7063.500000f, 5015.500000f},
-        };
+{-9768.599609f, 16863.500000f, 895.500000f},
+{-9768.599609f, 16343.500000f, 895.500000f},
+{-9768.599609f, 16343.500000f, 895.500000f},
+{-9768.599609f, 15763.500000f, 895.500000f},
+{-9768.599609f, 15763.500000f, 895.500000f},
+{-9768.599609f, 14703.500000f, 895.500000f},
+{-9768.599609f, 13843.500000f, 895.500000f},
+{-9768.599609f, 12603.500000f, 895.500000f},
+{-9768.599609f, 11783.500000f, 895.500000f},
+{-9768.599609f, 9863.500000f, 895.500000f},
+{-9768.599609f, 8463.500000f, 895.500000f},
+{-9008.599609f, 5723.500000f, 895.500000f},
+{-7588.599609f, 5723.500000f, 1635.500000f},
+{-6368.599609f, 4663.500000f, 2595.500000f},
+{-6348.599609f, 4643.500000f, 3655.500000f},
+{-5468.599609f, 2943.500000f, 3955.500000f},
+{-5468.599609f, 2943.500000f, 3955.500000f},
+{-4368.599609f, 2943.500000f, 3935.500000f},
+{-3648.599609f, 2943.500000f, 3935.500000f},
+{-3588.599609f, 2443.500000f, 3935.500000f},
+{-3588.599609f, 1843.500000f, 3935.500000f},
+{-3588.599609f, 1443.500000f, 3935.500000f},
+{-3588.599609f, 1443.500000f, 2855.500000f},
+{-3588.599609f, 1443.500000f, 2855.500000f},
+{-3588.599609f, 1443.500000f, 2855.500000f},
+{-3588.599609f, 1443.500000f, 2855.500000f},
+{-3588.599609f, 1443.500000f, 2855.500000f},
+{-3588.599609f, 1443.500000f, 2855.500000f},
+{-3588.599609f, 1443.500000f, 2855.500000f},
+{-3588.599609f, 1443.500000f, 2855.500000f},
+};
 
-        // YAW GLOBAL
-        std::vector<float> yawGlobalSC1 = {
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            49.000000f,
-            49.000000f,
-            79.000000f,
-            109.000000f,
-        };
 
-        // PITCH GLOBAL
-        std::vector<float> pitchGlobalSC1 = {
-            32.000000f,
-            12.000000f,
-            12.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-        };
+// YAW GLOBAL
+std::vector<float> yawGlobalSC1 = {
+29.000000f,
+29.000000f,
+13.000000f,
+13.000000f,
+-9.000000f,
+-9.000000f,
+-30.000000f,
+-36.000000f,
+-85.000000f,
+-86.000000f,
+-136.000000f,
+-215.000000f,
+-215.000000f,
+-215.000000f,
+-264.000000f,
+-264.000000f,
+-301.000000f,
+-301.000000f,
+-323.000000f,
+-360.000000f,
+-370.000000f,
+-370.000000f,
+-370.000000f,
+-370.000000f,
+-368.000000f,
+-366.000000f,
+-366.000000f,
+-366.000000f,
+-366.000000f,
+-368.000000f,
+};
 
-        // FOV GLOBAL
-        std::vector<float> fovGlobalSC1 = {
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-        };
+
+// PITCH GLOBAL
+std::vector<float> pitchGlobalSC1 = {
+-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-86.000000f,
+	-85.000000f,
+	-85.000000f,
+	-71.000000f,
+	-54.000000f,
+	-47.000000f,
+	-33.000000f,
+	-22.000000f,
+	-10.000000f,
+	-10.000000f,
+	-6.000000f,
+	-3.000000f,
+	3.000000f,
+	4.000000f,
+	5.000000f,
+	6.000000f,
+	6.000000f,
+	};
+
+
+// FOV GLOBAL
+std::vector<float> fovGlobalSC1 = {
+-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	};
 
         sc1.initialize();
         sc1.setBezierPoints(bezierPointsSC1, yawGlobalSC1, pitchGlobalSC1, fovGlobalSC1);
@@ -329,8 +367,6 @@ public:
 
      void drawSwingModel(bool isBlack = false)
     {
-        if (!mSwing)
-            return;
 
         pushMatrix(modelMatrix);
         {
@@ -338,11 +374,10 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             mSwing->mTextureShader->Use();
-            bindShadowUniforms(mSwing->mTextureShader.get());
             mSwing->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 swingModelMatrix =
-                vmath::translate(8000.0f, 800.0f, -9000.0f)  *
+                vmath::translate(8000.0f + -7980.000000f, 800.0f + 240.000000f, -9000.0f + 11460.000000f)     *
                 vmath::scale(1000.0f, 1000.0f, 1000.0f) *
                 vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f);
 
@@ -361,45 +396,53 @@ public:
         }
         modelMatrix = popMatrix();
     }
+
+    void drawKaliyaMardanModel(bool isBlack = false)
+    {
+
+        pushMatrix(modelMatrix);
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            mKaliaMardan->mTextureShader->Use();
+            mKaliaMardan->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 swingModelMatrix =
+                vmath::translate(5180.0f , 3830.0f -150.000000f , 1290.0f -1810.000000f)     *
+                vmath::scale(-300.0f, -300.0f, -300.0f) *
+                vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f) * 
+                vmath::rotate(180.0f , 1.0f , 0.0f , 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            mKaliaMardan->mTextureShader->SetUniform("u_model", swingModelMatrix);
+            mKaliaMardan->mTextureShader->SetUniform("u_view", viewMatrix);
+            mKaliaMardan->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            mKaliaMardan->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+
+            mKaliaMardan->Draw(mKaliaMardan->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
     
     void display()
     {
-        // Shadow Depth Pass
-        mat4 lightProjectionMatrix = vmath::ortho(-6000.0f, 6000.0f, -6000.0f, 6000.0f, -10000.0f, 10000.0f);
-        mat4 lightViewMatrix = vmath::lookat(shadowLightPos, vec3(0.0f, 0.0f, 0.0f), vec3(0.0, 1.0, 0.0));
-        lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
-
-        isDepthPass = true;
-        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
-        
-        drawSwingModel();
-        
-        glCullFace(GL_BACK);
-        glDisable(GL_CULL_FACE);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        isDepthPass = false;
-
-        glViewport(0, 0, giWindowWidth, giWindowHeight);
-
         // Camera
         modelMatrix = mat4::identity();
         perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)giWindowWidth / (GLfloat)giWindowHeight, 10.0f, 10000000.0f);
 
         // modelLoader.display();
-        // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
+        // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal );
         // sceneCamera->update();
 
         pushMatrix(modelMatrix);
         {
-            terrain->shadowMap = depthMapTexture;
-            terrain->shadowLightSpaceMatrix = lightSpaceMatrix;
-            terrain->shadowLightPosition = shadowLightPos;
-            terrain->draw(1.0f);
+            terrain->draw(false);
         }
         modelMatrix = popMatrix();
 
@@ -439,55 +482,111 @@ public:
 
         drawSwingModel();
 
+        drawKaliyaMardanModel();
+
+        drawLightning();
+
         // RAIN RENDERING
-        // pushMatrix(modelMatrix);
-        // {
-        //     // modelMatrix = modelMatrix * translate(0.0f, -35.0f, -5.0f) * scale(1.0f,1.0f,1.0f);
-        //     if (rain->alpha > 0.0f)
-        //     {
-        //         drawRain();
-        //     }
-        // }
-        // modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            // modelMatrix = modelMatrix * translate(0.0f, -35.0f, -5.0f) * scale(1.0f,1.0f,1.0f);
+            if (rain->alpha > 0.0f)
+            {
+                drawRain();
+            }
+        }
+        modelMatrix = popMatrix();
 
         // sceneCamera->displayBezierCurve();
     }
 
+    // Lightning
+    void drawLightning(void)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(44100.000000f + 21440.000000f, 18300.000000f , -53400.000000f + -260.000000f) * vmath::scale(1.0f + 9050.0f, 1.0f + 14450.0f, 1.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(6000.000000f + 21440.000000f, 13800.000000f , -70500.000000f + -260.000000f) * vmath::scale(1.0f + 3400.000000f, 1.0f + 7700.000000f, 1.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning2, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(-1800.000000f + 21440.000000f, 9150.000000f , -34050.000000f + -260.000000f) * vmath::scale(1.0f + 6550.000000f, 1.0f + 9450.000000f, 1.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(26100.000000f + 21440.000000f, 13050.000000f , 7950.000000f + -260.000000f) * vmath::scale(7750.000000f, 10400.000000f, 1.0f) * rotate(0.0f, 0.0f, 1.0f, 0.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(59850.000000f + 21440.000000f, 15900.000000f , -7650.000000f + -260.000000f) * vmath::scale(21550.000000f, 16150.000000f, 1.0f) * rotate(-4710.000000f, 0.0f, 1.0f, 0.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(-13200.000000f + 21440.000000f, 8100.000000f , 36150.000000f + -260.000000f) * rotate(-200.000000f, 0.0f, 1.0f, 0.0f) * vmath::scale(6700.000000f, 12400.000000f, 1.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            modelMatrix = modelMatrix * vmath::translate(-12900.000000f + 21440.000000f, 4950.000000f , 4800.000000f + -260.000000f) * rotate(-250.000000f, 0.0f, 1.0f, 0.0f) * vmath::scale(8650.000000f, 17200.000000f, 1.0f);
+            commonShaders->textureShader->drawQuadWithTexture(texture_lightning1, modelMatrix, viewMatrix, perspectiveProjectionMatrix, cloudNoiseAlpha);
+        }
+        modelMatrix = popMatrix();
+
+        glDisable(GL_BLEND);
+    }
+
     // RAIN RELATED
-    // void drawRain(void)
-    // {
-    //     // code
-    //     pushMatrix(modelMatrix);
-    //     {
-    //         rain->lightAmbient[0] = 0.0f;
-    //         rain->lightAmbient[1] = 0.0f;
-    //         rain->lightAmbient[2] = 0.0f;
-    //         rain->lightAmbient[3] = 1.0f;
+    void drawRain(void)
+    {
+        // code
+        pushMatrix(modelMatrix);
+        {
+            rain->lightAmbient[0] = 0.0f;
+            rain->lightAmbient[1] = 0.0f;
+            rain->lightAmbient[2] = 0.0f;
+            rain->lightAmbient[3] = 1.0f;
 
-    //         rain->lightDiffuse[0] = 1.0f;
-    //         rain->lightDiffuse[1] = 1.0f;
-    //         rain->lightDiffuse[2] = 1.0f;
-    //         rain->lightDiffuse[3] = 1.0f;
+            rain->lightDiffuse[0] = 1.0f;
+            rain->lightDiffuse[1] = 1.0f;
+            rain->lightDiffuse[2] = 1.0f;
+            rain->lightDiffuse[3] = 1.0f;
 
-    //         rain->lightPosition[0] = 0.0f;
-    //         rain->lightPosition[1] = 100.0f;
-    //         rain->lightPosition[2] = -30.0f;
-    //         rain->lightPosition[3] = 1.0f;
+            rain->lightPosition[0] = 0.0f;
+            rain->lightPosition[1] = 100.0f;
+            rain->lightPosition[2] = -30.0f;
+            rain->lightPosition[3] = 1.0f;
 
-    //         rain->lightSpecular[0] = 1.0f;
-    //         rain->lightSpecular[1] = 1.0f;
-    //         rain->lightSpecular[2] = 1.0f;
-    //         rain->lightSpecular[3] = 1.0f;
+            rain->lightSpecular[0] = 1.0f;
+            rain->lightSpecular[1] = 1.0f;
+            rain->lightSpecular[2] = 1.0f;
+            rain->lightSpecular[3] = 1.0f;
 
-    //         // depth buffer madhe writing disable karnya sathi
+            // depth buffer madhe writing disable karnya sathi
 
-    //         glEnable(GL_BLEND);
+            glEnable(GL_BLEND);
 
-    //         rain->display();
-    //         glDisable(GL_BLEND);
-    //     }
-    //     modelMatrix = popMatrix();
-    // }
+            rain->display();
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     void displayScene(float terrainUp)
@@ -520,11 +619,30 @@ public:
 
     void update()
     {
-        sceneCamera->time = globalTime;
+        // sceneCamera->time = globalTime;
+        // sceneCamera->update();
 
-        // CAMERA UPDATE
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // terrain->setWaterHeight(85.0f);
+        // waterMatrix->interpolateWaterColor = 1.0f;
+        // terrain->setTextureTransitionFactor(1.0f);
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+        // if (terrain->getTextureTransitionFactor() < 1.0f)
+        // {
+        //     terrain->setTextureTransitionFactor(terrain->getTextureTransitionFactor() + 0.001f);
+        // }
+
+        // if (terrain->getGrassCoverage() < 0.5f)
+        // {
+        //     terrain->setGrassCoverage(terrain->getGrassCoverage() + 0.005f);
+        // }
+
+        // // CAMERA UPDATE
         sceneCamera->time = sceneEvents->getEventTime(START_T);
         sceneEvents->increment();
+        // sceneCamera->time = globalTime;
 
         // CAMERA UPDATE
         if (sceneEvents->isEventInProgress(SC_T1))
@@ -536,6 +654,9 @@ public:
         if (sceneEvents->isEventComplete(END_T))
             isSceneComplete = true;
 
+        // terrain->setWaterHeight(100.0f - 15.000000f);
+        // waterMatrix->interpolateWaterColor = 1.0f;
+        // terrain->setTextureTransitionFactor(1.0f);
 
         float fadeSpeed = 0.001f; // Adjust speed for smooth fade effect
 
@@ -558,6 +679,30 @@ public:
         //         iCurrentCubeMap += 1;
         //     }
         // }
+
+        // rain
+        // if (rain->alpha > 0.0f)
+        // {
+        //     rain->alpha -= 0.002f;
+        // }
+
+        // Lightning fluctuation
+        float period = fmod(globalTime, 4.0f); // 4 seconds cycle
+        if (period < 0.15f) // First double flash
+        {
+            if (period < 0.04f) cloudNoiseAlpha = 1.0f;
+            else if (period < 0.06f) cloudNoiseAlpha = 0.0f;
+            else if (period < 0.12f) cloudNoiseAlpha = 1.0f;
+            else cloudNoiseAlpha = 0.0f;
+        }
+        else if (period > 1.5f && period < 1.6f) // Second single short flash
+        {
+            cloudNoiseAlpha = 1.0f;
+        }
+        else
+        {
+            cloudNoiseAlpha = 0.0f;
+        }
     }
 
     void uninitialize()
@@ -575,13 +720,16 @@ public:
             terrain = nullptr;
         }
 
-        mSwing.reset();
-
-        // // rain
-        // if (rain->alpha > 0.0f)
-        // {
-        //     rain->alpha -= 0.002f;
-        // }
+        if (texture_lightning1)
+        {
+            glDeleteTextures(1, &texture_lightning1);
+            texture_lightning1 = 0;
+        }
+        if (texture_lightning2)
+        {
+            glDeleteTextures(1, &texture_lightning2);
+            texture_lightning2 = 0;
+        }
 
         // modelLoader.uninitialize();
     }
