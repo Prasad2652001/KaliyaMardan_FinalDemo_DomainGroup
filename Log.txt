@@ -1,0 +1,198 @@
+============================================================
+Log File "Log.txt" Has Been Created Successfully !!!
+============================================================
+
+".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+"./src/shaders/texture/texture.vs" : Vertex Shader Compilation Succeeded.
+"./src/shaders/texture/texture.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\model\model.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\model\model.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+"./src/shaders/overlayTexture/texture.vs" : Vertex Shader Compilation Succeeded.
+"./src/shaders/overlayTexture/texture.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+"./src/shaders/overlayColor/color.vs" : Vertex Shader Compilation Succeeded.
+"./src/shaders/overlayColor/color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\model\modelParticles.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\model\modelParticles.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+"./src/shaders/textureLight/texture.vs" : Vertex Shader Compilation Succeeded.
+"./src/shaders/textureLight/texture.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\terrain\terrain.vert" : Vertex Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tcs" : Tessellation Control Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.tes" : Tessellation Evaluation Shader Compilation Succeeded.
+".\src\shaders\terrain\terrain.frag" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\grid\grid.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\grid\grid.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/Kaliya.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/Kaliya.glb' loaded: meshes=1
+".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/cowHouse.glb': anim[0]='Attack_Back' dur=1458.33 tps=1000.00 targetT=0.00 bones=77
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/cowHouse.glb' loaded: meshes=6
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/cow1.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/cow1.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/cow2.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/cow2.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house1.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house1.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house2.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house2.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house3.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house3.glb' loaded: meshes=2
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house5.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house5.glb' loaded: meshes=2
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house6.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house6.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/house7.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/house7.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/vrundavanGate.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/vrundavanGate.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/well.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/well.glb' loaded: meshes=7
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/hutHouse.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/hutHouse.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmer2_bailgadi.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmer2_bailgadi.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/farmer3.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/farmer3.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/peepal_tree.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/peepal_tree.glb' loaded: meshes=17
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/whiteBull.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/whiteBull.glb' loaded: meshes=5
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/treeKatta.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/treeKatta.glb' loaded: meshes=1
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/gavkari/nandBaba.fbx': anim[0]='Armature|Armature|Talk_with_Right_Hand_Open|baselayer' dur=113.00 tps=30.00 targetT=0.00 bones=27
+[Core::Model::ProcessMesh]: Skinned mesh 'char1': verts=81645 bones=24 bonesNotFound=0 unweighted=0 partial=0
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/gavkari/nandBaba.fbx' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/gavkari/gavkari1.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/gavkari/gavkari1.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/gavkari/gavkari2_ladies.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/gavkari/gavkari2_ladies.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/gavkari/yashoda.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/gavkari/yashoda.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/gavkari/gavkari3.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/gavkari/gavkari3.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/gavkari/gavkari4_ladies.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/gavkari/gavkari4_ladies.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene1_models/vrundavan/gavkari/tulsi.glb'
+[Core::Model::LoadModel]: './assets/models/scene1_models/vrundavan/gavkari/tulsi.glb' loaded: meshes=6
+".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\cubemap\cubemap.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\cubemap\cubemap.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+[Core::Model::LoadModel]: './assets/models/scene2_models/Krishna_sleeping.glb': anim[0]='Armature.001|mixamo.com|Layer0' dur=66.67 tps=1000.00 targetT=0.00 bones=45
+[Core::Model::LoadModel]: './assets/models/scene2_models/Krishna_sleeping.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/tree1.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/tree1.glb' loaded: meshes=4
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/stone1.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/stone1.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/stone2.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/stone2.glb' loaded: meshes=1
+[Core::Model::LoadModel]: './assets/models/scene2_models/krishnaFriend/friend1.glb': anim[0]='Armature|Seated_Fist_Pump|baselayer' dur=3291.67 tps=1000.00 targetT=0.00 bones=26
+[Core::Model::LoadModel]: './assets/models/scene2_models/krishnaFriend/friend1.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/krishnaFriend/friend2.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/krishnaFriend/friend2.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/krishnaFriend/balram.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/krishnaFriend/balram.glb' loaded: meshes=1
+[Core::Model::LoadModel]: './assets/models/scene2_models/cow1.glb': anim[0]='Attack_Back' dur=1458.33 tps=1000.00 targetT=0.00 bones=53
+[Core::Model::LoadModel]: './assets/models/scene2_models/cow1.glb' loaded: meshes=1
+[Core::Model::LoadModel]: './assets/models/scene2_models/cow2.glb': anim[0]='Attack_Back' dur=1458.33 tps=1000.00 targetT=0.00 bones=53
+[Core::Model::ProcessMesh]: Skinned mesh 'Brahman_cow_1_Brahman_cow_0.001': verts=7655 bones=46 bonesNotFound=0 unweighted=0 partial=0
+[Core::Model::LoadModel]: './assets/models/scene2_models/cow2.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/cow3.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/cow3.glb' loaded: meshes=1
+[Core::Model::LoadModel]: No animations found in './assets/models/scene2_models/cow3.glb'
+[Core::Model::LoadModel]: './assets/models/scene2_models/cow3.glb' loaded: meshes=1
+[Core::AnimatedModel::LoadModel]: AnimatedModel './assets/models/scene2_models/eagle/eagle.fbx': anim='CINEMA_4D_Principal' dur=18.00 tps=30.00
+[Core::AnimatedModel::LoadModel]: AnimatedModel './assets/models/scene2_models/eagle/eagle.fbx': bones=50 meshes=1
+[Core::AnimatedModel::SetBaseColorTexture]: AnimatedModel override base color './assets/models/scene2_models/eagle/baseTexture.png': id=259
+".\src\shaders\water_matrix\WaterQuad.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\water_matrix\WaterQuad.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\color\color.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\color\color.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+".\src\shaders\tint\tint.vs" : Vertex Shader Compilation Succeeded.
+".\src\shaders\tint\tint.fs" : Fragment Shader Compilation Succeeded.
+Shader Program Linking Succeeded.
+
+ FBO creation Sucessful!! 
+InitalizeAudio() : alCOpenDevice() Failed.
+Initialize Successful...
+ESC Pressed. Starting log dump...
+
+
+Variables  | OBJ -128.600082f, -136.499954f, 35.500015f | OBJ Angle 1.000000f | SCALE 49.000000f, -25.000000f, -160.000000f
+
+
+
+
+light_objX : 0.000000 , light_objY : 0.000000 , light_objZ : 0.000000
+ Logging bezierPoints. Size: 1
+
+
+std::vector<std::vector<float>> bezierPoints = {
+{-128.600082f, -136.499954f, 35.500015f},
+};
+Logging yawGlobal. Size: 1
+
+
+// YAW GLOBAL
+std::vector<float> yawGlobal = {
+49.000000f,
+};
+Logging pitchGlobal. Size: 1
+
+
+// PITCH GLOBAL
+std::vector<float> pitchGlobal = {
+-25.000000f,
+	};
+Logging fovGlobal. Size: 1
+
+
+// FOV GLOBAL
+std::vector<float> fovGlobal = {
+-160.000000f,
+	};
+Finished ESC log dump. Posting quit message...

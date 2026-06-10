@@ -1038,7 +1038,7 @@ int initialize(void)
 
 	// if (playMusic)
 	// {
-
+	
 	myMusic.InitializeAudio(MAKEINTRESOURCE(MYMUSIC));
 	// myMusic.Play();
 

@@ -42,10 +42,10 @@ public:
         scene4 = new DemoScene4();
         outroScene = new OutroScene();
         tintEffect = new TintEffect();
-
+        
         START_E2E_DEMO = true;
         // selected_scene = SCENE_INTRO;
-        selected_scene = SCENE_01;
+        selected_scene = SCENE_02;
         scene = nullptr;
     }
 
