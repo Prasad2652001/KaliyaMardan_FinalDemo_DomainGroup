@@ -45,7 +45,7 @@ public:
 
         START_E2E_DEMO = true;
         // selected_scene = SCENE_INTRO;
-        selected_scene = SCENE_02;
+        selected_scene = SCENE_01;
         scene = nullptr;
     }
 

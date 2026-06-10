@@ -4,9 +4,16 @@
       "name": "Win32",
       "includePath": [
         "${workspaceFolder}/**",
+        "${workspaceFolder}/src",
+        "${workspaceFolder}/src/includes",
+        "${workspaceFolder}/src/includes/freetype",
+        "${workspaceFolder}/src/imgui",
+        "${workspaceFolder}/third_party/assimp/include",
+        "${workspaceFolder}/third_party/glew/include",
+        "${workspaceFolder}/third_party/glm",
+        "${workspaceFolder}/third_party/openal/include",
+        "${workspaceFolder}/third_party/ffmpeg/include",
         "C:\\Program Files (x86)\\OpenAL 1.1 SDK\\include",
-        "C:\\assimp\\include",
-        "C:\\glew\\include",
         "C:\\opencv\\build\\include",
         "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.1\\include"
       ],
