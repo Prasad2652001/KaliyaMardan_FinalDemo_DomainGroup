@@ -54,6 +54,8 @@ public:
     std::unique_ptr<Core::Model> hutHouse;
     std::unique_ptr<Core::Model> vrundavanGate;
     std::unique_ptr<Core::Model> cowHouse;
+    std::unique_ptr<Core::Model> cow1;
+    std::unique_ptr<Core::Model> cow2;
     std::unique_ptr<Core::Model> well;
     std::unique_ptr<Core::Model> farmLand;
     std::unique_ptr<Core::AnimatedModel> farmer1;
@@ -176,6 +178,12 @@ public:
 
         cowHouse = std::make_unique<Core::Model>();
         cowHouse->LoadModel("./assets/models/scene1_models/vrundavan/cowHouse.glb");
+
+        cow1 = std::make_unique<Core::Model>();
+        cow1->LoadModel("./assets/models/scene1_models/vrundavan/cow1.glb");
+
+        cow2 = std::make_unique<Core::Model>();
+        cow2->LoadModel("./assets/models/scene1_models/vrundavan/cow2.glb");
         
         house1 = std::make_unique<Core::Model>();
         house1->LoadModel("./assets/models/scene1_models/vrundavan/house1.glb");
@@ -618,7 +626,7 @@ std::vector<float> fovGlobalSC1 = {
         // }
         // modelMatrix = popMatrix();
 
-        sceneCamera->displayBezierCurve();
+        // sceneCamera->displayBezierCurve();
     }
 
     void drawVrundavanScene()
@@ -1086,6 +1094,66 @@ std::vector<float> fovGlobalSC1 = {
             cowHouse->mTextureShader->SetUniform("u_ApplyToon", false); 
 
             cowHouse->Draw(cowHouse->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            cow1->mTextureShader->Use();
+            bindShadowUniforms(cow1->mTextureShader.get());
+            cow1->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 cow1ModelMatrix =
+                vmath::translate(-400.0f + 1661.399902f , 0.0f + 3.500046f, 70.0f + 15.500017f) *
+                vmath::scale(0.5f , 0.5f , 0.5f) *
+                vmath::rotate(-120.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            cow1->mTextureShader->SetUniform("u_model", cow1ModelMatrix);
+            cow1->mTextureShader->SetUniform("u_view", viewMatrix);
+            cow1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            cow1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            cow1->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            cow1->Draw(cow1->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            cow2->mTextureShader->Use();
+            bindShadowUniforms(cow2->mTextureShader.get());
+            cow2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 cow2ModelMatrix =
+                vmath::translate(-400.0f + 1661.399902f + objX, 0.0f + 3.500046f, 70.0f + 15.500017f + objZ) *
+                vmath::scale(0.5f , 0.5f , 0.5f) *
+                vmath::rotate(-120.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            cow2->mTextureShader->SetUniform("u_model", cow2ModelMatrix);
+            cow2->mTextureShader->SetUniform("u_view", viewMatrix);
+            cow2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            cow2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            cow2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            cow2->Draw(cow2->mTextureShader);
 
             glDisable(GL_BLEND);
         }
