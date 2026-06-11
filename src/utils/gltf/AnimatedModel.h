@@ -31,6 +31,10 @@ namespace Core
         std::vector<unsigned int>  indices;
         std::vector<ModelTexture>  textures;
         GLuint vao = 0, vbo = 0, ebo = 0;
+        // Cached element count so the heavy CPU-side vertices/indices can be
+        // released after they are uploaded to the GPU (saves a lot of RAM when
+        // many models are loaded, e.g. the 8 Krishna Tandav pose GLBs).
+        GLsizei indexCount = 0;
 
     public:
         SkinnedMesh() = default;

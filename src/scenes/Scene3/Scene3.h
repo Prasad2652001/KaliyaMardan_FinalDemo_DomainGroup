@@ -61,6 +61,13 @@ public:
     std::unique_ptr<Core::Model> hutHouse;
     std::unique_ptr<Core::AnimatedModel> vrundavanGate;
     std::unique_ptr<Core::AnimatedModel> shreeKrishna;
+
+    // Eight Krishna Tandav "position" models cross-faded to animate the dance
+    // (fade in / fade out between static poses, sequenced 1..8 on a loop).
+    static const int KRISHNA_POSE_COUNT = 8;
+    std::unique_ptr<Core::AnimatedModel> krishnaPoses[KRISHNA_POSE_COUNT];
+    float krishnaFadeTime = 0.0f;
+
     std::unique_ptr<Core::Model> cowHouse;
     std::unique_ptr<Core::Model> well;
     std::unique_ptr<Core::Model> farmLand;
@@ -187,17 +194,30 @@ public:
         // loads quickly. AnimatedModel renders it statically (no bones).
         vrundavanGate->LoadModel("./assets/models/scene3_models/Kaliya.glb");
 
-        shreeKrishna = std::make_unique<Core::AnimatedModel>();
-        shreeKrishna->LoadModel("./assets/models/scene3_models/Krishna.fbx");
-        // Krishna.fbx is a Mixamo rig export - Mixamo strips all material
-        // texture references from the FBX, so automatic texture resolution
-        // finds nothing. We set the base color explicitly here. For any FBX
-        // that does carry texture references (embedded or relative paths),
-        // AnimatedModel::LoadMaterialTextures will pick them up automatically.
-        shreeKrishna->SetBaseColorTexture(
-            "./assets/models/scene3_models/Old/BalKrishna_fbx/"
-            "Meshy_AI_Bal_Krishna_with_outs_0526221114_texture_fbx/"
-            "Meshy_AI_Bal_Krishna_with_outs_0526221114_texture.png");
+        // Krishna is animated by cross-fading three static Tandav poses (below),
+        // so the single skinned Krishna.fbx is no longer loaded or drawn.
+        // shreeKrishna = std::make_unique<Core::AnimatedModel>();
+        // shreeKrishna->LoadModel("./assets/models/scene3_models/Krishna.fbx");
+
+        // Eight static "position" poses of dancing Krishna (Meshy AI exports).
+        // We cross-fade between them (fade in / fade out) to animate the Tandav.
+        // These are GLB files with textures embedded, so no separate base-color
+        // texture override is needed (the loader picks up the embedded ones).
+        const char *krishnaPosePaths[KRISHNA_POSE_COUNT] = {
+            "./assets/models/scene3_models/KrishnaTandav/1stPosition/Krishna_1st.glb",
+            "./assets/models/scene3_models/KrishnaTandav/2ndPosition/Krishna_2nd.glb",
+            "./assets/models/scene3_models/KrishnaTandav/3rdPosition/Krishna_3rd.glb",
+            "./assets/models/scene3_models/KrishnaTandav/4thPosition/Krishna_4th.glb",
+            "./assets/models/scene3_models/KrishnaTandav/5thPosition/Krishna_5th.glb",
+            "./assets/models/scene3_models/KrishnaTandav/6thPosition/Krishna_6th.glb",
+            "./assets/models/scene3_models/KrishnaTandav/7thPosition/Krishna_7th.glb",
+            "./assets/models/scene3_models/KrishnaTandav/8thPosition/Krishna_8th.glb",
+        };
+        for (int i = 0; i < KRISHNA_POSE_COUNT; ++i)
+        {
+            krishnaPoses[i] = std::make_unique<Core::AnimatedModel>();
+            krishnaPoses[i]->LoadModel(krishnaPosePaths[i]);
+        }
 
         lightManager = new SceneLight();
         lightManager->addDirectionalLights({
@@ -439,7 +459,7 @@ public:
         // drawHouse2();      
         // drawHouse3();
         drawKaliyaModel();
-        drawShreeKrishnaModel();
+        drawKrishnaPosesFade();
         // drawCowHouse();
         // drawFarmLand();
         // drawHutHouse();
@@ -649,8 +669,11 @@ public:
 
             // Kaliya.glb has tiny native units (~1), so it needs a large scale.
             // Placed just below Krishna (y=245) so Krishna stands on the heads.
+            // Raised out of the water: at y=200 (the sea level) Kaliya's centre
+            // sat on the waterline so half the body was submerged; lift it so the
+            // body rises above the river surface.
             vmath::mat4 vrundavanGateModelMatrix =
-                vmath::translate(-10.0f, 200.0f, -40.0f) *
+                vmath::translate(-10.0f, 300.0f, -40.0f) *
                 vmath::scale(50.0f, 50.0f, 50.0f) *
                 vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
@@ -705,6 +728,94 @@ public:
             glDisable(GL_BLEND);
         }
         modelMatrix = popMatrix();
+    }
+
+    // Cross-fade the eight Krishna pose models: each pose holds fully opaque,
+    // then dissolves into the next (fade out current + fade in next), sequenced
+    // 1 -> 2 -> ... -> 8 -> 1 on an endless loop.
+    void drawKrishnaPosesFade(bool isBlack = false)
+    {
+        // Advance the fade timeline here (display path owns per-frame time).
+        krishnaFadeTime += (float)gDeltaTime;
+
+        const float holdDur = 0.933f; // seconds a pose stays fully visible
+        const float fadeDur = 0.667f; // seconds of cross-dissolve into next pose
+        const float slotDur = holdDur + fadeDur;
+        const float cycle   = slotDur * KRISHNA_POSE_COUNT;
+
+        float t = fmodf(krishnaFadeTime, cycle);
+        if (t < 0.0f) t += cycle;
+
+        int   slot  = (int)(t / slotDur) % KRISHNA_POSE_COUNT;
+        float local = t - slot * slotDur;            // time within current slot
+        int   next  = (slot + 1) % KRISHNA_POSE_COUNT;
+
+        float alpha[KRISHNA_POSE_COUNT] = {}; // zero-initialise all 8 poses
+        if (local < holdDur)
+        {
+            alpha[slot] = 1.0f;                       // fully showing this pose
+        }
+        else
+        {
+            float f = (local - holdDur) / fadeDur;    // 0..1 cross-dissolve
+            f = f < 0.0f ? 0.0f : (f > 1.0f ? 1.0f : f);
+            f = f * f * (3.0f - 2.0f * f);            // smoothstep ease
+            alpha[slot] = 1.0f - f;
+            alpha[next] = f;
+        }
+
+        // Shared placement for all eight poses (same spot, same facing).
+        // These poses are GLB (Y-up, already upright) so NO Z-up fix is needed.
+        // Scale is calibrated to Kaliya's scale (50) the same way Scene 2.5 sized
+        // this Krishna GLB. Tune translate.y / scale / the -90 yaw if needed.
+        vmath::mat4 krishnaModelMatrix =
+            vmath::translate(-10.0f, 325.0f, -40.0f) *
+            vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f) *
+            vmath::scale(44.0f, 44.0f, 44.0f);
+
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        // Draw the fading-out pose (slot) first, then the fading-in pose (next)
+        // on top, so the cross-dissolve reads correctly. During a hold only the
+        // current slot has alpha, so it's the only one drawn.
+        int drawOrder[2] = { slot, next };
+        for (int oi = 0; oi < 2; ++oi)
+        {
+            int i = drawOrder[oi];
+            if (oi == 1 && next == slot)
+                continue; // no second pose during a pure hold
+            if (!krishnaPoses[i] || alpha[i] <= 0.001f)
+                continue;
+
+            // A fully-visible (held) pose is drawn solid with depth writes so it
+            // self-occludes correctly; a cross-fading pose is blended with depth
+            // writes off so the two overlapping poses dissolve into each other.
+            bool opaque = alpha[i] >= 0.999f;
+            if (opaque) { glDisable(GL_BLEND); glDepthMask(GL_TRUE); }
+            else        { glEnable(GL_BLEND);  glDepthMask(GL_FALSE); }
+
+            pushMatrix(modelMatrix);
+            {
+                krishnaPoses[i]->mShader->Use();
+                bindShadowUniforms(krishnaPoses[i]->mShader.get());
+                krishnaPoses[i]->mShader->SetUniform("isBlack", isBlack);
+                krishnaPoses[i]->mShader->SetUniform("u_model", krishnaModelMatrix);
+                krishnaPoses[i]->mShader->SetUniform("u_view", viewMatrix);
+                krishnaPoses[i]->mShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+                krishnaPoses[i]->mShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
+                krishnaPoses[i]->mShader->SetUniform("u_ApplyToon", false);
+                krishnaPoses[i]->mShader->SetSampler2D("u_GGXLUT", 0, 5);
+                krishnaPoses[i]->mShader->SetUniform("u_DebugMode", 0);
+                krishnaPoses[i]->mShader->SetUniform("u_UseAlpha", true);
+                krishnaPoses[i]->mShader->SetUniform("u_Alpha", alpha[i]);
+
+                krishnaPoses[i]->Draw(krishnaPoses[i]->mShader);
+            }
+            modelMatrix = popMatrix();
+        }
+
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
     }
 
     void drawCowHouse(bool isBlack = false)
@@ -966,6 +1077,8 @@ public:
         house3.reset();
         vrundavanGate.reset();
         shreeKrishna.reset();
+        for (int i = 0; i < KRISHNA_POSE_COUNT; ++i)
+            krishnaPoses[i].reset();
         cowHouse.reset();
         farmLand.reset();
 

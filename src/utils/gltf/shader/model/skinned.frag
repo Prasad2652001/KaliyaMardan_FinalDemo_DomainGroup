@@ -12,6 +12,11 @@ uniform bool      isBlack;
 // 0 = normal shading
 // 1 = false-color by dominant bone id (uses v_debug)
 uniform int       u_DebugMode;
+// Opt-in transparency for cross-fading static poses. Defaults (u_UseAlpha=false)
+// keep every existing animated model fully opaque; only callers that enable it
+// (e.g. the Krishna Tandav pose cross-fade) get blended output.
+uniform bool      u_UseAlpha;
+uniform float     u_Alpha;
 
 out vec4 FragColor;
 
@@ -37,5 +42,6 @@ void main(void)
     vec3 color = base * (0.2 + 0.8 * diff) + vec3(0.3) * spec;
     if (isBlack) color = vec3(0.0);
 
-    FragColor = vec4(color, 1.0);
+    float outAlpha = u_UseAlpha ? clamp(u_Alpha, 0.0, 1.0) : 1.0;
+    FragColor = vec4(color, outAlpha);
 }

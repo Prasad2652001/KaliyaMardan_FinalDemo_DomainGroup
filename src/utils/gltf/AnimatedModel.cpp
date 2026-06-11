@@ -51,7 +51,8 @@ namespace Core
         : vertices(std::move(o.vertices)),
           indices(std::move(o.indices)),
           textures(std::move(o.textures)),
-          vao(o.vao), vbo(o.vbo), ebo(o.ebo)
+          vao(o.vao), vbo(o.vbo), ebo(o.ebo),
+          indexCount(o.indexCount)
     {
         o.vao = 0; o.vbo = 0; o.ebo = 0;
     }
@@ -67,6 +68,7 @@ namespace Core
             indices  = std::move(o.indices);
             textures = std::move(o.textures);
             vao = o.vao; vbo = o.vbo; ebo = o.ebo;
+            indexCount = o.indexCount;
             o.vao = 0;   o.vbo = 0;   o.ebo = 0;
         }
         return *this;
@@ -116,6 +118,13 @@ namespace Core
                               (void*)offsetof(SkinnedVertex, boneWeights));
 
         glBindVertexArray(0);
+
+        // The geometry now lives in GPU buffers; rendering uses the VAO/EBO and
+        // GPU skinning (bone matrices), never the CPU arrays. Release them to
+        // free a large amount of RAM (prevents bad_alloc with many heavy GLBs).
+        indexCount = (GLsizei)indices.size();
+        std::vector<SkinnedVertex>().swap(vertices);
+        std::vector<unsigned int>().swap(indices);
     }
 
     void SkinnedMesh::DrawMesh(std::unique_ptr<Shader>& shader)
@@ -158,7 +167,7 @@ namespace Core
         }
 
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
         glActiveTexture(GL_TEXTURE0);
     }
@@ -428,6 +437,17 @@ namespace Core
 
         PrintLogFunction(__FUNCTION__, "AnimatedModel '%s': bones=%d meshes=%zu",
             path.c_str(), mNumBones, meshes.size());
+
+        // Static model (no skeletal animation and no bones): the GPU buffers and
+        // textures are already uploaded, so the heavy Assimp scene (embedded
+        // textures + processed geometry) is no longer needed. Release it now so
+        // many such models (e.g. the 8 Krishna Tandav pose GLBs) don't all keep
+        // their full import in RAM at once, which otherwise causes bad_alloc.
+        if (!mScene->HasAnimations() && mNumBones == 0)
+        {
+            mImporter.FreeScene();
+            mScene = nullptr;
+        }
 
         return true;
     }
