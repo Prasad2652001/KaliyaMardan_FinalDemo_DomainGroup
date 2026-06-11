@@ -98,7 +98,7 @@ public:
         // "bad allocation" under memory pressure (same issue as Kaliya.fbx).
         // We load a GLB converted from that FBX, which Assimp parses cheaply.
         krishna = std::make_unique<Core::AnimatedModel>();
-        krishna->LoadModel("./assets/models/scene3_models/KrishnaTandav/1stPosition/Krishna_1st.glb");
+        krishna->LoadModel("./assets/models/scene3_models/Krishna_Fighting.glb");
         krishna->SetBaseColorTexture("./assets/models/scene3_models/KrishnaTandav/1stPosition/Meshy_AI_Dancing_Krishna_0608195926_texture.png");
 
         lightManager = new SceneLight();
@@ -548,7 +548,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             vmath::mat4 m =
-                vmath::translate(110.0f, 70.0f, 0.0f) *
+                vmath::translate(110.0f , 70.0f, 0.0f) *
                 vmath::rotate(kaliyaYaw, 0.0f, 1.0f, 0.0f) *
                 vmath::scale(55.0f, 55.0f, 55.0f);
 
@@ -584,9 +584,9 @@ public:
 
             // GLB export is Y-up (already upright); just yaw to face Kaliya.
             vmath::mat4 m =
-                vmath::translate(-110.0f, 20.0f, 0.0f) *
+                vmath::translate(-110.0f + 10.399918f, 20.0f + 23.500046f, 0.0f + 15.500017f) *
                 vmath::rotate(krishnaYaw, 0.0f, 1.0f, 0.0f) *
-                vmath::scale(48.0f, 48.0f, 48.0f);
+                vmath::scale(28.0f, 28.0f, 28.0f);
 
             krishna->mShader->Use();
             krishna->mShader->SetUniform("isBlack", false);

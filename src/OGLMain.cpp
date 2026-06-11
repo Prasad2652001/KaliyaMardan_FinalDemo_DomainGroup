@@ -1165,7 +1165,7 @@ void display(void)
 	}
 
 	// ==================================== IMGUI
-	drawImGui();
+	// drawImGui();
 	endImGuiFrame();
 
 	// ==================================== DISPLAY TEXT IN TITLE BAR
