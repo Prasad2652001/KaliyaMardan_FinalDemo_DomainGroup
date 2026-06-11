@@ -54,6 +54,8 @@ public:
     std::unique_ptr<Core::Model> cow1;
     std::unique_ptr<Core::Model> cow2;
     std::unique_ptr<Core::Model> cow3;
+    std::unique_ptr<Core::Model> mKaliya;
+    float mKaliya_yPos = -3000.0f;
 
     std::unique_ptr<Core::Model> tree1;
 
@@ -182,6 +184,9 @@ public:
         stone2 = std::make_unique<Core::Model>();
         stone2->LoadModel("./assets/models/scene2_models/stone2.glb");
 
+        mKaliya = std::make_unique<Core::Model>();
+        mKaliya->LoadModel("./assets/models/scene1_models/Kaliya_Final.glb");
+
         krishnaFriend1 = std::make_unique<Core::Model>();
         krishnaFriend1->LoadModel("./assets/models/scene2_models/krishnaFriend/friend1.glb");
 
@@ -241,11 +246,11 @@ public:
 
         // Event System
         sceneEvents = new EventManager(
-            {{START_T, {0.0f, 30.0f}},
+            {{START_T, {0.0f, 37.0f}},
              {FADE_IN, {0.0f, 3.0f}},
-             {SC_T1, {0.0f, 28.0f}},
-             {FADE_OUT, {28.0f, 2.0f}},
-             {END_T, {30.0f, 0.0f}}},
+             {SC_T1, {0.0f, 35.0f}},
+             {FADE_OUT, {35.0f, 2.0f}},
+             {END_T, {37.0f, 0.0f}}},
             true);
 
         setupCamera();
@@ -261,139 +266,103 @@ public:
     void setupCamera()
     {
         std::vector<std::vector<float>> bezierPointsSC1 = {
-{-5448.600098f, 2763.500000f, 7095.500000f},
-{-4828.600098f, 2763.500000f, 7095.500000f},
-{-2788.600098f, 2763.500000f, 7095.500000f},
-{-2068.600098f, 2083.500000f, 7095.500000f},
-{-408.600098f, 2083.500000f, 7095.500000f},
-{1791.399902f, 1623.500000f, 6495.500000f},
-{5151.399902f, 1623.500000f, 5355.500000f},
-{8891.400391f, 1163.500000f, 2675.500000f},
-{9631.400391f, 763.500000f, 2235.500000f},
-{13671.400391f, 763.500000f, 1855.500000f},
-{15011.400391f, 763.500000f, -444.500000f},
-{15791.400391f, 523.500000f, -1844.500000f},
-{15771.400391f, 523.500000f, -2304.500000f},
-{15771.400391f, 523.500000f, -3484.500000f},
-{15771.400391f, 523.500000f, -5184.500000f},
-{15771.400391f, 523.500000f, -5804.500000f},
-{15771.400391f, 663.500000f, -7304.500000f},
-{15771.400391f, 663.500000f, -7744.500000f},
-{15771.400391f, 663.500000f, -8484.500000f},
-{15911.400391f, 663.500000f, -9224.500000f},
-{15911.400391f, 703.500000f, -9324.500000f},
-{15911.400391f, 783.500000f, -9324.500000f},
-{15911.400391f, 903.500000f, -9324.500000f},
-{15911.400391f, 1003.500000f, -9324.500000f},
-{15911.400391f, 2063.500000f, -9324.500000f},
-{15911.400391f, 2943.500000f, -9324.500000f},
-{15911.400391f, 3603.500000f, -9324.500000f},
-{15911.400391f, 3743.500000f, -9324.500000f},
-{15911.400391f, 3883.500000f, -9324.500000f},
-{15911.400391f, 4343.500000f, -9324.500000f},
-{15911.400391f, 5103.500000f, -9324.500000f},
-{15911.400391f, 5103.500000f, -9324.500000f},
-{15911.400391f, 5103.500000f, -9324.500000f},
-{15911.400391f, 5103.500000f, -9324.500000f},
-{15911.400391f, 5103.500000f, -9324.500000f},
-{15911.400391f, 5103.500000f, -9324.500000f},
+{15611.400391f, 763.500000f, -10064.500000f},
+{15611.400391f, 823.500000f, -10064.500000f},
+{15611.400391f, 923.500000f, -10064.500000f},
+{15611.400391f, 1023.500000f, -10064.500000f},
+{15611.400391f, 1823.500000f, -10064.500000f},
+{15611.400391f, 2443.500000f, -10064.500000f},
+{15611.400391f, 3663.500000f, -10064.500000f},
+{15711.400391f, 4223.500000f, -8924.500000f},
+{15711.400391f, 4223.500000f, -8064.500000f},
+{15711.400391f, 4223.500000f, -4404.500000f},
+{15711.400391f, 5043.500000f, -3664.500000f},
+{15711.400391f, 6303.500000f, -2284.500000f},
+{14911.400391f, 6303.500000f, -1504.500000f},
+{12811.400391f, 6303.500000f, -1024.500000f},
+{11471.400391f, 6303.500000f, -1024.500000f},
+{9991.400391f, 6303.500000f, -1024.500000f},
+{7311.400391f, 6303.500000f, 615.500000f},
+{5071.400391f, 6303.500000f, 1455.500000f},
+{811.400391f, 5183.500000f, 3195.500000f},
+{-228.599609f, 5183.500000f, 3195.500000f},
+{-2028.599609f, 5183.500000f, 3195.500000f},
+{-2028.599609f, 4703.500000f, 3195.500000f},
+{-2028.599609f, 4143.500000f, 3195.500000f},
+{-2028.599609f, 2523.500000f, 3195.500000f},
+{-4348.599609f, 2083.500000f, 4795.500000f},
+{-4348.599609f, 923.500000f, 4795.500000f},
+{-4348.599609f, 923.500000f, 4795.500000f},
 };
 
 
 // YAW GLOBAL
 std::vector<float> yawGlobalSC1 = {
--29.000000f,
--31.000000f,
--31.000000f,
--31.000000f,
--32.000000f,
--35.000000f,
--37.000000f,
--37.000000f,
--39.000000f,
--65.000000f,
--65.000000f,
--75.000000f,
--83.000000f,
--88.000000f,
--88.000000f,
--89.000000f,
--89.000000f,
--91.000000f,
--91.000000f,
--91.000000f,
--91.000000f,
--91.000000f,
--91.000000f,
--91.000000f,
--91.000000f,
--91.000000f,
--91.000000f,
--77.000000f,
--46.000000f,
--27.000000f,
-24.000000f,
-87.000000f,
-107.000000f,
-103.000000f,
-118.000000f,
-118.000000f,
+435.000000f,
+435.000000f,
+435.000000f,
+435.000000f,
+435.000000f,
+435.000000f,
+435.000000f,
+438.000000f,
+438.000000f,
+438.000000f,
+438.000000f,
+463.000000f,
+508.000000f,
+498.000000f,
+498.000000f,
+498.000000f,
+496.000000f,
+498.000000f,
+494.000000f,
+490.000000f,
+486.000000f,
+486.000000f,
+488.000000f,
+491.000000f,
+488.000000f,
+488.000000f,
+488.000000f,
 };
 
 
 // PITCH GLOBAL
 std::vector<float> pitchGlobalSC1 = {
--12.000000f,
-	-12.000000f,
-	-12.000000f,
-	-11.000000f,
+-2.000000f,
+	-6.000000f,
+	-13.000000f,
+	-26.000000f,
+	-49.000000f,
+	-64.000000f,
+	-68.000000f,
+	-68.000000f,
+	-74.000000f,
+	-74.000000f,
+	-74.000000f,
+	-74.000000f,
+	-74.000000f,
+	-42.000000f,
+	-30.000000f,
+	-21.000000f,
+	-21.000000f,
+	-21.000000f,
+	-19.000000f,
+	-19.000000f,
+	-19.000000f,
+	-13.000000f,
 	-11.000000f,
 	-9.000000f,
 	-9.000000f,
-	-5.000000f,
-	-3.000000f,
-	-3.000000f,
-	-3.000000f,
-	-2.000000f,
-	-2.000000f,
-	-2.000000f,
-	-2.000000f,
-	1.000000f,
-	3.000000f,
-	4.000000f,
-	4.000000f,
-	4.000000f,
-	-7.000000f,
-	-24.000000f,
-	-44.000000f,
-	-59.000000f,
-	-80.000000f,
-	-80.000000f,
-	-80.000000f,
-	-80.000000f,
-	-80.000000f,
-	-80.000000f,
-	-80.000000f,
-	-80.000000f,
-	-61.000000f,
-	-45.000000f,
-	-25.000000f,
-	-25.000000f,
+	-1.000000f,
+	-1.000000f,
 	};
 
 
 // FOV GLOBAL
 std::vector<float> fovGlobalSC1 = {
 -120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
 	-120.000000f,
 	-120.000000f,
 	-120.000000f,
@@ -515,7 +484,7 @@ std::vector<float> fovGlobalSC1 = {
         // }
         // modelMatrix = popMatrix();
 
-        // sceneCamera->displayBezierCurve();
+        sceneCamera->displayBezierCurve();
     }
 
     void drawYamunaSideScene()
@@ -531,9 +500,44 @@ std::vector<float> fovGlobalSC1 = {
         drawCow1();
         drawCow2();
         drawCow3();
+        drawKaliyaModel();
     }  
 
     // ==================== yamuna side scene models drawing functions ====================
+    void drawKaliyaModel(bool isBlack = false)
+    {
+        if (!mKaliya)
+            return;
+
+        pushMatrix(modelMatrix);
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            mKaliya->mTextureShader->Use();
+            bindShadowUniforms(mKaliya->mTextureShader.get());
+            mKaliya->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 swingModelMatrix =
+                vmath::translate(8000.0f + -18988.599609f, mKaliya_yPos + -96.500000f, -9000.0f + 23255.500000f)  *
+                vmath::scale(1000.0f + 691.000000f, 1000.0f + 691.000000f, 1000.0f + 691.000000f) *
+                vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            mKaliya->mTextureShader->SetUniform("u_model", swingModelMatrix);
+            mKaliya->mTextureShader->SetUniform("u_view", viewMatrix);
+            mKaliya->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            mKaliya->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+
+            mKaliya->Draw(mKaliya->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
 
     // static models function
     void drawSleepingKrishna(bool isBlack = false)
@@ -1042,6 +1046,23 @@ std::vector<float> fovGlobalSC1 = {
         {
             sceneCamera = &sc1;
             sceneCamera->time = sceneEvents->getEventTime(SC_T1);
+
+            float threshold = 10.0f / 26.0f;
+            if (sceneCamera->time >= threshold) {
+                // Kaliya comes up
+                mKaliya_yPos += 5.0f; 
+                if (mKaliya_yPos > 800.0f) mKaliya_yPos = 800.0f;
+                
+                // Water turns dark black/blue
+                waterMatrix->interpolateWaterColor -= 0.002f;
+                if (waterMatrix->interpolateWaterColor < 0.0f) waterMatrix->interpolateWaterColor = 0.0f;
+
+                cubeMap->isBarasat = 2; // Dark clouds
+            } else {
+                mKaliya_yPos = -3000.0f;
+                waterMatrix->interpolateWaterColor = 1.0f;
+                cubeMap->isBarasat = 0; // Normal sky
+            }
         }
         
         if (sceneEvents->isEventComplete(END_T))
