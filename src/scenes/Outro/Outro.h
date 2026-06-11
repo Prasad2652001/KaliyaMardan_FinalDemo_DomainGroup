@@ -182,12 +182,12 @@ public:
             0.1f,
             10000000.0f);
 
-        pushMatrix(modelMatrix);
+        /*pushMatrix(modelMatrix);
         {
             modelMatrix = modelMatrix * vmath::scale(2000000.0f, 2000000.0f, 2000000.0f);
             cubeMap->display();
         }
-        modelMatrix = popMatrix();
+        modelMatrix = popMatrix();*/
 
         // Process fade events
         for (const auto& event : fadeEvents)
