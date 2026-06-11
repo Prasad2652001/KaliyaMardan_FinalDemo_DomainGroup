@@ -136,6 +136,8 @@ public:
             return FALSE;
         }
 
+        cubeMap->isBarasat = 2;
+
         if (!terrain)
         {
             PrintLog("Failed to initialize Terrain");

@@ -114,6 +114,7 @@ public:
         glUniformMatrix4fv(cubemap->projectionMatrixUniform, 1, GL_FALSE, perspectiveProjectionMatrix);
         glUniform1i(cubemap->isBarsatUniform, isBarasat);
         glUniform1f(cubemap->alphaUniform, Cubemap_Alpha);
+        glUniform1f(cubemap->timeUniform, globalTime);
         glBindVertexArray(vao_cube);
 
         // Game coding here

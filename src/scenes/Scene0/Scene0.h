@@ -59,8 +59,19 @@ public:
     // std::unique_ptr<Core::Model> mTunnel;
 
     std::unique_ptr<Core::Model> mSwing;
+    float mSwing_yPos = -3000.0f;
 
     std::unique_ptr<Core::Model> mKaliaMardan;
+    float mKaliaMardanAlpha = 0.0f;
+    
+    std::unique_ptr<Core::Model> mDomainGroup;
+    float mDomainGroupAlpha = 1.0f; // Forced to 1.0f for testing
+
+    // Variables for tweaking Domain Group position
+    float domainObjX = 5111.4f;
+    float domainObjY = 3863.5f;
+    float domainObjZ = 175.5f;
+    float domainScale = -300.0f;
 
     glshaderprogram *programStaticPBR;
     // glmodel *churchModel;
@@ -139,6 +150,8 @@ public:
             return FALSE;
         }
 
+        cubeMap->isBarasat = 2; // Dark and rainy clouds
+
         if (!terrain)
         {
             PrintLog("Failed to initialize Terrain");
@@ -150,6 +163,9 @@ public:
 
         mKaliaMardan = std::make_unique<Core::Model>();
         mKaliaMardan->LoadModel("./assets/models/scene1_models/KaliyaMardan.glb");
+
+        mDomainGroup = std::make_unique<Core::Model>();
+        mDomainGroup->LoadModel("./assets/models/scene1_models/Domain_Group.glb");
 
         // // Camera
 
@@ -181,7 +197,7 @@ public:
         terrain->setGrassCoverage(0.716f);     // >1.0 avoids grass branch
         terrain->setWaterHeight(400.0f);       // keep your sea level
 
-        waterMatrix->interpolateWaterColor = 1.0f;
+        waterMatrix->interpolateWaterColor = 0.0f;
         waterMatrix->moveFactor = 0.0f;
 
         // Lightning
@@ -377,7 +393,7 @@ std::vector<float> fovGlobalSC1 = {
             mSwing->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 swingModelMatrix =
-                vmath::translate(8000.0f + -7980.000000f + 871.399902f + -68.600082f, 800.0f + 240.000000f + -236.499939f + 183.500046f, -9000.0f + 11460.000000f + -1034.500000f + 695.500000f )     *
+                vmath::translate(8000.0f + -7980.000000f + 871.399902f + -68.600082f, mSwing_yPos, -9000.0f + 11460.000000f + -1034.500000f + 695.500000f )     *
                 vmath::scale(1500.0f, 1500.0f, 1500.0f) *
                 vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f);
 
@@ -407,6 +423,7 @@ std::vector<float> fovGlobalSC1 = {
 
             mKaliaMardan->mTextureShader->Use();
             mKaliaMardan->mTextureShader->SetUniform("isBlack", isBlack);
+            mKaliaMardan->mTextureShader->SetUniform("u_alpha", mKaliaMardanAlpha);
 
             vmath::mat4 swingModelMatrix =
                 vmath::translate(5180.0f + -68.600082f, 3830.0f -150.000000f + 183.500046f, 1290.0f -1810.000000f + 695.500000f)     *
@@ -424,6 +441,35 @@ std::vector<float> fovGlobalSC1 = {
             mKaliaMardan->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
 
             mKaliaMardan->Draw(mKaliaMardan->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    void drawDomainGroupModel(bool isBlack = false)
+    {
+        pushMatrix(modelMatrix);
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            mDomainGroup->mTextureShader->Use();
+            mDomainGroup->mTextureShader->SetUniform("isBlack", isBlack);
+            mDomainGroup->mTextureShader->SetUniform("u_alpha", mDomainGroupAlpha);
+
+            vmath::mat4 swingModelMatrix =
+                vmath::translate(5241.399902f, 4423.500000f, 1675.500000f) *
+                vmath::scale(300.0f + -2674.000000f, 300.0f + -2674.000000f, 300.0f + -2674.000000f) *
+                vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f) * 
+                vmath::rotate(180.0f , 1.0f , 0.0f , 0.0f);
+
+            mDomainGroup->mTextureShader->SetUniform("u_model", swingModelMatrix);
+            mDomainGroup->mTextureShader->SetUniform("u_view", viewMatrix);
+            mDomainGroup->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            mDomainGroup->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+
+            mDomainGroup->Draw(mDomainGroup->mTextureShader);
 
             glDisable(GL_BLEND);
         }
@@ -482,7 +528,13 @@ std::vector<float> fovGlobalSC1 = {
 
         drawSwingModel();
 
-        drawKaliyaMardanModel();
+        if (mKaliaMardanAlpha > 0.0f) {
+            drawKaliyaMardanModel();
+        }
+        
+        if (mDomainGroupAlpha > 0.0f) {
+            drawDomainGroupModel();
+        }
 
         drawLightning();
 
@@ -649,6 +701,34 @@ std::vector<float> fovGlobalSC1 = {
         {
             sceneCamera = &sc1;
             sceneCamera->time = sceneEvents->getEventTime(SC_T1);
+            
+            // Phase 1: Kaliya rises up from the water
+            if (sceneCamera->time >= 0.70f) {
+                mSwing_yPos += 4.0f;
+                float targetY = 800.0f + 240.0f - 236.499939f + 183.500046f;
+                if (mSwing_yPos > targetY) mSwing_yPos = targetY;
+            } else {
+                mSwing_yPos = -3000.0f;
+            }
+
+            // Phase 2 & 3: Domain Group Fades In then Fades Out at the end of the camera path
+            if (sceneCamera->time >= 0.80f && sceneCamera->time < 0.88f) {
+                mDomainGroupAlpha += 0.005f;
+                if (mDomainGroupAlpha > 1.0f) mDomainGroupAlpha = 1.0f;
+            } else if (sceneCamera->time >= 0.88f && sceneCamera->time < 0.95f) {
+                mDomainGroupAlpha -= 0.005f;
+                if (mDomainGroupAlpha < 0.0f) mDomainGroupAlpha = 0.0f;
+            } else {
+                mDomainGroupAlpha = 0.0f;
+            }
+
+            // Phase 4: KaliyaMardan Title Fades In right at the very end
+            if (sceneCamera->time >= 0.95f) {
+                mKaliaMardanAlpha += 0.005f;
+                if (mKaliaMardanAlpha > 1.0f) mKaliaMardanAlpha = 1.0f;
+            } else {
+                mKaliaMardanAlpha = 0.0f;
+            }
         }
         
         if (sceneEvents->isEventComplete(END_T))

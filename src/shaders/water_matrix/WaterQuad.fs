@@ -164,11 +164,19 @@ void main(void) {
 
     red = 10.0 / 255.0;
     green = 15.0 / 255.0;
-    blue = 35.0 / 255.0;
+    blue = 60.0 / 255.0; // Little dark blue
     vec4 darkColor = vec4(red, green, blue, 0.5);
     vec4 brightBlue = vec4(0.05, 0.20, 0.45, 1.0);
     vec4 finalWaterColor = mix(darkColor, brightBlue, interpolateDarkToBright);
-    waterColor = mix(color, finalWaterColor, 0.2) + vec4(specularHighlights, 1.0);
+
+    // Make waterMixFactor lower so the reflection (baseColor) is more visible (70% reflection, 30% water color tint)
+    float waterMixFactor = mix(0.3, 0.2, interpolateDarkToBright);
+    
+    // Don't darken the reflection too much, so the clouds are clearly visible
+    vec4 baseColor = color * mix(0.7, 1.0, interpolateDarkToBright);
+    vec3 dimmedSpecular = specularHighlights * mix(0.5, 1.0, interpolateDarkToBright);
+
+    waterColor = mix(baseColor, finalWaterColor, waterMixFactor) + vec4(dimmedSpecular, 1.0);
     
     // Add artificial brightness at the sharp crests of the ripples so they show up on dark water
     waterColor += vec4(0.3, 0.4, 0.5, 0.0) * (rippleHighlight * 0.4);

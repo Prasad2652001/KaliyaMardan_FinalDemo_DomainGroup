@@ -153,7 +153,7 @@ public:
 
     void draw(float isShadow)
     {
-        drawFog = true;
+        drawFog = false;
 
         if (up != 0.0f)
         {
