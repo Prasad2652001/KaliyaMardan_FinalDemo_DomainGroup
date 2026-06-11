@@ -55,6 +55,8 @@ public:
     std::unique_ptr<Core::Model> house5;
     std::unique_ptr<Core::Model> house6;
     std::unique_ptr<Core::Model> house7;
+    std::unique_ptr<Core::Model> house8;
+
 
     std::unique_ptr<Core::Model> hutHouse;
     std::unique_ptr<Core::Model> vrundavanGate;
@@ -65,6 +67,7 @@ public:
     std::unique_ptr<Core::Model> farmer2_bailgadi;
     std::unique_ptr<Core::Model> farmer3;
     std::unique_ptr<Core::Model> tree1;
+    std::unique_ptr<Core::Model> tree2;
     std::unique_ptr<Core::Model> whiteBull;
     std::unique_ptr<Core::Model> treeKatta;
     std::unique_ptr<Core::Model> nandBaba;
@@ -200,6 +203,9 @@ public:
         house7 = std::make_unique<Core::Model>();
         house7->LoadModel("./assets/models/scene1_models/vrundavan/house7.glb");
 
+        house8 = std::make_unique<Core::Model>();
+        house8->LoadModel("./assets/models/scene1_models/vrundavan/house8.glb");
+
         vrundavanGate = std::make_unique<Core::Model>();
         vrundavanGate->LoadModel("./assets/models/scene1_models/vrundavan/vrundavanGate.glb");
         
@@ -217,6 +223,9 @@ public:
 
         tree1 = std::make_unique<Core::Model>();
         tree1->LoadModel("./assets/models/scene1_models/vrundavan/peepal_tree.glb");
+
+        tree2 = std::make_unique<Core::Model>();
+        tree2->LoadModel("./assets/models/scene1_models/vrundavan/tree2.glb");
 
         whiteBull = std::make_unique<Core::Model>();
         whiteBull->LoadModel("./assets/models/scene1_models/vrundavan/whiteBull.glb");
@@ -666,12 +675,14 @@ std::vector<float> fovGlobalSC1 = {
         drawHouse5();
         drawHouse6();
         drawHouse7();
+        drawHouse8();
 
         drawKaliyaModel();
         drawCowHouse();
         drawHutHouse();
         drawFarmers();
         drawTree1();
+        drawTree2();
         drawWhiteBull();
         drawTreeKatta();
         drawGavkari();
@@ -1019,7 +1030,7 @@ std::vector<float> fovGlobalSC1 = {
         }
         modelMatrix = popMatrix();
     }
-
+    
     void drawHouse3(bool isBlack = false)
     {   
         if (!house3)
@@ -1204,6 +1215,111 @@ std::vector<float> fovGlobalSC1 = {
             house7->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
             
             house7->Draw(house7->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();  
+
+        // house 2  
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            
+            house7->mTextureShader->Use();
+            bindShadowUniforms(house7->mTextureShader.get());
+            house7->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 house7ModelMatrix =
+                vmath::translate(1500.0f, 100.0f, -330.0f) *
+                vmath::scale(200.0f, 200.0f, 200.0f) *
+                vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            house7->mTextureShader->SetUniform("u_model", house7ModelMatrix);
+            house7->mTextureShader->SetUniform("u_view", viewMatrix);
+            house7->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            house7->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
+            house7->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            //house3->mTextureShader->exposure = 1.2f;
+            house7->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            
+            house7->Draw(house7->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    } 
+
+    void drawHouse8(bool isBlack = false)
+    {   
+        if (!house8)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            
+            house8->mTextureShader->Use();
+            bindShadowUniforms(house8->mTextureShader.get());
+            house8->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 house8ModelMatrix =
+                vmath::translate(300.0f, 150.0f, 2000.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
+                vmath::rotate(120.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            house8->mTextureShader->SetUniform("u_model", house8ModelMatrix);
+            house8->mTextureShader->SetUniform("u_view", viewMatrix);
+            house8->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            house8->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
+            house8->mTextureShader->SetUniform("u_ApplyToon", false); 
+            
+            house8->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            
+            house8->Draw(house8->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            
+            house8->mTextureShader->Use();
+            bindShadowUniforms(house8->mTextureShader.get());
+            house8->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 house8ModelMatrix =
+                vmath::translate(600.0f, 150.0f, -500.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+            
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            house8->mTextureShader->SetUniform("u_model", house8ModelMatrix);
+            house8->mTextureShader->SetUniform("u_view", viewMatrix);
+            house8->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            house8->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
+            house8->mTextureShader->SetUniform("u_ApplyToon", false); 
+            
+            house8->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            
+            house8->Draw(house8->mTextureShader);
 
             glDisable(GL_BLEND);
         }
@@ -1489,7 +1605,7 @@ std::vector<float> fovGlobalSC1 = {
 
     void drawTree1(bool isBlack = false)
     {   
-        if (!tree1)
+        if (!tree2)
             return;
         // first pair of trees - left side of scene
         pushMatrix(modelMatrix);    
@@ -1497,26 +1613,26 @@ std::vector<float> fovGlobalSC1 = {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            tree1->mTextureShader->Use();
-            bindShadowUniforms(tree1->mTextureShader.get());
-            tree1->mTextureShader->SetUniform("isBlack", isBlack);
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
 
-            vmath::mat4 tree1ModelMatrix =
+            vmath::mat4 tree2ModelMatrix =
                 vmath::translate(2.0f, -40.0f, -500.0f) *
-                vmath::scale(200.0f, 200.0f, 200.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
                 vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
                 // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
 
-            tree1->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            tree1->mTextureShader->SetUniform("u_view", viewMatrix);
-            tree1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            tree1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            tree1->mTextureShader->SetUniform("u_ApplyToon", false); 
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
 
-            tree1->Draw(tree1->mTextureShader);
+            tree2->Draw(tree2->mTextureShader);
 
             glDisable(GL_BLEND);
         }
@@ -1528,26 +1644,26 @@ std::vector<float> fovGlobalSC1 = {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            tree1->mTextureShader->Use();
-            bindShadowUniforms(tree1->mTextureShader.get());
-            tree1->mTextureShader->SetUniform("isBlack", isBlack);
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
 
-            vmath::mat4 tree1ModelMatrix =
+            vmath::mat4 tree2ModelMatrix =
                 vmath::translate(-400.0f, -40.0f, 1300.0f) *
-                vmath::scale(200.0f, 200.0f, 200.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
                 vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
                 // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
 
-            tree1->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            tree1->mTextureShader->SetUniform("u_view", viewMatrix);
-            tree1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            tree1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            tree1->mTextureShader->SetUniform("u_ApplyToon", false); 
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
 
-            tree1->Draw(tree1->mTextureShader);
+            tree2->Draw(tree2->mTextureShader);
 
             glDisable(GL_BLEND);
         }
@@ -1559,26 +1675,26 @@ std::vector<float> fovGlobalSC1 = {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            tree1->mTextureShader->Use();
-            bindShadowUniforms(tree1->mTextureShader.get());
-            tree1->mTextureShader->SetUniform("isBlack", isBlack);
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
 
-            vmath::mat4 tree1ModelMatrix =
+            vmath::mat4 tree2ModelMatrix =
                 vmath::translate(2000.0f, -40.0f, 0.0f) *
-                vmath::scale(200.0f, 200.0f, 200.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
                 vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
                 // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
 
-            tree1->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            tree1->mTextureShader->SetUniform("u_view", viewMatrix);
-            tree1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            tree1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            tree1->mTextureShader->SetUniform("u_ApplyToon", false); 
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
 
-            tree1->Draw(tree1->mTextureShader);
+            tree2->Draw(tree2->mTextureShader);
 
             glDisable(GL_BLEND);
         }
@@ -1590,26 +1706,26 @@ std::vector<float> fovGlobalSC1 = {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            tree1->mTextureShader->Use();
-            bindShadowUniforms(tree1->mTextureShader.get());
-            tree1->mTextureShader->SetUniform("isBlack", isBlack);
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
 
-            vmath::mat4 tree1ModelMatrix =
+            vmath::mat4 tree2ModelMatrix =
                 vmath::translate(3000.0f, -50.0f, 500.0f) *
-                vmath::scale(200.0f, 200.0f, 200.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
                 vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
                 // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
 
-            tree1->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            tree1->mTextureShader->SetUniform("u_view", viewMatrix);
-            tree1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            tree1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            tree1->mTextureShader->SetUniform("u_ApplyToon", false); 
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
 
-            tree1->Draw(tree1->mTextureShader);
+            tree2->Draw(tree2->mTextureShader);
 
             glDisable(GL_BLEND);
         }
@@ -1648,6 +1764,506 @@ std::vector<float> fovGlobalSC1 = {
 
     }
 
+    void drawTree2(bool isBlack = false)
+    {   
+        // first tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(1600.0f, 40.0f, 1900.0f) *
+                vmath::scale(80.0f, 80.0f, 80.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // second tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(1000.0f, 0.0f, 3000.0f) *
+                vmath::scale(80.0f, 80.0f, 80.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // third tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(2500.0f, 0.0f, 3000.0f) *
+                vmath::scale(80.0f, 80.0f, 80.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // fourth tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(5000.0f, 33.0f, 0.0f) *
+                vmath::scale(80.0f, 80.0f, 80.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // fifth tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(5000.0f, 30.0f, 900.0f) *
+                vmath::scale(80.0f, 80.0f, 80.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // sixth tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(4100.0f, 0.0f, 3000.0f) *
+                vmath::scale(80.0f, 80.0f, 80.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // seventh tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(3000.0f, 100.0f, -1000.0f) *
+                vmath::scale(80.0f, 80.0f, 80.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // eight tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(4000.0f, 100.0f, 1900.0f) *
+                vmath::scale(80.0f, 80.0f, 80.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // ninth tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(4000.0f, 60.0f, 600.0f) *
+                vmath::scale(80.0f, 80.0f, 80.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // tenth tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(2600.0f, 40.0f, 2500.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // eleventh tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(50.0f, 0.0f, 2500.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // twelth tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(-400.0f, 400.0f, 3000.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // thirteen tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(4000.0f, 100.0f, 4000.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // thirteen tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(2000.0f, 300.0f, -1500.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // fourtinth tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(6000.0f, 100.0f, 2500.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // fiftinth tree
+        pushMatrix(modelMatrix);    
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+
+            tree2->mTextureShader->Use();
+            bindShadowUniforms(tree2->mTextureShader.get());
+            tree2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tree2ModelMatrix =
+                vmath::translate(4000.0f, 400.0f, 6000.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tree2->mTextureShader->SetUniform("u_model", tree2ModelMatrix);
+            tree2->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            tree2->Draw(tree2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+        
+    }
+    
     void drawWhiteBull(bool isBlack = false)
     {
         pushMatrix(modelMatrix);

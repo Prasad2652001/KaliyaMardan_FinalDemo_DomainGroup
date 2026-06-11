@@ -5,7 +5,6 @@
 #include "../../utils/camera/BezierCamera.h"
 #include "../../effects/tint/Tint.h"
 #include "../Scene.h"
-// #include "../Intro/Intro.h"
 #include "../Scene0/Scene0.h"
 #include "../Scene1/Scene1.h"
 #include "../Scene2/Scene2.h"
@@ -33,7 +32,7 @@ public:
     TintEffect *tintEffect;
 
     MainScene()
-    {
+    {   
         // // introScene = new IntroScene();
         scene0 = new DemoScene0();
         scene1 = new DemoScene1();
@@ -45,7 +44,7 @@ public:
         
         START_E2E_DEMO = true;
         // selected_scene = SCENE_INTRO;
-        selected_scene = SCENE_02;
+        selected_scene = SCENE_01;
         scene = nullptr;
     }
 

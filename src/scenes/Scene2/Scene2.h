@@ -207,7 +207,7 @@ public:
 
         tree1 = std::make_unique<Core::Model>();
         tree1->LoadModel("./assets/models/scene2_models/cow3.glb");
-
+        
         // dynamic model
         eagle = std::make_unique<Core::AnimatedModel>();
         eagle->LoadModel("./assets/models/scene2_models/eagle/eagle.fbx");
