@@ -106,47 +106,25 @@ public:
 
     void display(void)
     {
-        // Draw as a pure background: no depth test, no depth writes, no culling.
-        // The skybox must be drawn FIRST in the scene so everything else paints on top.
-        GLboolean depthWasEnabled = glIsEnabled(GL_DEPTH_TEST);
-        GLboolean cullWasEnabled = glIsEnabled(GL_CULL_FACE);
-        GLboolean savedDepthMask = GL_TRUE;
-        glGetBooleanv(GL_DEPTH_WRITEMASK, &savedDepthMask);
-
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_FALSE);
-        glDisable(GL_CULL_FACE);
-
-        // Keep skybox centred on the camera by removing view translation.
-        vmath::mat4 skyView = viewMatrix;
-        skyView[3][0] = 0.0f;
-        skyView[3][1] = 0.0f;
-        skyView[3][2] = 0.0f;
-
+        // code
         glUseProgram(cubemap->shaderProgramObject);
 
         glUniformMatrix4fv(cubemap->modelMatrixUniform, 1, GL_FALSE, modelMatrix);
-        glUniformMatrix4fv(cubemap->viewMatrixUniform, 1, GL_FALSE, skyView);
+        glUniformMatrix4fv(cubemap->viewMatrixUniform, 1, GL_FALSE, viewMatrix);
         glUniformMatrix4fv(cubemap->projectionMatrixUniform, 1, GL_FALSE, perspectiveProjectionMatrix);
         glUniform1i(cubemap->isBarsatUniform, isBarasat);
         glUniform1f(cubemap->alphaUniform, Cubemap_Alpha);
-        if (cubemap->skyBoxUniform >= 0)
-            glUniform1i(cubemap->skyBoxUniform, 0);
-
+        glUniform1f(cubemap->timeUniform, globalTime);
         glBindVertexArray(vao_cube);
+
+        // Game coding here
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glBindVertexArray(0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-        glUseProgram(0);
 
-        glDepthMask(savedDepthMask);
-        if (depthWasEnabled)
-            glEnable(GL_DEPTH_TEST);
-        if (cullWasEnabled)
-            glEnable(GL_CULL_FACE);
+        glUseProgram(0);
     }
 
     void uninitialize(void)

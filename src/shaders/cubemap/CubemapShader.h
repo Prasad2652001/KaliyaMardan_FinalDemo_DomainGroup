@@ -13,6 +13,7 @@ public:
     GLuint skyBoxUniform;
     GLuint isBarsatUniform;
     GLuint alphaUniform;
+    GLuint timeUniform;
 
     // Member Functions
     BOOL initialize()
@@ -46,6 +47,7 @@ public:
         skyBoxUniform = glGetUniformLocation(shaderProgramObject, "u_skyBox");
         isBarsatUniform = glGetUniformLocation(shaderProgramObject, "isBarsat");
         alphaUniform = glGetUniformLocation(shaderProgramObject, "u_alpha");
+        timeUniform = glGetUniformLocation(shaderProgramObject, "u_time");
         return TRUE;
     }
 

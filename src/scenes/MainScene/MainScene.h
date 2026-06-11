@@ -45,7 +45,7 @@ public:
         scene4 = new DemoScene4();
         outroScene = new OutroScene();
         tintEffect = new TintEffect();
-
+        
         START_E2E_DEMO = true;
         // selected_scene = SCENE_INTRO;
         selected_scene = SCENE_03;
@@ -106,8 +106,8 @@ public:
         if (maxScene >= SCENE_02 && !scene2->isInitialized) scene2->initialize();
         if (maxScene >= SCENE_2_5 && !scene2_5->isInitialized) scene2_5->initialize();
         if (maxScene >= SCENE_03 && !scene3->isInitialized) scene3->initialize();
-        if (maxScene >= SCENE_04 && !scene4->isInitialized) scene4->initialize();
-        if (maxScene >= SCENE_OUTRO && !outroScene->isInitialized) outroScene->initialize();
+        // if (maxScene >= SCENE_04 && !scene4->isInitialized) scene4->initialize();
+        // if (maxScene >= SCENE_OUTRO && !outroScene->isInitialized) outroScene->initialize();
     }
 
     void initializeActiveSceneOnly()
@@ -263,8 +263,6 @@ public:
 
     void update()
     {   
-        if (!scene)
-            return;
         
         scene->update();
 

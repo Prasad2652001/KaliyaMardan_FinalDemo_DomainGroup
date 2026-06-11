@@ -51,6 +51,14 @@ public:
     std::unique_ptr<Core::Model> krishnaFriend1;
     std::unique_ptr<Core::Model> krishnaFriend2;
     std::unique_ptr<Core::Model> balram;
+    std::unique_ptr<Core::Model> cow1;
+    std::unique_ptr<Core::Model> cow2;
+    std::unique_ptr<Core::Model> cow3;
+    std::unique_ptr<Core::Model> mKaliya;
+    float mKaliya_yPos = -3000.0f;
+
+    std::unique_ptr<Core::Model> tree1;
+
 
     // dynamic models
     std::unique_ptr<Core::AnimatedModel> eagle;
@@ -73,6 +81,28 @@ public:
     BezierCamera sc1;
     BezierCamera sc2;
     BezierCamera sc3;
+
+    // Shadow Variables
+    GLuint depthMapFBO;
+    GLuint depthMapTexture;
+    const GLuint SHADOW_WIDTH = 4096;
+    const GLuint SHADOW_HEIGHT = 4096;
+    mat4 lightSpaceMatrix;
+    vec3 shadowLightPos = vec3(15500.0f, 4000.0f, -5500.0f);
+    bool isDepthPass = false;
+
+    void bindShadowUniforms(Core::Shader* shader) {
+        if (!shader) return;
+        shader->SetUniform("u_isDepthPass", isDepthPass);
+        shader->SetUniform("u_lightSpaceMatrix", lightSpaceMatrix);
+        if (!isDepthPass) {
+            shader->SetUniform("u_enableShadow", true);
+            shader->SetUniform("u_shadowLightPos", shadowLightPos);
+            glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+            shader->SetUniform("u_shadowMap", 6);
+        }
+    }
 
     // EVENT
     enum sceneEventIds
@@ -97,8 +127,7 @@ public:
     }
 
     bool initialize()
-    {
-    
+    {  
         const char *facesLight2[] =
         {   
             ".\\assets\\textures\\modelCubeMap\\vrundavan\\px.png",
@@ -120,6 +149,23 @@ public:
             return FALSE;
         }
 
+        // Create depth FBO
+        glGenFramebuffers(1, &depthMapFBO);
+        glGenTextures(1, &depthMapTexture);
+        glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMapTexture, 0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         // // Camera
 
         // Initializing GLB Model
@@ -130,13 +176,16 @@ public:
         krishnaSleeping->LoadModel("./assets/models/scene2_models/Krishna_sleeping.glb");
 
         mangoTree = std::make_unique<Core::Model>();
-        mangoTree->LoadModel("./assets/models/scene2_models/mango_tree.glb");
+        mangoTree->LoadModel("./assets/models/scene2_models/tree1.glb");
 
         stone1 = std::make_unique<Core::Model>();
         stone1->LoadModel("./assets/models/scene2_models/stone1.glb");
 
         stone2 = std::make_unique<Core::Model>();
         stone2->LoadModel("./assets/models/scene2_models/stone2.glb");
+
+        mKaliya = std::make_unique<Core::Model>();
+        mKaliya->LoadModel("./assets/models/scene1_models/Kaliya_Final.glb");
 
         krishnaFriend1 = std::make_unique<Core::Model>();
         krishnaFriend1->LoadModel("./assets/models/scene2_models/krishnaFriend/friend1.glb");
@@ -146,6 +195,18 @@ public:
 
         balram = std::make_unique<Core::Model>();
         balram->LoadModel("./assets/models/scene2_models/krishnaFriend/balram.glb");
+
+        cow1 = std::make_unique<Core::Model>();
+        cow1->LoadModel("./assets/models/scene2_models/cow1.glb");
+
+        cow2 = std::make_unique<Core::Model>();
+        cow2->LoadModel("./assets/models/scene2_models/cow2.glb");
+
+        cow3 = std::make_unique<Core::Model>();
+        cow3->LoadModel("./assets/models/scene2_models/cow3.glb");
+
+        tree1 = std::make_unique<Core::Model>();
+        tree1->LoadModel("./assets/models/scene2_models/cow3.glb");
 
         // dynamic model
         eagle = std::make_unique<Core::AnimatedModel>();
@@ -163,7 +224,7 @@ public:
                       vec3(0.0f, -0.9f, -0.3f), 20.0f, 22.0f)
         });
         lightManager->setAmbient(vec3(0.05f));
-
+        
         // Water
         waterMatrix->initialize();
         
@@ -176,7 +237,7 @@ public:
         terrain->setWaterHeight(190.0f);       // keep your sea level
 
         waterMatrix->interpolateWaterColor = 1.0f;
-        waterMatrix->moveFactor = 0.0f;
+        //waterMatrix->moveFactor = 0.0f;
 
         // if (!rain->initialize(2))
         // {
@@ -185,11 +246,11 @@ public:
 
         // Event System
         sceneEvents = new EventManager(
-            {{START_T, {0.0f, 30.0f}},
+            {{START_T, {0.0f, 37.0f}},
              {FADE_IN, {0.0f, 3.0f}},
-             {SC_T1, {0.0f, 28.0f}},
-             {FADE_OUT, {28.0f, 2.0f}},
-             {END_T, {30.0f, 0.0f}}},
+             {SC_T1, {0.0f, 35.0f}},
+             {FADE_OUT, {35.0f, 2.0f}},
+             {END_T, {37.0f, 0.0f}}},
             true);
 
         setupCamera();
@@ -205,83 +266,130 @@ public:
     void setupCamera()
     {
         std::vector<std::vector<float>> bezierPointsSC1 = {
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {-1648.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -12814.500000f},
-            {-3558.600098f, 8713.500000f, -9584.500000f},
-            {-5008.600098f, 7733.500000f, -9584.500000f},
-            {-5568.600098f, 7733.500000f, -6804.500000f},
-            {-5568.600098f, 6433.500000f, -5954.500000f},
-            {-5568.600098f, 6693.500000f, -5764.500000f},
-            {-5568.600098f, 7063.500000f, -4514.500000f},
-            {-5568.600098f, 7063.500000f, -2684.500000f},
-            {-5568.600098f, 7063.500000f, -1564.500000f},
-            {-5568.600098f, 7063.500000f, 1805.500000f},
-            {-5568.600098f, 7063.500000f, 3915.500000f},
-            {-5568.600098f, 7063.500000f, 5015.500000f},
-        };
+{15611.400391f, 763.500000f, -10064.500000f},
+{15611.400391f, 823.500000f, -10064.500000f},
+{15611.400391f, 923.500000f, -10064.500000f},
+{15611.400391f, 1023.500000f, -10064.500000f},
+{15611.400391f, 1823.500000f, -10064.500000f},
+{15611.400391f, 2443.500000f, -10064.500000f},
+{15611.400391f, 3663.500000f, -10064.500000f},
+{15711.400391f, 4223.500000f, -8924.500000f},
+{15711.400391f, 4223.500000f, -8064.500000f},
+{15711.400391f, 4223.500000f, -4404.500000f},
+{15711.400391f, 5043.500000f, -3664.500000f},
+{15711.400391f, 6303.500000f, -2284.500000f},
+{14911.400391f, 6303.500000f, -1504.500000f},
+{12811.400391f, 6303.500000f, -1024.500000f},
+{11471.400391f, 6303.500000f, -1024.500000f},
+{9991.400391f, 6303.500000f, -1024.500000f},
+{7311.400391f, 6303.500000f, 615.500000f},
+{5071.400391f, 6303.500000f, 1455.500000f},
+{811.400391f, 5183.500000f, 3195.500000f},
+{-228.599609f, 5183.500000f, 3195.500000f},
+{-2028.599609f, 5183.500000f, 3195.500000f},
+{-2028.599609f, 4703.500000f, 3195.500000f},
+{-2028.599609f, 4143.500000f, 3195.500000f},
+{-2028.599609f, 2523.500000f, 3195.500000f},
+{-4348.599609f, 2083.500000f, 4795.500000f},
+{-4348.599609f, 923.500000f, 4795.500000f},
+{-4348.599609f, 923.500000f, 4795.500000f},
+};
 
-        // YAW GLOBAL
-        std::vector<float> yawGlobalSC1 = {
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            49.000000f,
-            49.000000f,
-            79.000000f,
-            109.000000f,
-        };
 
-        // PITCH GLOBAL
-        std::vector<float> pitchGlobalSC1 = {
-            32.000000f,
-            12.000000f,
-            12.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-        };
+// YAW GLOBAL
+std::vector<float> yawGlobalSC1 = {
+435.000000f,
+435.000000f,
+435.000000f,
+435.000000f,
+435.000000f,
+435.000000f,
+435.000000f,
+438.000000f,
+438.000000f,
+438.000000f,
+438.000000f,
+463.000000f,
+508.000000f,
+498.000000f,
+498.000000f,
+498.000000f,
+496.000000f,
+498.000000f,
+494.000000f,
+490.000000f,
+486.000000f,
+486.000000f,
+488.000000f,
+491.000000f,
+488.000000f,
+488.000000f,
+488.000000f,
+};
 
-        // FOV GLOBAL
-        std::vector<float> fovGlobalSC1 = {
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-        };
+
+// PITCH GLOBAL
+std::vector<float> pitchGlobalSC1 = {
+-2.000000f,
+	-6.000000f,
+	-13.000000f,
+	-26.000000f,
+	-49.000000f,
+	-64.000000f,
+	-68.000000f,
+	-68.000000f,
+	-74.000000f,
+	-74.000000f,
+	-74.000000f,
+	-74.000000f,
+	-74.000000f,
+	-42.000000f,
+	-30.000000f,
+	-21.000000f,
+	-21.000000f,
+	-21.000000f,
+	-19.000000f,
+	-19.000000f,
+	-19.000000f,
+	-13.000000f,
+	-11.000000f,
+	-9.000000f,
+	-9.000000f,
+	-1.000000f,
+	-1.000000f,
+	};
+
+
+// FOV GLOBAL
+std::vector<float> fovGlobalSC1 = {
+-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	};
 
         sc1.initialize();
         sc1.setBezierPoints(bezierPointsSC1, yawGlobalSC1, pitchGlobalSC1, fovGlobalSC1);
@@ -290,6 +398,28 @@ public:
 
     void display()
     {
+        // Shadow Depth Pass
+        mat4 lightProjectionMatrix = vmath::ortho(-6000.0f, 6000.0f, -6000.0f, 6000.0f, -10000.0f, 10000.0f);
+        mat4 lightViewMatrix = vmath::lookat(shadowLightPos, vec3(15500.0f, 0.0f, -9500.0f), vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+
+        isDepthPass = true;
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        
+        drawYamunaSideScene();
+        
+        glCullFace(GL_BACK);
+        glDisable(GL_CULL_FACE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        isDepthPass = false;
+
+        glViewport(0, 0, giWindowWidth, giWindowHeight);
+
         // Camera
         modelMatrix = mat4::identity();
         perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)giWindowWidth / (GLfloat)giWindowHeight, 10.0f, 10000000.0f);
@@ -300,7 +430,10 @@ public:
 
         pushMatrix(modelMatrix);
         {
-            terrain->draw(false);
+            terrain->shadowMap = depthMapTexture;
+            terrain->shadowLightSpaceMatrix = lightSpaceMatrix;
+            terrain->shadowLightPosition = shadowLightPos;
+            terrain->draw(1.0f);
         }
         modelMatrix = popMatrix();
 
@@ -351,7 +484,7 @@ public:
         // }
         // modelMatrix = popMatrix();
 
-        // sceneCamera->displayBezierCurve();
+        sceneCamera->displayBezierCurve();
     }
 
     void drawYamunaSideScene()
@@ -364,9 +497,47 @@ public:
         drawKrishnaFriend1();
         drawKrishnaFriend2();
         drawBalram();
-    }   
+        drawCow1();
+        drawCow2();
+        drawCow3();
+        drawKaliyaModel();
+    }  
 
     // ==================== yamuna side scene models drawing functions ====================
+    void drawKaliyaModel(bool isBlack = false)
+    {
+        if (!mKaliya)
+            return;
+
+        pushMatrix(modelMatrix);
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            mKaliya->mTextureShader->Use();
+            bindShadowUniforms(mKaliya->mTextureShader.get());
+            mKaliya->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 swingModelMatrix =
+                vmath::translate(8000.0f + -18988.599609f, mKaliya_yPos + -96.500000f, -9000.0f + 23255.500000f)  *
+                vmath::scale(1000.0f + 691.000000f, 1000.0f + 691.000000f, 1000.0f + 691.000000f) *
+                vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            mKaliya->mTextureShader->SetUniform("u_model", swingModelMatrix);
+            mKaliya->mTextureShader->SetUniform("u_view", viewMatrix);
+            mKaliya->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            mKaliya->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+
+            mKaliya->Draw(mKaliya->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
 
     // static models function
     void drawSleepingKrishna(bool isBlack = false)
@@ -380,6 +551,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             krishnaSleeping->mTextureShader->Use();
+            bindShadowUniforms(krishnaSleeping->mTextureShader.get());
             krishnaSleeping->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 krishnaSleepingModelMatrix =
@@ -415,12 +587,13 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             mangoTree->mTextureShader->Use();
+            bindShadowUniforms(mangoTree->mTextureShader.get());
             mangoTree->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 mangoTreeModelMatrix =
-                vmath::translate(14800.0f, 500.0f, -9000.0f) *
+                vmath::translate(15700.0f, 500.0f, -9700.0f) *
                 vmath::scale(250.0f, 250.0f, 250.0f) *
-                vmath::rotate(44.0f, 0.0f, 1.0f, 0.0f);
+                vmath::rotate(-40.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
@@ -450,6 +623,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             stone1->mTextureShader->Use();
+            bindShadowUniforms(stone1->mTextureShader.get());
             stone1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 stone1ModelMatrix =
@@ -485,6 +659,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             stone2->mTextureShader->Use();
+            bindShadowUniforms(stone2->mTextureShader.get());
             stone2->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 stone2ModelMatrix =
@@ -520,6 +695,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             krishnaFriend1->mTextureShader->Use();
+            bindShadowUniforms(krishnaFriend1->mTextureShader.get());
             krishnaFriend1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 krishnaFriend1ModelMatrix =
@@ -555,6 +731,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             krishnaFriend2->mTextureShader->Use();
+            bindShadowUniforms(krishnaFriend2->mTextureShader.get());
             krishnaFriend2->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 krishnaFriend2ModelMatrix =
@@ -590,6 +767,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             balram->mTextureShader->Use();
+            bindShadowUniforms(balram->mTextureShader.get());
             balram->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 balramModelMatrix =
@@ -613,6 +791,116 @@ public:
         }
         modelMatrix = popMatrix();
     }
+
+    void drawCow1(bool isBlack = false)
+    {
+         if (!cow1)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            cow1->mTextureShader->Use();
+            bindShadowUniforms(cow1->mTextureShader.get());
+            cow1->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 cow1ModelMatrix =
+                vmath::translate(15000.0f, 190.0f, -2500.0f) *
+                vmath::scale(2.0f, 2.0f, 2.0f) *
+                vmath::rotate(120.0f, 0.0f, 1.0f, 0.0f);
+                
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            cow1->mTextureShader->SetUniform("u_model", cow1ModelMatrix);
+            cow1->mTextureShader->SetUniform("u_view", viewMatrix);
+            cow1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            cow1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            cow1->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            cow1->Draw(cow1->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    void drawCow2(bool isBlack = false)
+    {
+         if (!cow2)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            cow2->mTextureShader->Use();
+            bindShadowUniforms(cow2->mTextureShader.get());
+            cow2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 cow2ModelMatrix =
+                vmath::translate(16500.0f, 120.0f, -3500.0f) *
+                vmath::scale(2.0f, 2.0f, 2.0f) *
+                vmath::rotate(20.0f, 0.0f, 1.0f, 0.0f);
+                
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            cow2->mTextureShader->SetUniform("u_model", cow2ModelMatrix);
+            cow2->mTextureShader->SetUniform("u_view", viewMatrix);
+            cow2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            cow2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            cow2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            cow2->Draw(cow2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    void drawCow3(bool isBlack = false)
+    {
+         if (!cow3)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            cow3->mTextureShader->Use();
+            bindShadowUniforms(cow3->mTextureShader.get());
+            cow3->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 cow3ModelMatrix =
+                vmath::translate(17000.0f, 190.0f, -2500.0f) *
+                vmath::scale(2.0f, 2.0f, 2.0f) *
+                vmath::rotate(-120.0f, 0.0f, 1.0f, 0.0f);
+                
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            cow3->mTextureShader->SetUniform("u_model", cow3ModelMatrix);
+            cow3->mTextureShader->SetUniform("u_view", viewMatrix);
+            cow3->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            cow3->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            cow3->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            cow3->Draw(cow3->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+
     // ============================================================
 
     // dynamic models functions
@@ -622,7 +910,9 @@ public:
             return;
 
         // Advance the skinned animation once per frame (drawn once from display()).
-        eagle->Update((float)gDeltaTime);
+        if (!isDepthPass) {
+            eagle->Update((float)gDeltaTime);
+        }
 
         pushMatrix(modelMatrix);
         {   
@@ -630,6 +920,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             eagle->mShader->Use();
+            bindShadowUniforms(eagle->mShader.get());
             eagle->mShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 eagleModelMatrix =
@@ -727,6 +1018,7 @@ public:
     void update()
     {
         sceneCamera->time = globalTime;
+        // sceneCamera->update();
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // terrain->setWaterHeight(85.0f);
@@ -754,6 +1046,23 @@ public:
         {
             sceneCamera = &sc1;
             sceneCamera->time = sceneEvents->getEventTime(SC_T1);
+
+            float threshold = 10.0f / 26.0f;
+            if (sceneCamera->time >= threshold) {
+                // Kaliya comes up
+                mKaliya_yPos += 5.0f; 
+                if (mKaliya_yPos > 800.0f) mKaliya_yPos = 800.0f;
+                
+                // Water turns dark black/blue
+                waterMatrix->interpolateWaterColor -= 0.002f;
+                if (waterMatrix->interpolateWaterColor < 0.0f) waterMatrix->interpolateWaterColor = 0.0f;
+
+                cubeMap->isBarasat = 2; // Dark clouds
+            } else {
+                mKaliya_yPos = -3000.0f;
+                waterMatrix->interpolateWaterColor = 1.0f;
+                cubeMap->isBarasat = 0; // Normal sky
+            }
         }
         
         if (sceneEvents->isEventComplete(END_T))

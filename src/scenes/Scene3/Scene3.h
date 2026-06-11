@@ -25,6 +25,7 @@
 #include "../../effects/terrain/Terrain.h"
 #include "../../shaders/terrain/TerrainShader.h"
 #include "../../shaders/godRays/GodRaysShader.h"
+#include "../../effects/rain/Rain.h"
 
 
 #define _DEBUG
@@ -32,6 +33,10 @@
 extern Camera camera;
 extern BezierCamera *globalBezierCamera;
 extern DOUBLE gDeltaTime;
+
+extern float gModelTranslate[3];
+extern float gModelRotate[3];
+extern float gModelScale[3];
 
 class DemoScene3 : public Scene
 {
@@ -42,7 +47,7 @@ public:
     Terrain *terrain;
     // GLuint brdfLookUp;
     WaterMatrix *waterMatrix;
-    // Rain *rain = NULL;
+    Rain *rain = NULL;
 
     // moment of kaliya nag variables for translation
     float kaliyaX = 7000.000f;
@@ -54,7 +59,7 @@ public:
     std::unique_ptr<Core::Model> house2;
     std::unique_ptr<Core::Model> house3;
     std::unique_ptr<Core::Model> hutHouse;
-    std::unique_ptr<Core::Model> vrundavanGate;
+    std::unique_ptr<Core::AnimatedModel> vrundavanGate;
     std::unique_ptr<Core::AnimatedModel> shreeKrishna;
     std::unique_ptr<Core::Model> cowHouse;
     std::unique_ptr<Core::Model> well;
@@ -84,6 +89,28 @@ public:
     BezierCamera sc2;
     BezierCamera sc3;
 
+    // Shadow Variables
+    GLuint depthMapFBO;
+    GLuint depthMapTexture;
+    const GLuint SHADOW_WIDTH = 4096;
+    const GLuint SHADOW_HEIGHT = 4096;
+    mat4 lightSpaceMatrix;
+    vec3 shadowLightPos = vec3(0.0f, 4000.0f, 4000.0f);
+    bool isDepthPass = false;
+
+    void bindShadowUniforms(Core::Shader* shader) {
+        if (!shader) return;
+        shader->SetUniform("u_isDepthPass", isDepthPass);
+        shader->SetUniform("u_lightSpaceMatrix", lightSpaceMatrix);
+        if (!isDepthPass) {
+            shader->SetUniform("u_enableShadow", true);
+            shader->SetUniform("u_shadowLightPos", shadowLightPos);
+            glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+            shader->SetUniform("u_shadowMap", 6);
+        }
+    }
+
     // EVENT
     enum sceneEventIds
     {   
@@ -102,25 +129,14 @@ public:
         terrain = new Terrain(20.0f * 80.0f);
         waterMatrix = new WaterMatrix(300. * 400.);
         sceneCamera = new BezierCamera();
-        // rain = new Rain(40000);
+        rain = new Rain(40000);
         // godRaysShader = new GodRaysShader();
     }
 
     bool initialize()
     {
-        // const char *facesLight[] =
-        //     {
-        //         ".\\assets\\textures\\DayCubeMap\\px.png",
-        //         ".\\assets\\textures\\DayCubeMap\\nx.png",
-        //         ".\\assets\\textures\\DayCubeMap\\py.png",
-        //         ".\\assets\\textures\\DayCubeMap\\ny.png",
-        //         ".\\assets\\textures\\DayCubeMap\\pz.png",
-        //         ".\\assets\\textures\\DayCubeMap\\nz.png"};
-        // if (!cubeMap[1]->initialize(facesLight))
-        // {
-        //     PrintLog("Failed to initialize CubeMap");
-        //     return FALSE;
-        // }
+        if (isInitialized)
+            return TRUE;
 
         const char *facesLight2[] =
         {
@@ -143,40 +159,45 @@ public:
             return FALSE;
         }
 
+        // Create depth FBO
+        glGenFramebuffers(1, &depthMapFBO);
+        glGenTextures(1, &depthMapTexture);
+        glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMapTexture, 0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         // // Camera
 
         // Initializing GLB Model
         programStaticPBR = new glshaderprogram({"./src/shaders/modelgltf/pbrStatic.vert", "./src/shaders/modelgltf/pbrMain.frag"});
-        
-        // churchModel = new glmodel("./assets/models/scene2/church.glb", aiProcessPreset_TargetRealtime_Quality, true);
-        // roadModel = new glmodel("./assets/models/scene2/road.glb", aiProcessPreset_TargetRealtime_Quality, true);
 
-        cowHouse = std::make_unique<Core::Model>();
-        cowHouse->LoadModel("./assets/models/scene1_models/vrundavan/cowHouse.glb");
-
-        house1 = std::make_unique<Core::Model>();
-        house1->LoadModel("./assets/models/scene1_models/vrundavan/house1.glb");
-
-        house2 = std::make_unique<Core::Model>();
-        house2->LoadModel("./assets/models/scene1_models/vrundavan/house2.glb");
-
-        house3 = std::make_unique<Core::Model>();
-        house3->LoadModel("./assets/models/scene1_models/vrundavan/house3.glb");
-
-        vrundavanGate = std::make_unique<Core::Model>();
+        vrundavanGate = std::make_unique<Core::AnimatedModel>();
+        // NOTE: Kaliya.fbx is ~62 MB and triggers an Assimp bad_alloc that
+        // freezes the app while it thrashes memory. Use the GLB instead, which
+        // loads quickly. AnimatedModel renders it statically (no bones).
         vrundavanGate->LoadModel("./assets/models/scene3_models/Kaliya.glb");
 
         shreeKrishna = std::make_unique<Core::AnimatedModel>();
-        shreeKrishna->LoadModel("./assets/models/scene3_models/Untitled.glb");
-        
-        well = std::make_unique<Core::Model>();
-        well->LoadModel("./assets/models/scene1_models/vrundavan/well.glb");
-
-        farmLand = std::make_unique<Core::Model>();
-        farmLand->LoadModel("./assets/models/scene1_models/vrundavan/farmLand.glb");
-
-        hutHouse = std::make_unique<Core::Model>();
-        hutHouse->LoadModel("./assets/models/scene1_models/vrundavan/hutHouse.glb");
+        shreeKrishna->LoadModel("./assets/models/scene3_models/Krishna.fbx");
+        // Krishna.fbx is a Mixamo rig export - Mixamo strips all material
+        // texture references from the FBX, so automatic texture resolution
+        // finds nothing. We set the base color explicitly here. For any FBX
+        // that does carry texture references (embedded or relative paths),
+        // AnimatedModel::LoadMaterialTextures will pick them up automatically.
+        shreeKrishna->SetBaseColorTexture(
+            "./assets/models/scene3_models/Old/BalKrishna_fbx/"
+            "Meshy_AI_Bal_Krishna_with_outs_0526221114_texture_fbx/"
+            "Meshy_AI_Bal_Krishna_with_outs_0526221114_texture.png");
 
         lightManager = new SceneLight();
         lightManager->addDirectionalLights({
@@ -204,10 +225,14 @@ public:
         waterMatrix->interpolateWaterColor = 1.0f;
         waterMatrix->moveFactor = 0.0f;
 
-        // if (!rain->initialize(2))
-        // {
-        //     PrintLog("Failed to initialize Rain");
-        // }
+        // Kaliya Mardan happens on a turbulent river - drive the water stormy.
+        waterMatrix->stormStrength = 1.0f;
+
+        if (!rain->initialize(2))
+        {
+            PrintLog("Rain initialize failed (texture missing?) - continuing without rain\n");
+            rain->alpha = 0.0f; // disable rain rendering
+        }
 
         // Event System
         sceneEvents = new EventManager(
@@ -317,6 +342,28 @@ public:
    
     void display()
     {
+        // Shadow Depth Pass
+        mat4 lightProjectionMatrix = vmath::ortho(-6000.0f, 6000.0f, -6000.0f, 6000.0f, -10000.0f, 10000.0f);
+        mat4 lightViewMatrix = vmath::lookat(shadowLightPos, vec3(0.0f, 0.0f, 0.0f), vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+
+        isDepthPass = true;
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        
+        drawKaliyaMardanScene();
+        
+        glCullFace(GL_BACK);
+        glDisable(GL_CULL_FACE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        isDepthPass = false;
+
+        glViewport(0, 0, giWindowWidth, giWindowHeight);
+
         // Camera
         modelMatrix = mat4::identity();
         perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)giWindowWidth / (GLfloat)giWindowHeight, 10.0f, 10000000.0f);
@@ -327,21 +374,27 @@ public:
 
         pushMatrix(modelMatrix);
         {
-            terrain->draw(false);
+            terrain->shadowMap = depthMapTexture;
+            terrain->shadowLightSpaceMatrix = lightSpaceMatrix;
+            terrain->shadowLightPosition = shadowLightPos;
+            terrain->draw(1.0f);
         }
         modelMatrix = popMatrix();
 
         pushMatrix(modelMatrix);
         {
              // Refraction
-            waterMatrix->bindRefractionFBO(1920, 1080);
+            // NOTE: viewport must match the FBO texture size (1920x1080),
+            // not the window size, or the scene renders into only a corner of
+            // the texture and the water samples the black (unrendered) region.
+            waterMatrix->bindRefractionFBO(REFRACTION_FBO_WIDTH, REFRACTION_FBO_HEIGHT);
             {
                 displayScene(-1.0);
             }
             waterMatrix->unbindRefractionFBO();
 
-            // Refraction
-            waterMatrix->bindReflectionFBO(1920, 1080);
+            // Reflection
+            waterMatrix->bindReflectionFBO(REFLECTION_FBO_WIDTH, REFLECTION_FBO_HEIGHT);
             {
                 displayScene(1.0);
             }
@@ -368,15 +421,14 @@ public:
         drawKaliyaMardanScene();
 
         // RAIN RENDERING
-        // pushMatrix(modelMatrix);
-        // {
-        //     // modelMatrix = modelMatrix * translate(0.0f, -35.0f, -5.0f) * scale(1.0f,1.0f,1.0f);
-        //     if (rain->alpha > 0.0f)
-        //     {
-        //         drawRain();
-        //     }
-        // }
-        // modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            if (rain && rain->alpha > 0.0f)
+            {
+                drawRain();
+            }
+        }
+        modelMatrix = popMatrix();
 
         // sceneCamera->displayBezierCurve();
     }
@@ -407,6 +459,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
@@ -440,6 +493,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
@@ -475,6 +529,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house2->mTextureShader->Use();
+            bindShadowUniforms(house2->mTextureShader.get());
             house2->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house2ModelMatrix =
@@ -513,6 +568,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             hutHouse->mTextureShader->Use();
+            bindShadowUniforms(hutHouse->mTextureShader.get());
             hutHouse->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 hutHouseModelMatrix =
@@ -547,6 +603,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house3->mTextureShader->Use();
+            bindShadowUniforms(house3->mTextureShader.get());
             house3->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house3ModelMatrix =
@@ -578,30 +635,34 @@ public:
     {   
         if (!vrundavanGate)
             return;
-        
+
+        vrundavanGate->Update((float)gDeltaTime);
+
         pushMatrix(modelMatrix);
         {   
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            vrundavanGate->mTextureShader->Use();
-            vrundavanGate->mTextureShader->SetUniform("isBlack", isBlack);
+            vrundavanGate->mShader->Use();
+            bindShadowUniforms(vrundavanGate->mShader.get());
+            vrundavanGate->mShader->SetUniform("isBlack", isBlack);
 
+            // Kaliya.glb has tiny native units (~1), so it needs a large scale.
+            // Placed just below Krishna (y=245) so Krishna stands on the heads.
             vmath::mat4 vrundavanGateModelMatrix =
-                vmath::translate(0.0f, 200.0f, 0.0f) *
+                vmath::translate(-10.0f, 200.0f, -40.0f) *
                 vmath::scale(50.0f, 50.0f, 50.0f) *
                 vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
-            vrundavanGate->mTextureShader->SetUniform("u_model", vrundavanGateModelMatrix);
-            vrundavanGate->mTextureShader->SetUniform("u_view", viewMatrix);
-            vrundavanGate->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            //vrundavanGate->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            vrundavanGate->mTextureShader->SetUniform("u_ApplyToon", false); 
+            vrundavanGate->mShader->SetUniform("u_model", vrundavanGateModelMatrix);
+            vrundavanGate->mShader->SetUniform("u_view", viewMatrix);
+            vrundavanGate->mShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            vrundavanGate->mShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
+            vrundavanGate->mShader->SetUniform("u_ApplyToon", false);
+            vrundavanGate->mShader->SetSampler2D("u_GGXLUT", 0, 5);
+            vrundavanGate->mShader->SetUniform("u_DebugMode", 0);
 
-            //vrundavanGate->mTextureShader->exposure = 1.2f;
-            vrundavanGate->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            vrundavanGate->Draw(vrundavanGate->mTextureShader);
+            vrundavanGate->Draw(vrundavanGate->mShader);
 
             glDisable(GL_BLEND);
         }
@@ -613,7 +674,7 @@ public:
         if (!shreeKrishna)
             return;
 
-        // Advance animation
+        // Advance the skinned animation once per frame (drawn once from display()).
         shreeKrishna->Update((float)gDeltaTime);
 
         pushMatrix(modelMatrix);
@@ -622,12 +683,13 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             shreeKrishna->mShader->Use();
+            bindShadowUniforms(shreeKrishna->mShader.get());
             shreeKrishna->mShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 shreeKrishnaModelMatrix =
-                vmath::translate(-10.0f, 260.0f, 0.0f) *
+                vmath::translate(0.0f, 245.0f, -40.0f) *
                 vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f) *
-                vmath::scale(20.0f, 20.0f, 20.0f);
+                vmath::scale(0.18f, 0.18f, 0.18f);
 
             shreeKrishna->mShader->SetUniform("u_model", shreeKrishnaModelMatrix);
             shreeKrishna->mShader->SetUniform("u_view", viewMatrix);
@@ -636,11 +698,6 @@ public:
             shreeKrishna->mShader->SetUniform("u_ApplyToon", false);
             shreeKrishna->mShader->SetSampler2D("u_GGXLUT", 0, 5);
 
-            // DIAGNOSTIC: 0 = full skinning, 1 = bypass skinning (raw bind pose).
-            // When AnimatedModel::s_forceBindPose=true, this should be 0 so we
-            // see the skinning chain output (which should still be a clean
-            // T-pose because all bone matrices collapse to identity).
-            shreeKrishna->mShader->SetUniform("u_DisableSkinning", 0);
             shreeKrishna->mShader->SetUniform("u_DebugMode", 0);
 
             shreeKrishna->Draw(shreeKrishna->mShader);
@@ -661,6 +718,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             cowHouse->mTextureShader->Use();
+            bindShadowUniforms(cowHouse->mTextureShader.get());
             cowHouse->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 cowHouseModelMatrix =
@@ -694,6 +752,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             well->mTextureShader->Use();
+            bindShadowUniforms(well->mTextureShader.get());
             well->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 wellModelMatrix =
@@ -729,6 +788,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             farmLand->mTextureShader->Use();
+            bindShadowUniforms(farmLand->mTextureShader.get());
             farmLand->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 farmLandModelMatrix =
@@ -759,40 +819,36 @@ public:
     // ============================================================
 
     // RAIN RELATED
-    // void drawRain(void)
-    // {
-    //     // code
-    //     pushMatrix(modelMatrix);
-    //     {
-    //         rain->lightAmbient[0] = 0.0f;
-    //         rain->lightAmbient[1] = 0.0f;
-    //         rain->lightAmbient[2] = 0.0f;
-    //         rain->lightAmbient[3] = 1.0f;
+    void drawRain(void)
+    {
+        pushMatrix(modelMatrix);
+        {
+            rain->lightAmbient[0]  = 0.0f;
+            rain->lightAmbient[1]  = 0.0f;
+            rain->lightAmbient[2]  = 0.0f;
+            rain->lightAmbient[3]  = 1.0f;
 
-    //         rain->lightDiffuse[0] = 1.0f;
-    //         rain->lightDiffuse[1] = 1.0f;
-    //         rain->lightDiffuse[2] = 1.0f;
-    //         rain->lightDiffuse[3] = 1.0f;
+            rain->lightDiffuse[0]  = 1.0f;
+            rain->lightDiffuse[1]  = 1.0f;
+            rain->lightDiffuse[2]  = 1.0f;
+            rain->lightDiffuse[3]  = 1.0f;
 
-    //         rain->lightPosition[0] = 0.0f;
-    //         rain->lightPosition[1] = 100.0f;
-    //         rain->lightPosition[2] = -30.0f;
-    //         rain->lightPosition[3] = 1.0f;
+            rain->lightPosition[0] = 0.0f;
+            rain->lightPosition[1] = 100.0f;
+            rain->lightPosition[2] = -30.0f;
+            rain->lightPosition[3] = 1.0f;
 
-    //         rain->lightSpecular[0] = 1.0f;
-    //         rain->lightSpecular[1] = 1.0f;
-    //         rain->lightSpecular[2] = 1.0f;
-    //         rain->lightSpecular[3] = 1.0f;
+            rain->lightSpecular[0] = 1.0f;
+            rain->lightSpecular[1] = 1.0f;
+            rain->lightSpecular[2] = 1.0f;
+            rain->lightSpecular[3] = 1.0f;
 
-    //         // depth buffer madhe writing disable karnya sathi
-
-    //         glEnable(GL_BLEND);
-
-    //         rain->display();
-    //         glDisable(GL_BLEND);
-    //     }
-    //     modelMatrix = popMatrix();
-    // }
+            glEnable(GL_BLEND);
+            rain->display();
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     void displayScene(float terrainUp)
@@ -913,11 +969,12 @@ public:
         cowHouse.reset();
         farmLand.reset();
 
-        // // rain
-        // if (rain->alpha > 0.0f)
-        // {
-        //     rain->alpha -= 0.002f;
-        // }
+        if (rain)
+        {
+            rain->uninitialize();
+            delete rain;
+            rain = nullptr;
+        }
 
         // modelLoader.uninitialize();
     }

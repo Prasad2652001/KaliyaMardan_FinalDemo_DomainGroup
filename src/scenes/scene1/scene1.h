@@ -2,6 +2,7 @@
 // vrundavan scene 
 // *******************************
 #pragma once
+
 #include "../../utils/common.h"
 #include "../../shaders/model/Model_Shader.h"
 #include "../../effects/cubemap/Cubemap.h"
@@ -51,16 +52,30 @@ public:
     std::unique_ptr<Core::Model> house1;
     std::unique_ptr<Core::Model> house2;
     std::unique_ptr<Core::Model> house3;
+    std::unique_ptr<Core::Model> house5;
+    std::unique_ptr<Core::Model> house6;
+    std::unique_ptr<Core::Model> house7;
+
     std::unique_ptr<Core::Model> hutHouse;
     std::unique_ptr<Core::Model> vrundavanGate;
     std::unique_ptr<Core::Model> cowHouse;
+    std::unique_ptr<Core::Model> cow1;
+    std::unique_ptr<Core::Model> cow2;
     std::unique_ptr<Core::Model> well;
-    std::unique_ptr<Core::Model> farmLand;
-    std::unique_ptr<Core::AnimatedModel> farmer1;
     std::unique_ptr<Core::Model> farmer2_bailgadi;
     std::unique_ptr<Core::Model> farmer3;
     std::unique_ptr<Core::Model> tree1;
-    std::unique_ptr<Core::Model> bananaTree;
+    std::unique_ptr<Core::Model> whiteBull;
+    std::unique_ptr<Core::Model> treeKatta;
+    std::unique_ptr<Core::Model> nandBaba;
+    std::unique_ptr<Core::Model> gavkari1;
+    std::unique_ptr<Core::Model> gavkari2_ladies;
+    std::unique_ptr<Core::Model> yashoda;
+    std::unique_ptr<Core::Model> gavkari3;
+    std::unique_ptr<Core::Model> gavkari4_ladies;
+    std::unique_ptr<Core::Model> tulsi;
+
+    // std::unique_ptr<Core::AnimatedModel> farmer1;
 
     // ==========================================================
     
@@ -85,6 +100,28 @@ public:
     BezierCamera sc2;
     BezierCamera sc3;
 
+    // Shadow variables
+    GLuint depthMapFBO;
+    GLuint depthMapTexture;
+    const GLuint SHADOW_WIDTH = 4096;
+    const GLuint SHADOW_HEIGHT = 4096;
+    mat4 lightSpaceMatrix;
+    vec3 shadowLightPos = vec3(0.0f, 4000.0f, 4000.0f); // Adjust light pos to cover the scene
+    bool isDepthPass = false;
+
+    void bindShadowUniforms(Core::Shader* shader) {
+        if (!shader) return;
+        shader->SetUniform("u_isDepthPass", isDepthPass);
+        shader->SetUniform("u_lightSpaceMatrix", lightSpaceMatrix);
+        if (!isDepthPass) {
+            shader->SetUniform("u_enableShadow", true);
+            shader->SetUniform("u_shadowLightPos", shadowLightPos);
+            glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+            shader->SetUniform("u_shadowMap", 6);
+        }
+    }
+
     // EVENT
     enum sceneEventIds
     {   
@@ -101,7 +138,7 @@ public:
         cubeMap = new CubeMap();
         // cubeMap[1] = new CubeMap();
         terrain = new Terrain(20.0f * 80.0f);
-        waterMatrix = new WaterMatrix(300. * 400.);
+        // waterMatrix = new WaterMatrix(300. * 400.);
         sceneCamera = new BezierCamera();
         // rain = new Rain(40000);
         // godRaysShader = new GodRaysShader();
@@ -109,20 +146,7 @@ public:
 
     bool initialize()
     {
-        // const char *facesLight[] =
-        //     {
-        //         ".\\assets\\textures\\DayCubeMap\\px.png",
-        //         ".\\assets\\textures\\DayCubeMap\\nx.png",
-        //         ".\\assets\\textures\\DayCubeMap\\py.png",
-        //         ".\\assets\\textures\\DayCubeMap\\ny.png",
-        //         ".\\assets\\textures\\DayCubeMap\\pz.png",
-        //         ".\\assets\\textures\\DayCubeMap\\nz.png"};
-        // if (!cubeMap[1]->initialize(facesLight))
-        // {
-        //     PrintLog("Failed to initialize CubeMap");
-        //     return FALSE;
-        // }
-
+        
         const char *facesLight2[] =
         {   
             ".\\assets\\textures\\modelCubeMap\\vrundavan\\px.png",
@@ -148,12 +172,15 @@ public:
 
         // Initializing GLB Model
         programStaticPBR = new glshaderprogram({"./src/shaders/modelgltf/pbrStatic.vert", "./src/shaders/modelgltf/pbrMain.frag"});
-        
-        // churchModel = new glmodel("./assets/models/scene2/church.glb", aiProcessPreset_TargetRealtime_Quality, true);
-        // roadModel = new glmodel("./assets/models/scene2/road.glb", aiProcessPreset_TargetRealtime_Quality, true);
 
         cowHouse = std::make_unique<Core::Model>();
         cowHouse->LoadModel("./assets/models/scene1_models/vrundavan/cowHouse.glb");
+
+        cow1 = std::make_unique<Core::Model>();
+        cow1->LoadModel("./assets/models/scene1_models/vrundavan/cow1.glb");
+
+        cow2 = std::make_unique<Core::Model>();
+        cow2->LoadModel("./assets/models/scene1_models/vrundavan/cow2.glb");
         
         house1 = std::make_unique<Core::Model>();
         house1->LoadModel("./assets/models/scene1_models/vrundavan/house1.glb");
@@ -164,15 +191,20 @@ public:
         house3 = std::make_unique<Core::Model>();
         house3->LoadModel("./assets/models/scene1_models/vrundavan/house3.glb");
 
+        house5 = std::make_unique<Core::Model>();
+        house5->LoadModel("./assets/models/scene1_models/vrundavan/house5.glb");
+
+        house6 = std::make_unique<Core::Model>();
+        house6->LoadModel("./assets/models/scene1_models/vrundavan/house6.glb");
+
+        house7 = std::make_unique<Core::Model>();
+        house7->LoadModel("./assets/models/scene1_models/vrundavan/house7.glb");
+
         vrundavanGate = std::make_unique<Core::Model>();
         vrundavanGate->LoadModel("./assets/models/scene1_models/vrundavan/vrundavanGate.glb");
         
         well = std::make_unique<Core::Model>();
         well->LoadModel("./assets/models/scene1_models/vrundavan/well.glb");
-        //well->LoadModel("./assets/models/scene4_models/yamuna_side_tree.glb");
-
-        farmLand = std::make_unique<Core::Model>();
-        farmLand->LoadModel("./assets/models/scene1_models/vrundavan/farmLand.glb");
 
         hutHouse = std::make_unique<Core::Model>();
         hutHouse->LoadModel("./assets/models/scene1_models/vrundavan/hutHouse.glb");
@@ -184,13 +216,39 @@ public:
         farmer3->LoadModel("./assets/models/scene1_models/vrundavan/farmer3.glb");
 
         tree1 = std::make_unique<Core::Model>();
-        tree1->LoadModel("./assets/models/scene1_models/vrundavan/tree1.glb");
+        tree1->LoadModel("./assets/models/scene1_models/vrundavan/peepal_tree.glb");
 
-        bananaTree = std::make_unique<Core::Model>();
-        bananaTree->LoadModel("./assets/models/scene1_models/vrundavan/bananaTree.glb");
+        whiteBull = std::make_unique<Core::Model>();
+        whiteBull->LoadModel("./assets/models/scene1_models/vrundavan/whiteBull.glb");
 
-        // farmer1 = std::make_unique<Core::AnimatedModel>();
-        // farmer1->LoadModel("./assets/models/scene1_models/vrundavan/farmer1.fbx");
+        treeKatta = std::make_unique<Core::Model>();
+        treeKatta->LoadModel("./assets/models/scene1_models/vrundavan/treeKatta.glb");
+
+        nandBaba = std::make_unique<Core::Model>();
+        nandBaba->LoadModel("./assets/models/scene1_models/vrundavan/gavkari/nandBaba.fbx");
+
+        gavkari1 = std::make_unique<Core::Model>();
+        gavkari1 ->LoadModel("./assets/models/scene1_models/vrundavan/gavkari/gavkari1.glb");
+
+        gavkari2_ladies = std::make_unique<Core::Model>();
+        gavkari2_ladies ->LoadModel("./assets/models/scene1_models/vrundavan/gavkari/gavkari2_ladies.glb");
+
+        yashoda = std::make_unique<Core::Model>();
+        yashoda ->LoadModel("./assets/models/scene1_models/vrundavan/gavkari/yashoda.glb");
+
+        gavkari3 = std::make_unique<Core::Model>();
+        gavkari3 ->LoadModel("./assets/models/scene1_models/vrundavan/gavkari/gavkari3.glb");
+
+        gavkari4_ladies = std::make_unique<Core::Model>();
+        gavkari4_ladies ->LoadModel("./assets/models/scene1_models/vrundavan/gavkari/gavkari4_ladies.glb");
+
+
+        tulsi = std::make_unique<Core::Model>();
+        tulsi ->LoadModel("./assets/models/scene1_models/vrundavan/gavkari/tulsi.glb");
+
+        // farmer1 = std::make_unique<Core::AnimatedModel>();   
+        // farmer1->LoadModel("./assets/models/scene1_models/vrundavan/nandBaba/nandBaba.fbx");
+        // farmer1->SetBaseColorTexture("./assets/models/scene1_models/vrundavan/nandBaba/baseTexture.png");
 
         lightManager = new SceneLight();
         lightManager->addDirectionalLights({
@@ -205,7 +263,7 @@ public:
         lightManager->setAmbient(vec3(0.05f));
 
         // Water
-        waterMatrix->initialize();
+        // waterMatrix->initialize();
 
         // IMPortanttt
         terrain->setFreq(0.020f);            // broad beach hills
@@ -215,8 +273,8 @@ public:
         terrain->setGrassCoverage(0.0f);     // >1.0 avoids grass branch
         terrain->setWaterHeight(-20.0f);       // keep your sea level
 
-        waterMatrix->interpolateWaterColor = 1.0f;
-        waterMatrix->moveFactor = 0.0f;
+        // waterMatrix->interpolateWaterColor = 1.0f;
+        // waterMatrix->moveFactor = 0.0f;
 
         // if (!rain->initialize(2))
         // {
@@ -232,10 +290,26 @@ public:
              {END_T, {30.0f, 0.0f}}},
             true);
 
+        // Create depth FBO
+        glGenFramebuffers(1, &depthMapFBO);
+        glGenTextures(1, &depthMapTexture);
+        glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMapTexture, 0);
+        glDrawBuffer(GL_NONE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         setupCamera();
         // sceneCamera->initialize();
         // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
-        // sceneCamera->handlePerspective = true;
+        sceneCamera->handlePerspective = true;
 
         isInitialized = true;
         isSceneComplete = false;
@@ -244,84 +318,249 @@ public:
 
     void setupCamera()
     {
+    
         std::vector<std::vector<float>> bezierPointsSC1 = {
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {-1648.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -12814.500000f},
-            {-3558.600098f, 8713.500000f, -9584.500000f},
-            {-5008.600098f, 7733.500000f, -9584.500000f},
-            {-5568.600098f, 7733.500000f, -6804.500000f},
-            {-5568.600098f, 6433.500000f, -5954.500000f},
-            {-5568.600098f, 6693.500000f, -5764.500000f},
-            {-5568.600098f, 7063.500000f, -4514.500000f},
-            {-5568.600098f, 7063.500000f, -2684.500000f},
-            {-5568.600098f, 7063.500000f, -1564.500000f},
-            {-5568.600098f, 7063.500000f, 1805.500000f},
-            {-5568.600098f, 7063.500000f, 3915.500000f},
-            {-5568.600098f, 7063.500000f, 5015.500000f},
-        };
+    {7591.399902f, 3313.500000f, 5725.500000f},
+    {7341.399902f, 3313.500000f, 5455.500000f},
+    {6851.399902f, 3113.500000f, 5175.500000f},
+    {6851.399902f, 2563.500000f, 5175.500000f},
+    {6051.399902f, 2563.500000f, 4295.500000f},
+    {6051.399902f, 2233.500000f, 4295.500000f},
+    {5211.399902f, 1583.500000f, 3305.500000f},
+    {4741.399902f, 1583.500000f, 3305.500000f},
+    {4501.399902f, 1093.500000f, 3305.500000f},
+    {3771.399902f, 893.500000f, 2795.500000f},
+    {3771.399902f, 583.500000f, 2795.500000f},
+    {3771.399902f, 323.500000f, 2795.500000f},
+    {2621.399902f, 183.500000f, 2105.500000f},
+    {2621.399902f, 133.500000f, 2105.500000f},
+    {2171.399902f, 93.500000f, 1805.500000f},
+    {2051.399902f, 93.500000f, 1695.500000f},
+    {1941.399902f, 93.500000f, 1615.500000f},
+    {1741.399902f, 93.500000f, 1615.500000f},
+    {1741.399902f, 113.500000f, 1595.500000f},
+    {1741.399902f, 113.500000f, 1525.500000f},
+    {1741.399902f, 113.500000f, 1475.500000f},
+    {1741.399902f, 113.500000f, 1475.500000f},
+    {1741.399902f, 113.500000f, 1385.500000f},
+    {1741.399902f, 113.500000f, 1145.500000f},
+    {1741.399902f, 113.500000f, 875.500000f},
+    {1551.399902f, 113.500000f, 515.500000f},
+    {1401.399902f, 113.500000f, 405.500000f},
+    {1331.399902f, 113.500000f, 235.500000f},
+    {1211.399902f, 113.500000f, 135.500000f},
+    {1081.399902f, 113.500000f, 5.500000f},
+    {751.399902f, 113.500000f, -134.500000f},
+    {341.399902f, 163.500000f, -84.500000f},
+    {51.399902f, 153.500000f, 145.500000f},
+    {51.399902f, 103.500000f, 145.500000f},
+    {51.399902f, 103.500000f, 155.500000f},
+    {51.399902f, 103.500000f, 225.500000f},
+    {41.399902f, 103.500000f, 375.500000f},
+    {41.399902f, 103.500000f, 535.500000f},
+    {41.399902f, 103.500000f, 895.500000f},
+    {41.399902f, 103.500000f, 905.500000f},
+    {411.399902f, 103.500000f, 1175.500000f},
+    {621.399902f, 103.500000f, 1175.500000f},
+    {1041.399902f, 103.500000f, 1175.500000f},
+    {1231.399902f, 103.500000f, 1175.500000f},
+    {1231.399902f, 223.500000f, 1175.500000f},
+    {1231.399902f, 713.500000f, 1175.500000f},
+    {1231.399902f, 1213.500000f, 1175.500000f},
+    {1231.399902f, 1953.500000f, 1175.500000f},
+    {1231.399902f, 3143.500000f, 1175.500000f},
+    {1231.399902f, 3983.500000f, 1175.500000f},
+    {1231.399902f, 4463.500000f, 1175.500000f},
+    {1231.399902f, 4793.500000f, 1175.500000f},
+    {1231.399902f, 5273.500000f, 1175.500000f},
+    {1231.399902f, 5963.500000f, 1175.500000f},
+    {1231.399902f, 6673.500000f, 1175.500000f},
+    {1231.399902f, 6673.500000f, 1175.500000f},
+    };
 
-        // YAW GLOBAL
-        std::vector<float> yawGlobalSC1 = {
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            49.000000f,
-            49.000000f,
-            79.000000f,
-            109.000000f,
-        };
 
-        // PITCH GLOBAL
-        std::vector<float> pitchGlobalSC1 = {
-            32.000000f,
-            12.000000f,
-            12.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-        };
+// YAW GLOBAL
+std::vector<float> yawGlobalSC1 = {
+219.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+216.000000f,
+214.000000f,
+215.000000f,
+219.000000f,
+220.000000f,
+220.000000f,
+219.000000f,
+219.000000f,
+217.000000f,
+217.000000f,
+215.000000f,
+215.000000f,
+209.000000f,
+205.000000f,
+197.000000f,
+176.000000f,
+166.000000f,
+159.000000f,
+155.000000f,
+142.000000f,
+134.000000f,
+128.000000f,
+152.000000f,
+171.000000f,
+178.000000f,
+189.000000f,
+197.000000f,
+207.000000f,
+207.000000f,
+156.000000f,
+156.000000f,
+194.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+204.000000f,
+};
 
-        // FOV GLOBAL
-        std::vector<float> fovGlobalSC1 = {
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-        };
+
+// PITCH GLOBAL
+std::vector<float> pitchGlobalSC1 = {
+-34.000000f,
+	-34.000000f,
+	-31.000000f,
+	-28.000000f,
+	-28.000000f,
+	-25.000000f,
+	-25.000000f,
+	-25.000000f,
+	-25.000000f,
+	-21.000000f,
+	-17.000000f,
+	-12.000000f,
+	-11.000000f,
+	-9.000000f,
+	-6.000000f,
+	-6.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-4.000000f,
+	-1.000000f,
+	-7.000000f,
+	-11.000000f,
+	-11.000000f,
+	-10.000000f,
+	-7.000000f,
+	-7.000000f,
+	-2.000000f,
+	-2.000000f,
+	-2.000000f,
+	-2.000000f,
+	-2.000000f,
+	-2.000000f,
+	-26.000000f,
+	-38.000000f,
+	-52.000000f,
+	-69.000000f,
+	-82.000000f,
+	-82.000000f,
+	-86.000000f,
+	-83.000000f,
+	-83.000000f,
+	-85.000000f,
+	-85.000000f,
+	-85.000000f,
+	-85.000000f,
+	};
+
+
+
+// FOV GLOBAL
+std::vector<float> fovGlobalSC1 = {
+-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	};    
 
         sc1.initialize();
         sc1.setBezierPoints(bezierPointsSC1, yawGlobalSC1, pitchGlobalSC1, fovGlobalSC1);
@@ -330,6 +569,28 @@ public:
 
     void display()
     {
+        // Shadow Depth Pass
+        mat4 lightProjectionMatrix = vmath::ortho(-6000.0f, 6000.0f, -6000.0f, 6000.0f, -10000.0f, 10000.0f);
+        mat4 lightViewMatrix = vmath::lookat(shadowLightPos, vec3(0.0f, 0.0f, 0.0f), vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+
+        isDepthPass = true;
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        
+        drawVrundavanScene();
+        
+        glCullFace(GL_BACK);
+        glDisable(GL_CULL_FACE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        isDepthPass = false;
+
+        glViewport(0, 0, giWindowWidth, giWindowHeight);
+
         // Camera
         modelMatrix = mat4::identity();
         perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)giWindowWidth / (GLfloat)giWindowHeight, 10.0f, 10000000.0f);
@@ -340,35 +601,38 @@ public:
 
         pushMatrix(modelMatrix);
         {
-            terrain->draw(false);
+            terrain->shadowMap = depthMapTexture;
+            terrain->shadowLightSpaceMatrix = lightSpaceMatrix;
+            terrain->shadowLightPosition = shadowLightPos;
+            terrain->draw(1.0f);
         }
         modelMatrix = popMatrix();
 
-        pushMatrix(modelMatrix);
-        {
-             // Refraction
-            waterMatrix->bindRefractionFBO(1920, 1080);
-            {
-                displayScene(-1.0);
-            }
-            waterMatrix->unbindRefractionFBO();
+        // pushMatrix(modelMatrix);
+        // {
+        //      // Refraction
+        //     // waterMatrix->bindRefractionFBO(1920, 1080);
+        //     {
+        //         displayScene(-1.0);
+        //     }
+        //     waterMatrix->unbindRefractionFBO();
 
-            // Refraction
-            waterMatrix->bindReflectionFBO(1920, 1080);
-            {
-                displayScene(1.0);
-            }
-            waterMatrix->unbindReflectionFBO();
-        }
-        modelMatrix = popMatrix();
+        //     // Refraction
+        //     waterMatrix->bindReflectionFBO(1920, 1080);
+        //     {
+        //         displayScene(1.0);
+        //     }
+        //     waterMatrix->unbindReflectionFBO();
+        // }
+        // modelMatrix = popMatrix();
 
         // Water Bed
-        pushMatrix(modelMatrix);
-        {
-            modelMatrix = modelMatrix * translate(0.0f, (float)terrain->getWaterHeight() + 1.0f, 0.0f);
-            waterMatrix->renderWaterQuad(terrain->getWaterHeight());
-        }
-        modelMatrix = popMatrix();
+        // pushMatrix(modelMatrix);
+        // {
+        //     modelMatrix = modelMatrix * translate(0.0f, (float)terrain->getWaterHeight() + 1.0f, 0.0f);
+        //     waterMatrix->renderWaterQuad(terrain->getWaterHeight());
+        // }
+        // modelMatrix = popMatrix();
 
         pushMatrix(modelMatrix);
         {
@@ -399,13 +663,18 @@ public:
         drawHouse1();
         drawHouse2();      
         drawHouse3();
+        drawHouse5();
+        drawHouse6();
+        drawHouse7();
+
         drawKaliyaModel();
         drawCowHouse();
-        //drawFarmLand();
         drawHutHouse();
         drawFarmers();
         drawTree1();
-        //drawBananaTree();
+        drawWhiteBull();
+        drawTreeKatta();
+        drawGavkari();
     }
 
     // ==================== vrundavan scene models drawing functions ====================
@@ -421,11 +690,12 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
                 vmath::translate(-40.0f, 0.0f, 42.0f) *
-                vmath::scale(30.0f, 20.0f, 30.0f) *
+                vmath::scale(43.0f, 33.0f, 43.0f) *
                 vmath::rotate(-32.0f, 0.0f, 1.0f, 0.0f);
 
             house1->mTextureShader->SetUniform("u_model", house1ModelMatrix);
@@ -448,6 +718,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
@@ -479,6 +750,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
@@ -510,6 +782,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
@@ -540,6 +813,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house1->mTextureShader->Use();
+            bindShadowUniforms(house1->mTextureShader.get());
             house1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house1ModelMatrix =
@@ -575,6 +849,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house2->mTextureShader->Use();
+            bindShadowUniforms(house2->mTextureShader.get());
             house2->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house2ModelMatrix =
@@ -600,6 +875,40 @@ public:
             glDisable(GL_BLEND);
         }
         modelMatrix = popMatrix();
+
+        // tulsi vrundavan
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            tulsi->mTextureShader->Use();
+            bindShadowUniforms(tulsi->mTextureShader.get());
+            tulsi->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 tulsiModelMatrix =
+                vmath::translate(-70.0f, 0.0f, 630.0f) *
+                vmath::scale(5.0f, 5.0f, 5.0f) *
+                vmath::rotate(70.0f, 0.0f, 1.0f, 0.0f); 
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            tulsi->mTextureShader->SetUniform("u_model", tulsiModelMatrix);
+            tulsi->mTextureShader->SetUniform("u_view", viewMatrix);
+            tulsi->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tulsi->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
+            tulsi->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            //house2->mTextureShader->exposure = 1.2f;
+            tulsi->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+
+            tulsi->Draw(tulsi->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
         
     }
 
@@ -614,6 +923,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             hutHouse->mTextureShader->Use();
+            bindShadowUniforms(hutHouse->mTextureShader.get());
             hutHouse->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 hutHouseModelMatrix =
@@ -647,6 +957,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             hutHouse->mTextureShader->Use();
+            bindShadowUniforms(hutHouse->mTextureShader.get());
             hutHouse->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 hutHouseModelMatrix =
@@ -681,6 +992,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             hutHouse->mTextureShader->Use();
+            bindShadowUniforms(hutHouse->mTextureShader.get());
             hutHouse->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 hutHouseModelMatrix =
@@ -719,6 +1031,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             
             house3->mTextureShader->Use();
+            bindShadowUniforms(house3->mTextureShader.get());
             house3->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house3ModelMatrix =
@@ -752,6 +1065,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             house3->mTextureShader->Use();
+            bindShadowUniforms(house3->mTextureShader.get());
             house3->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 house3ModelMatrix =
@@ -779,6 +1093,123 @@ public:
         modelMatrix = popMatrix();
     }
 
+    void drawHouse5(bool isBlack = false)
+    {   
+        if (!house5)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            
+            house5->mTextureShader->Use();
+            bindShadowUniforms(house5->mTextureShader.get());
+            house5->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 house5ModelMatrix =
+                vmath::translate(1000.0f, 0.0f, -100.0f) *
+                vmath::scale(35.0f, 35.0f, 35.0f) *
+                vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            house5->mTextureShader->SetUniform("u_model", house5ModelMatrix);
+            house5->mTextureShader->SetUniform("u_view", viewMatrix);
+            house5->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            house5->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
+            house5->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            //house3->mTextureShader->exposure = 1.2f;
+            house5->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+
+            house5->Draw(house5->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    void drawHouse6(bool isBlack = false)
+    {   
+        if (!house6)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            
+            house6->mTextureShader->Use();
+            bindShadowUniforms(house6->mTextureShader.get());
+            house6->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 house6ModelMatrix =
+                vmath::translate(1200.0f, 100.0f, 1800.0f) *
+                vmath::scale(400.0f, 400.0f, 400.0f) *
+                vmath::rotate(160.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            house6->mTextureShader->SetUniform("u_model", house6ModelMatrix);
+            house6->mTextureShader->SetUniform("u_view", viewMatrix);
+            house6->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            house6->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
+            house6->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            //house3->mTextureShader->exposure = 1.2f;
+            house6->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+
+            house6->Draw(house6->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
+
+    void drawHouse7(bool isBlack = false)
+    {   
+        if (!house7)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            
+            house7->mTextureShader->Use();
+            bindShadowUniforms(house7->mTextureShader.get());
+            house7->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 house7ModelMatrix =
+                vmath::translate(2200.0f, 105.0f, 700.0f) *
+                vmath::scale(150.0f, 150.0f, 150.0f) *
+                vmath::rotate(-20.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            house7->mTextureShader->SetUniform("u_model", house7ModelMatrix);
+            house7->mTextureShader->SetUniform("u_view", viewMatrix);
+            house7->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            house7->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
+            house7->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            //house3->mTextureShader->exposure = 1.2f;
+            house7->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            
+            house7->Draw(house7->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    } 
+
     void drawKaliyaModel(bool isBlack = false)
     {   
         if (!vrundavanGate)
@@ -790,12 +1221,13 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             vrundavanGate->mTextureShader->Use();
+            bindShadowUniforms(vrundavanGate->mTextureShader.get());
             vrundavanGate->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 vrundavanGateModelMatrix =
-                vmath::translate(1500.0f, -220.0f, 1500.0f) *
-                vmath::scale(10.0f, 10.0f, 10.0f) *
-                vmath::rotate(-130.0f, 0.0f, 1.0f, 0.0f);
+                vmath::translate(2000.0f, 170.0f, 1600.0f) *
+                vmath::scale(300.0f, 300.0f, 300.0f) *
+                vmath::rotate(60.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
@@ -828,6 +1260,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             cowHouse->mTextureShader->Use();
+            bindShadowUniforms(cowHouse->mTextureShader.get());
             cowHouse->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 cowHouseModelMatrix =
@@ -851,6 +1284,66 @@ public:
         }
         modelMatrix = popMatrix();
 
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            cow1->mTextureShader->Use();
+            bindShadowUniforms(cow1->mTextureShader.get());
+            cow1->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 cow1ModelMatrix =
+                vmath::translate(-400.0f + 1661.399902f , 0.0f + 3.500046f, 70.0f + 15.500017f) *
+                vmath::scale(0.5f , 0.5f , 0.5f) *
+                vmath::rotate(-120.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            cow1->mTextureShader->SetUniform("u_model", cow1ModelMatrix);
+            cow1->mTextureShader->SetUniform("u_view", viewMatrix);
+            cow1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            cow1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            cow1->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            cow1->Draw(cow1->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            cow2->mTextureShader->Use();
+            bindShadowUniforms(cow2->mTextureShader.get());
+            cow2->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 cow2ModelMatrix =
+                vmath::translate(-400.0f + 1661.399902f + objX, 0.0f + 3.500046f, 70.0f + 15.500017f + objZ) *
+                vmath::scale(0.5f , 0.5f , 0.5f) *
+                vmath::rotate(-120.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            cow2->mTextureShader->SetUniform("u_model", cow2ModelMatrix);
+            cow2->mTextureShader->SetUniform("u_view", viewMatrix);
+            cow2->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            cow2->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            cow2->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            cow2->Draw(cow2->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
         // draw well here
          if (!well)
             return;
@@ -861,6 +1354,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             well->mTextureShader->Use();
+            bindShadowUniforms(well->mTextureShader.get());
             well->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 wellModelMatrix =
@@ -885,77 +1379,6 @@ public:
         modelMatrix = popMatrix();
     }
 
-    void drawFarmLand(bool isBlack = false)
-    {       
-        if (!farmLand)
-            return;
-        
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            farmLand->mTextureShader->Use();
-            farmLand->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 farmLandModelMatrix =
-                vmath::translate(-533.0f, 20.0f, 232.0f) *
-                vmath::scale(40.0f, 20.0f, 40.0f) *
-                vmath::rotate(-30.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            farmLand->mTextureShader->SetUniform("u_model", farmLandModelMatrix);
-            farmLand->mTextureShader->SetUniform("u_view", viewMatrix);
-            farmLand->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            //farmLand->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            farmLand->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //farmLand->mTextureShader->exposure = 1.2f;
-            farmLand->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            farmLand->Draw(farmLand->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-
-        // second farm land
-        pushMatrix(modelMatrix);
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            farmLand->mTextureShader->Use();
-            farmLand->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 farmLandModelMatrix =
-                vmath::translate(-710.0f, 20.0f, 530.0f) *
-                 vmath::scale(40.0f, 20.0f, 40.0f) *
-                vmath::rotate(-30.0f, 0.0f, 1.0f, 0.0f);
-
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            farmLand->mTextureShader->SetUniform("u_model", farmLandModelMatrix);
-            farmLand->mTextureShader->SetUniform("u_view", viewMatrix);
-            farmLand->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            //farmLand->mTextureShader->SetUniform("u_LightPosition", vec4(10.0f, 10.0f, 10.0f, 1.0f));
-            farmLand->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            //farmLand->mTextureShader->exposure = 1.2f;
-            farmLand->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-
-            farmLand->Draw(farmLand->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
-    }
-
     void drawFarmers(bool isBlack = false)
     {
         // if (!farmer1)
@@ -973,9 +1396,9 @@ public:
         //     farmer1->mShader->SetUniform("isBlack", isBlack);
 
         //     vmath::mat4 farmer1ModelMatrix =
-        //         vmath::translate(0.0f, 245.0f, -40.0f) *
-        //         vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f) *
-        //         vmath::scale(0.18f, 0.18f, 0.18f);
+        //         vmath::translate(400.0f, 0.0f, 1000.0f) *
+        //         vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f) *
+        //         vmath::scale(0.3f, 0.3f, 0.3f);
 
         //         // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
         //         // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
@@ -1005,6 +1428,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             farmer2_bailgadi->mTextureShader->Use();
+            bindShadowUniforms(farmer2_bailgadi->mTextureShader.get());
             farmer2_bailgadi->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 farmer2_bailgadiModelMatrix =
@@ -1037,6 +1461,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             farmer3->mTextureShader->Use();
+            bindShadowUniforms(farmer3->mTextureShader.get());
             farmer3->mTextureShader->SetUniform("isBlack", isBlack);
             
             vmath::mat4 farmer3ModelMatrix =
@@ -1073,12 +1498,13 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             tree1->mTextureShader->Use();
+            bindShadowUniforms(tree1->mTextureShader.get());
             tree1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 tree1ModelMatrix =
-                vmath::translate(1050.0f, 0.0f, -400.0f) *
-                vmath::scale(50.0f, 50.0f, 50.0f) *
-                vmath::rotate(10.0f, 0.0f, 1.0f, 0.0f);
+                vmath::translate(2.0f, -40.0f, -500.0f) *
+                vmath::scale(200.0f, 200.0f, 200.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
@@ -1103,12 +1529,13 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             tree1->mTextureShader->Use();
+            bindShadowUniforms(tree1->mTextureShader.get());
             tree1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 tree1ModelMatrix =
-                vmath::translate(-433.0f, 0.0f, 1400.0f) *
-                vmath::scale(50.0f, 50.0f, 50.0f) *
-                vmath::rotate(-50.0f, 0.0f, 1.0f, 0.0f);
+                vmath::translate(-400.0f, -40.0f, 1300.0f) *
+                vmath::scale(200.0f, 200.0f, 200.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
@@ -1133,12 +1560,13 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             tree1->mTextureShader->Use();
+            bindShadowUniforms(tree1->mTextureShader.get());
             tree1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 tree1ModelMatrix =
-                vmath::translate(2000.0f, 0.0f, 0000.0f) *
-                vmath::scale(50.0f, 50.0f, 50.0f) *
-                vmath::rotate(-30.0f, 0.0f, 1.0f, 0.0f);
+                vmath::translate(2000.0f, -40.0f, 0.0f) *
+                vmath::scale(200.0f, 200.0f, 200.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
@@ -1163,11 +1591,12 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             tree1->mTextureShader->Use();
+            bindShadowUniforms(tree1->mTextureShader.get());
             tree1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 tree1ModelMatrix =
-                vmath::translate(730.0f, 0.0f, 1940.0f) *
-                vmath::scale(50.0f, 50.0f, 50.0f) *
+                vmath::translate(3000.0f, -50.0f, 500.0f) *
+                vmath::scale(200.0f, 200.0f, 200.0f) *
                 vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
@@ -1186,73 +1615,296 @@ public:
         }
         modelMatrix = popMatrix();
 
-
-    }
-
-    void drawBananaTree(bool isBlack = false)
-    {   
-        // first tree - left side of vada
-        if (!bananaTree)
-            return;
-        // first pair of trees - left side of scene
+         // fifth peeple tree center at vrundavan
         pushMatrix(modelMatrix);    
         {   
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            bananaTree->mTextureShader->Use();
-            bananaTree->mTextureShader->SetUniform("isBlack", isBlack);
+            tree1->mTextureShader->Use();
+            bindShadowUniforms(tree1->mTextureShader.get());
+            tree1->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 tree1ModelMatrix =
-                vmath::translate(1000.0f, 0.0f, 250.0f) *
-                vmath::scale(30.0f, 30.0f, 30.0f) *
+                vmath::translate(800.0f, -60.0f, 700.0f) *
+                vmath::scale(300.0f, 300.0f, 300.0f) *
                 vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
                 // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
 
-            bananaTree->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            bananaTree->mTextureShader->SetUniform("u_view", viewMatrix);
-            bananaTree->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            bananaTree->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            bananaTree->mTextureShader->SetUniform("u_ApplyToon", false); 
+            tree1->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
+            tree1->mTextureShader->SetUniform("u_view", viewMatrix);
+            tree1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            tree1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            tree1->mTextureShader->SetUniform("u_ApplyToon", false); 
 
-            bananaTree->Draw(bananaTree->mTextureShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();  
-
-        // second tree - right side of vada
-        pushMatrix(modelMatrix);    
-        {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            bananaTree->mTextureShader->Use();
-            bananaTree->mTextureShader->SetUniform("isBlack", isBlack);
-
-            vmath::mat4 tree1ModelMatrix =
-                vmath::translate(950.0f, 0.0f, 700.0f) *
-                vmath::scale(30.0f, 30.0f, 30.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
-                
-                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
-                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
-                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
-
-            bananaTree->mTextureShader->SetUniform("u_model", tree1ModelMatrix);
-            bananaTree->mTextureShader->SetUniform("u_view", viewMatrix);
-            bananaTree->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            bananaTree->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
-            bananaTree->mTextureShader->SetUniform("u_ApplyToon", false); 
-
-            bananaTree->Draw(bananaTree->mTextureShader);
+            tree1->Draw(tree1->mTextureShader);
 
             glDisable(GL_BLEND);
         }
         modelMatrix = popMatrix();
+
+    }
+
+    void drawWhiteBull(bool isBlack = false)
+    {
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            whiteBull->mTextureShader->Use();
+            bindShadowUniforms(whiteBull->mTextureShader.get());
+            whiteBull->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 whiteBullModelMatrix =
+                vmath::translate(2500.0f, 50.0f, 1500.0f) *
+                vmath::scale(50.0f, 50.0f, 50.0f) *
+                vmath::rotate(80.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            whiteBull->mTextureShader->SetUniform("u_model", whiteBullModelMatrix);
+            whiteBull->mTextureShader->SetUniform("u_view", viewMatrix);
+            whiteBull->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            whiteBull->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            whiteBull->mTextureShader->SetUniform("u_ApplyToon", false); 
+            
+            whiteBull->Draw(whiteBull->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+    }
+
+    void drawTreeKatta(bool isBlack = false)
+    {
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            treeKatta->mTextureShader->Use();
+            bindShadowUniforms(treeKatta->mTextureShader.get());
+            treeKatta->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 treeKattaModelMatrix =
+                vmath::translate(800.0f, 3.0f, 700.0f) *
+                vmath::scale(150.0f, 150.0f, 150.0f) *
+                vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            treeKatta->mTextureShader->SetUniform("u_model", treeKattaModelMatrix);
+            treeKatta->mTextureShader->SetUniform("u_view", viewMatrix);
+            treeKatta->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            treeKatta->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            treeKatta->mTextureShader->SetUniform("u_ApplyToon", false); 
+            
+            treeKatta->Draw(treeKatta->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+    }
+    
+    void drawGavkari(bool isBlack = false)
+    {   
+        // nand baba
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            nandBaba->mTextureShader->Use();
+            bindShadowUniforms( nandBaba->mTextureShader.get());
+            nandBaba->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4  nandBabaModelMatrix =
+                    vmath::translate(1000.0f, 0.0f, 700.0f) *
+                    vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f) *
+                    vmath::scale(0.3f, 0.3f, 0.3f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            nandBaba->mTextureShader->SetUniform("u_model",  nandBabaModelMatrix);
+            nandBaba->mTextureShader->SetUniform("u_view", viewMatrix);
+            nandBaba->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            nandBaba->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            nandBaba->mTextureShader->SetUniform("u_ApplyToon", false); 
+            
+            nandBaba->Draw(nandBaba->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // gavkari 1 talk with nandbaba
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            gavkari1->mTextureShader->Use();
+            bindShadowUniforms( gavkari1->mTextureShader.get());
+            gavkari1->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4  gavkari1ModelMatrix =
+                    vmath::translate(1030.0f, 25.0f, 710.0f) *
+                    vmath::rotate(-130.0f, 0.0f, 1.0f, 0.0f) *
+                    vmath::scale(25.0f, 25.0f, 25.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            gavkari1->mTextureShader->SetUniform("u_model",  gavkari1ModelMatrix);
+            gavkari1->mTextureShader->SetUniform("u_view", viewMatrix);
+            gavkari1->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            gavkari1->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            gavkari1->mTextureShader->SetUniform("u_ApplyToon", false); 
+            
+            gavkari1->Draw(gavkari1->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // gavkari 3talk with nandbaba 
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            gavkari3->mTextureShader->Use();
+            bindShadowUniforms(gavkari3->mTextureShader.get());
+            gavkari3->mTextureShader->SetUniform("isBlack", isBlack);
+            
+            vmath::mat4  gavkari3ModelMatrix =
+                    vmath::translate(1000.0f, 28.0f, 670.0f) *
+                    vmath::rotate(40.0f, 0.0f, 1.0f, 0.0f) *
+                    vmath::scale(28.0f, 28.0f, 28.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            gavkari3->mTextureShader->SetUniform("u_model",  gavkari3ModelMatrix);
+            gavkari3->mTextureShader->SetUniform("u_view", viewMatrix);
+            gavkari3->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            gavkari3->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            gavkari3->mTextureShader->SetUniform("u_ApplyToon", false); 
+            
+            gavkari3->Draw(gavkari3->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+        // gavkari 2 ladies with water matka
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            gavkari2_ladies->mTextureShader->Use();
+            bindShadowUniforms( gavkari2_ladies->mTextureShader.get());
+            gavkari2_ladies->mTextureShader->SetUniform("isBlack", isBlack);
+            
+            vmath::mat4  gavkari2_ladiesModelMatrix =
+                    vmath::translate(1400.0f, 30.0f, 900.0f) *
+                    vmath::rotate(30.0f, 0.0f, 1.0f, 0.0f) *
+                    vmath::scale(30.0f, 30.0f, 30.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            gavkari2_ladies->mTextureShader->SetUniform("u_model",  gavkari2_ladiesModelMatrix);
+            gavkari2_ladies->mTextureShader->SetUniform("u_view", viewMatrix);
+            gavkari2_ladies->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            gavkari2_ladies->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            gavkari2_ladies->mTextureShader->SetUniform("u_ApplyToon", false); 
+            
+            gavkari2_ladies->Draw(gavkari2_ladies->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+        
+        // yashoda 
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            yashoda->mTextureShader->Use();
+            bindShadowUniforms( yashoda->mTextureShader.get());
+            yashoda->mTextureShader->SetUniform("isBlack", isBlack);
+            
+            vmath::mat4  yashodaModelMatrix =
+                    vmath::translate(-50.0f, 30.0f, 700.0f) *
+                    vmath::rotate(460.0f, 0.0f, 1.0f, 0.0f) *
+                    vmath::scale(25.0f, 25.0f, 25.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            yashoda->mTextureShader->SetUniform("u_model",  yashodaModelMatrix);
+            yashoda->mTextureShader->SetUniform("u_view", viewMatrix);
+            yashoda->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            yashoda->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            yashoda->mTextureShader->SetUniform("u_ApplyToon", false); 
+            
+            yashoda->Draw(yashoda->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+        
+        // gavkari 4 ladies talk with yashoda
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            gavkari4_ladies->mTextureShader->Use();
+            bindShadowUniforms( gavkari4_ladies->mTextureShader.get());
+            gavkari4_ladies->mTextureShader->SetUniform("isBlack", isBlack);
+            
+            vmath::mat4  gavkari4_ladiesModelMatrix =
+                    vmath::translate(0.0f, 30.0f, 680.0f) *
+                    vmath::rotate(-50.0f, 0.0f, 1.0f, 0.0f) *
+                    vmath::scale(25.0f, 25.0f, 25.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            gavkari4_ladies->mTextureShader->SetUniform("u_model",  gavkari4_ladiesModelMatrix);
+            gavkari4_ladies->mTextureShader->SetUniform("u_view", viewMatrix);
+            gavkari4_ladies->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            gavkari4_ladies->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            gavkari4_ladies->mTextureShader->SetUniform("u_ApplyToon", false); 
+            
+            gavkari4_ladies->Draw(gavkari4_ladies->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+
     }
 
     // ============================================================
@@ -1325,6 +1977,8 @@ public:
     void update()
     {
         sceneCamera->time = globalTime;
+        // sceneCamera->time = 1;
+        // sceneCamera->update();
 
         kaliyaX += 150.5f; // Move Kaliya along the X-axis
         kaliyaZ += 150.3f; // Move Kaliya along the Z-axis
@@ -1409,7 +2063,6 @@ public:
         house3.reset();
         vrundavanGate.reset();
         cowHouse.reset();
-        farmLand.reset();
 
         // // rain
         // if (rain->alpha > 0.0f)

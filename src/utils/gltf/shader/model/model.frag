@@ -5,6 +5,8 @@ in vec3 v_Normal;
 in vec2 v_texcoord;
 in vec3 v_LightDirection; 
 in vec3 v_ViewerVector; 
+in vec4 v_FragPosLightSpace;
+in vec3 v_WorldPosition;
 
 uniform vec3 u_LD;
 uniform vec3 u_LS;
@@ -43,6 +45,11 @@ uniform float u_Exposure;
 uniform float u_MetallicFactor;
 uniform float u_RoughnessFactor;
 uniform float u_alpha = 1.0;
+
+// Shadow
+uniform sampler2D u_shadowMap;
+uniform bool u_enableShadow = false;
+uniform vec3 u_shadowLightPos;
 
 struct PBRInfo {
     float NdotL;                  // cos angle between normal and light direction
@@ -136,13 +143,63 @@ vec3 RRTAndODTFit(vec3 color) {
     return a / b;
 }
 
+// Shadow calculation with PCF
+float ShadowCalculation(vec4 fragPosLightSpace)
+{
+    // Perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // Transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+
+    // Keep shadow at 0.0 when outside the far plane region
+    if(projCoords.z > 1.0)
+        return 0.0;
+
+    // Get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // Calculate bias based on slope
+    vec3 normal = normalize(v_Normal);
+    vec3 lightDir = normalize(u_shadowLightPos - v_WorldPosition);
+    float bias = max(0.005 * (1.0 - dot(normal, lightDir)), 0.0005);
+
+    // PCF (percentage-closer filtering) for soft shadows
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0);
+    for(int x = -2; x <= 2; ++x)
+    {
+        for(int y = -2; y <= 2; ++y)
+        {
+            float pcfDepth = texture(u_shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 25.0;
+
+    return shadow;
+}
+
+uniform bool u_isDepthPass = false;
+
 void main(void) {
+    if (u_isDepthPass) {
+        // Just write depth, color doesn't matter
+        FragColor = vec4(1.0);
+        return;
+    }
     
     vec3 albedo = texture(u_BaseColorSampler, v_texcoord).rgb;
 
     vec3 N = normalize(v_Normal);
     vec3 L = normalize(v_LightDirection);
     vec3 V = normalize(v_ViewerVector);
+
+    // Calculate shadow factor
+    float shadow = 0.0;
+    if(u_enableShadow)
+    {
+        shadow = ShadowCalculation(v_FragPosLightSpace);
+    }
 
     if(isBlack) 
     {
@@ -164,7 +221,10 @@ void main(void) {
         vec3 diffuseColor = baseColor.rgb;
         if(u_ApplyToon ==  false)
         {
-            FragColor = vec4((diffuseColor * u_Exposure), baseColor.a * u_alpha);
+            vec3 litColor = diffuseColor * u_Exposure;
+            // Apply shadow: darken non-ambient light contribution
+            litColor *= (1.0 - shadow * 0.6);
+            FragColor = vec4(litColor, baseColor.a * u_alpha);
         }
         else{
             // TOON SHADER PART
@@ -194,8 +254,10 @@ void main(void) {
                 rimLight = vec3(1.0) * rim * 0.5; 
             }
 
-            // Final toon color
-            vec3 finalColor = (toonDiffuse + toonSpecular + rimLight) * u_Exposure;
+            // Final toon color with shadow
+            vec3 ambient = diffuseColor * 0.3;
+            vec3 lit = toonDiffuse + toonSpecular + rimLight;
+            vec3 finalColor = (ambient + lit * (1.0 - shadow * 0.65)) * u_Exposure;
 
             FragColor = vec4(finalColor, baseColor.a * u_alpha);
         }

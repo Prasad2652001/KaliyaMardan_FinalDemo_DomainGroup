@@ -96,7 +96,7 @@ public:
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR rdiffuse");
         }
-        if (LoadPNGImage(&textures_green[3], "./assets/textures/terrain/green/snow2.png") == FALSE)
+        if (LoadPNGImage(&textures_green[3], "./assets/textures/terrain/green/terrainTexture.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR snow2");
         }
@@ -123,7 +123,7 @@ public:
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR rdiffuse");
         }
-        if (LoadPNGImage(&textures_dark[3], "./assets/textures/terrain/dark/snow2.png") == FALSE)
+        if (LoadPNGImage(&textures_dark[3], "./assets/textures/terrain/dark/terrainTexture.png") == FALSE)
         {
             PrintLog("\t\t IMAGE LOADING FAILED FOR snow2");
         }
@@ -153,7 +153,7 @@ public:
 
     void draw(float isShadow)
     {
-        drawFog = true;
+        drawFog = false;
 
         if (up != 0.0f)
         {
