@@ -71,12 +71,17 @@ public:
 	vec3 camCenter;
 	vec3 camUp;
 
+	// Save camera state for reflection/refraction rendering
+	vec3 savedBezierCameraPosition = vec3(0.0f);
+	vec3 savedFPVCameraPosition = vec3(0.0f);
+	mat4 savedPerspectiveProjectionMatrix;
+
 	bool isInitialized = false;
 	WaterMatrix(float waterQuadSize)
 	{
 		WATER_QUAD_SIZE = waterQuadSize;
 	}
-
+	
 	int initializeWaterQuad(void)
 	{
 		// VERTICES
@@ -307,6 +312,9 @@ public:
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFBO_reflection);
 		glGetIntegerv(GL_VIEWPORT, previousViewport_reflection);
 
+		// Save current projection matrix
+		savedPerspectiveProjectionMatrix = perspectiveProjectionMatrix;
+
 		// code
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo_reflection);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -315,17 +323,20 @@ public:
 		if (USE_FPV_CAM)
 		{
 			perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)textureWidth / (GLfloat)textureHeight, 10.0f, 10000000.0f);
+			// Save original camera position before modifying
+			savedFPVCameraPosition = camera.position;
 			camera.invertPitch();
 			camera.position[1] -= 2 * (camera.position[1] - waterHeight);
 			viewMatrix = camera.getViewMatrix();
 		}
 		else
 		{
-
 			if (globalBezierCamera->handlePerspective && globalBezierCamera->perspectivePoints.size() > 0)
 			{
 				perspectiveProjectionMatrix = vmath::perspective(45.0f + degToRad(globalBezierCamera->fov), (GLfloat)textureWidth / (GLfloat)textureHeight, 10.0f, 10000000.0f);
 			}
+			// Save original camera position before modifying
+			savedBezierCameraPosition = globalBezierCamera->position;
 			globalBezierCamera->invertPitch();
 			globalBezierCamera->position[1] -= 2 * (globalBezierCamera->position[1] - waterHeight);
 			viewMatrix = globalBezierCamera->getViewMatrix();
@@ -337,15 +348,20 @@ public:
 		if (USE_FPV_CAM)
 		{
 			camera.invertPitch();
-			camera.position[1] += 2 * abs(camera.position[1] - waterHeight);
+			// Restore original camera position
+			camera.position = savedFPVCameraPosition;
 			viewMatrix = camera.getViewMatrix();
 		}
 		else
 		{
 			globalBezierCamera->invertPitch();
-			globalBezierCamera->position[1] += 2 * abs(globalBezierCamera->position[1] - waterHeight);
+			// Restore original camera position
+			globalBezierCamera->position = savedBezierCameraPosition;
 			viewMatrix = globalBezierCamera->getViewMatrix();
 		}
+
+		// Restore projection matrix
+		perspectiveProjectionMatrix = savedPerspectiveProjectionMatrix;
 
 		// glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		// changes for the tint fbo
@@ -363,6 +379,9 @@ public:
 		// fbo of the tint
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFBO_refraction);
 		glGetIntegerv(GL_VIEWPORT, previousViewport_refraction);
+
+		// Save current projection matrix
+		savedPerspectiveProjectionMatrix = perspectiveProjectionMatrix;
 
 		// code
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo_refraction);
@@ -387,6 +406,9 @@ public:
 
 	void unbindRefractionFBO()
 	{
+		// Restore projection matrix
+		perspectiveProjectionMatrix = savedPerspectiveProjectionMatrix;
+
 		// glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		// for the tint fbo correction
 		glBindFramebuffer(GL_FRAMEBUFFER, previousFBO_refraction);

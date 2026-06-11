@@ -53,7 +53,9 @@ public:
     std::unique_ptr<Core::Model> balram;
     std::unique_ptr<Core::Model> cow1;
     std::unique_ptr<Core::Model> cow2;
-     std::unique_ptr<Core::Model> cow3;
+    std::unique_ptr<Core::Model> cow3;
+
+    std::unique_ptr<Core::Model> tree1;
 
 
     // dynamic models
@@ -123,8 +125,7 @@ public:
     }
 
     bool initialize()
-    {
-    
+    {  
         const char *facesLight2[] =
         {   
             ".\\assets\\textures\\modelCubeMap\\vrundavan\\px.png",
@@ -173,7 +174,7 @@ public:
         krishnaSleeping->LoadModel("./assets/models/scene2_models/Krishna_sleeping.glb");
 
         mangoTree = std::make_unique<Core::Model>();
-        mangoTree->LoadModel("./assets/models/scene2_models/mango_tree.glb");
+        mangoTree->LoadModel("./assets/models/scene2_models/tree1.glb");
 
         stone1 = std::make_unique<Core::Model>();
         stone1->LoadModel("./assets/models/scene2_models/stone1.glb");
@@ -199,6 +200,9 @@ public:
         cow3 = std::make_unique<Core::Model>();
         cow3->LoadModel("./assets/models/scene2_models/cow3.glb");
 
+        tree1 = std::make_unique<Core::Model>();
+        tree1->LoadModel("./assets/models/scene2_models/cow3.glb");
+
         // dynamic model
         eagle = std::make_unique<Core::AnimatedModel>();
         eagle->LoadModel("./assets/models/scene2_models/eagle/eagle.fbx");
@@ -215,7 +219,7 @@ public:
                       vec3(0.0f, -0.9f, -0.3f), 20.0f, 22.0f)
         });
         lightManager->setAmbient(vec3(0.05f));
-
+        
         // Water
         waterMatrix->initialize();
         
@@ -228,7 +232,7 @@ public:
         terrain->setWaterHeight(190.0f);       // keep your sea level
 
         waterMatrix->interpolateWaterColor = 1.0f;
-        waterMatrix->moveFactor = 0.0f;
+        //waterMatrix->moveFactor = 0.0f;
 
         // if (!rain->initialize(2))
         // {
@@ -583,9 +587,9 @@ std::vector<float> fovGlobalSC1 = {
             mangoTree->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 mangoTreeModelMatrix =
-                vmath::translate(14800.0f, 500.0f, -9000.0f) *
+                vmath::translate(15700.0f, 500.0f, -9700.0f) *
                 vmath::scale(250.0f, 250.0f, 250.0f) *
-                vmath::rotate(44.0f, 0.0f, 1.0f, 0.0f);
+                vmath::rotate(-40.0f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
