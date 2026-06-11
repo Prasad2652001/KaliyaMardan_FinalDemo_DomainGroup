@@ -25,6 +25,8 @@
 #include "../../effects/terrain/Terrain.h"
 #include "../../shaders/terrain/TerrainShader.h"
 #include "../../shaders/godRays/GodRaysShader.h"
+#include "../../effects/rain/Rain.h"
+#include "../../shaders/rain/RainShader.h"
 
 #define _DEBUG
 
@@ -40,6 +42,7 @@ public:
     Terrain *terrain;
     // GLuint brdfLookUp;
     WaterMatrix *waterMatrix;
+    Rain *rain = NULL;
 
     // =========== Yamuna Side scene models variables with smart pointer ==========
     
@@ -67,9 +70,6 @@ public:
     
     glshaderprogram *programStaticPBR;
     SceneLight *lightManager;
-
-    // Shaders
-    GodRaysShader *godRaysShader;
 
     // Fadein Fadeout
     // float scaleFactor = 2.0f;
@@ -122,7 +122,7 @@ public:
         terrain = new Terrain(40.0f * 100.0f);
         waterMatrix = new WaterMatrix(300. * 400.);
         sceneCamera = new BezierCamera();
-        // rain = new Rain(40000);
+        rain = new Rain(40000);
         // godRaysShader = new GodRaysShader();
     }
 
@@ -239,10 +239,10 @@ public:
         waterMatrix->interpolateWaterColor = 1.0f;
         //waterMatrix->moveFactor = 0.0f;
 
-        // if (!rain->initialize(2))
-        // {
-        //     PrintLog("Failed to initialize Rain");
-        // }
+        if (!rain->initialize(2))
+        {
+            PrintLog("Failed to initialize Rain");
+        }
 
         // Event System
         sceneEvents = new EventManager(
@@ -474,17 +474,17 @@ std::vector<float> fovGlobalSC1 = {
         drawYamunaSideScene();
 
         // RAIN RENDERING
-        // pushMatrix(modelMatrix);
-        // {
-        //     // modelMatrix = modelMatrix * translate(0.0f, -35.0f, -5.0f) * scale(1.0f,1.0f,1.0f);
-        //     if (rain->alpha > 0.0f)
-        //     {
-        //         drawRain();
-        //     }
-        // }
-        // modelMatrix = popMatrix();
+        pushMatrix(modelMatrix);
+        {
+            // modelMatrix = modelMatrix * translate(0.0f, -35.0f, -5.0f) * scale(1.0f,1.0f,1.0f);
+            if (rain->alpha > 0.0f)
+            {
+                drawRain();
+            }
+        }
+        modelMatrix = popMatrix();
 
-        sceneCamera->displayBezierCurve();
+        // sceneCamera->displayBezierCurve();
     }
 
     void drawYamunaSideScene()
@@ -521,7 +521,7 @@ std::vector<float> fovGlobalSC1 = {
             vmath::mat4 swingModelMatrix =
                 vmath::translate(8000.0f + -18988.599609f, mKaliya_yPos + -96.500000f, -9000.0f + 23255.500000f)  *
                 vmath::scale(1000.0f + 691.000000f, 1000.0f + 691.000000f, 1000.0f + 691.000000f) *
-                vmath::rotate(90.0f, 0.0f, 1.0f, 0.0f);
+                vmath::rotate(90.0f + -328.600098f, 0.0f, 1.0f, 0.0f);
 
                 // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
                 // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
@@ -951,40 +951,40 @@ std::vector<float> fovGlobalSC1 = {
     // =======================================================
 
     // RAIN RELATED
-    // void drawRain(void)
-    // {
-    //     // code
-    //     pushMatrix(modelMatrix);
-    //     {
-    //         rain->lightAmbient[0] = 0.0f;
-    //         rain->lightAmbient[1] = 0.0f;
-    //         rain->lightAmbient[2] = 0.0f;
-    //         rain->lightAmbient[3] = 1.0f;
+    void drawRain(void)
+    {
+        // code
+        pushMatrix(modelMatrix);
+        {
+            rain->lightAmbient[0] = 0.0f;
+            rain->lightAmbient[1] = 0.0f;
+            rain->lightAmbient[2] = 0.0f;
+            rain->lightAmbient[3] = 1.0f;
 
-    //         rain->lightDiffuse[0] = 1.0f;
-    //         rain->lightDiffuse[1] = 1.0f;
-    //         rain->lightDiffuse[2] = 1.0f;
-    //         rain->lightDiffuse[3] = 1.0f;
+            rain->lightDiffuse[0] = 1.0f;
+            rain->lightDiffuse[1] = 1.0f;
+            rain->lightDiffuse[2] = 1.0f;
+            rain->lightDiffuse[3] = 1.0f;
 
-    //         rain->lightPosition[0] = 0.0f;
-    //         rain->lightPosition[1] = 100.0f;
-    //         rain->lightPosition[2] = -30.0f;
-    //         rain->lightPosition[3] = 1.0f;
+            rain->lightPosition[0] = 0.0f;
+            rain->lightPosition[1] = 100.0f;
+            rain->lightPosition[2] = -30.0f;
+            rain->lightPosition[3] = 1.0f;
 
-    //         rain->lightSpecular[0] = 1.0f;
-    //         rain->lightSpecular[1] = 1.0f;
-    //         rain->lightSpecular[2] = 1.0f;
-    //         rain->lightSpecular[3] = 1.0f;
+            rain->lightSpecular[0] = 1.0f;
+            rain->lightSpecular[1] = 1.0f;
+            rain->lightSpecular[2] = 1.0f;
+            rain->lightSpecular[3] = 1.0f;
 
-    //         // depth buffer madhe writing disable karnya sathi
+            // depth buffer madhe writing disable karnya sathi
 
-    //         glEnable(GL_BLEND);
+            glEnable(GL_BLEND);
 
-    //         rain->display();
-    //         glDisable(GL_BLEND);
-    //     }
-    //     modelMatrix = popMatrix();
-    // }
+            rain->display();
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     void displayScene(float terrainUp)
@@ -1058,10 +1058,17 @@ std::vector<float> fovGlobalSC1 = {
                 if (waterMatrix->interpolateWaterColor < 0.0f) waterMatrix->interpolateWaterColor = 0.0f;
 
                 cubeMap->isBarasat = 2; // Dark clouds
+
+                // rain
+                if (rain->alpha < 1.0f) {
+                    rain->alpha += 0.002f;
+                }
+
             } else {
                 mKaliya_yPos = -3000.0f;
                 waterMatrix->interpolateWaterColor = 1.0f;
                 cubeMap->isBarasat = 0; // Normal sky
+                rain->alpha = 0.0f;
             }
         }
         
@@ -1113,12 +1120,12 @@ std::vector<float> fovGlobalSC1 = {
         krishnaSleeping.reset();
         mangoTree.reset();
         
-        // // rain
-        // if (rain->alpha > 0.0f)
+        // // brdfLookUp = 0;
+        // if (brdfLookUp)
         // {
-        //     rain->alpha -= 0.002f;
+        //     glDeleteTextures(1, &brdfLookUp);
+        //     brdfLookUp = 0;
         // }
-
         // modelLoader.uninitialize();
     }
 };

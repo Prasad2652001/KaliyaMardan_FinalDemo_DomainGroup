@@ -144,20 +144,23 @@ void main(void) {
     float blue = 1.0;
     vec4 waterColor;
 
-    red = 15.0 / 255.0;
-    green = 25.0 / 255.0;
-    blue = 40.0 / 255.0;
+    red = 10.0 / 255.0;
+    green = 15.0 / 255.0;
+    blue = 60.0 / 255.0; // Little dark blue
     vec4 darkColor = vec4(red, green, blue, 0.5);
-    vec4 brightBlue = vec4(0.2, 0.71, 0.85, 1.0);
+    vec4 brightBlue = vec4(0.05, 0.20, 0.45, 1.0);
     vec4 finalWaterColor = mix(darkColor, brightBlue, interpolateDarkToBright);
 
     // Pull the tint toward a cold, dark grey-green for an overcast storm mood.
     vec4 stormColor = vec4(0.06, 0.11, 0.12, 1.0);
     finalWaterColor = mix(finalWaterColor, stormColor, storm * 0.65);
 
-    float waterMixFactor = mix(0.8, 0.2 + storm * 0.15, interpolateDarkToBright);
-    vec4 baseColor = color * mix(0.3, 1.0, interpolateDarkToBright);
-    vec3 dimmedSpecular = specularHighlights * mix(0.2, 1.0, interpolateDarkToBright);
+    // Make waterMixFactor lower so the reflection (baseColor) is more visible (70% reflection, 30% water color tint)
+    float waterMixFactor = mix(0.3, 0.2 + storm * 0.15, interpolateDarkToBright);
+    
+    // Don't darken the reflection too much, so the clouds are clearly visible
+    vec4 baseColor = color * mix(0.7, 1.0, interpolateDarkToBright);
+    vec3 dimmedSpecular = specularHighlights * mix(0.5, 1.0, interpolateDarkToBright);
 
     waterColor = mix(baseColor, finalWaterColor, waterMixFactor) + vec4(dimmedSpecular, 1.0);
 
