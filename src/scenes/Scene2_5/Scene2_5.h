@@ -58,6 +58,18 @@ public:
     // scene fits fully in frame (1.0 = original size, bigger = wider/further).
     float cameraPathScale = 2.4f;
 
+    // ---- finale zoom-in -------------------------------------------------
+    // Once the combined Krishna_Kaliya model appears, we slowly narrow the
+    // field of view. A smaller FOV magnifies the subject, giving a "push in"
+    // zoom without moving the camera. The zoom follows a table of control
+    // points (see currentFov) so it can be shaped gradually instead of one
+    // single ramp.
+    static constexpr float KR_HOLD_DUR = 0.933f;            // pose hold time
+    static constexpr float KR_FADE_DUR = 0.667f;            // cross-fade time
+    static constexpr float KR_SLOT_DUR = KR_HOLD_DUR + KR_FADE_DUR;
+    float finaleTime = 0.0f;    // real seconds elapsed since the finale began
+    float fovStart   = 45.0f;   // normal field of view (degrees)
+
     BezierCamera sc1;
     BezierCamera sc2;
     BezierCamera sc3;
@@ -530,7 +542,7 @@ public:
 
         modelMatrix = mat4::identity();
         perspectiveProjectionMatrix = vmath::perspective(
-            45.0f, (GLfloat)w / (GLfloat)h, 1.0f, 10000000.0f);
+            currentFov(), (GLfloat)w / (GLfloat)h, 1.0f, 10000000.0f);
 
         // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
         // sceneCamera->update();
@@ -571,6 +583,62 @@ public:
         glEnable(GL_DEPTH_TEST);
 
         // sceneCamera->displayBezierCurve();
+    }
+
+    // Field of view for the current frame. Stays at fovStart during the dance,
+    // then eases through a series of control points once the combined finale
+    // model is on screen, producing a slow, gradual zoom-in.
+    //
+    // To shape the zoom, edit the (time, fov) points below: time is seconds
+    // since the finale began, fov is degrees (smaller = more zoomed in). Times
+    // must stay in ascending order. More closely spaced points = gentler,
+    // more gradual motion.
+    float currentFov()
+    {
+        float finaleStart = KRISHNA_POSE_COUNT * KR_SLOT_DUR;
+        if (krishnaFadeTime < finaleStart)
+            return fovStart;
+
+        // (time in seconds, fov in degrees). The fov values are spaced so the
+        // *magnification* (proportional to 1/tan(fov/2)) grows by an equal
+        // amount every 2s. Linearly dropping fov would make the zoom appear to
+        // accelerate (slow, then a sudden rush); equal-magnification steps make
+        // the perceived zoom constant and gradual instead.
+        struct FovKey { float t; float fov; };
+        static const FovKey keys[] = {
+            {  0.0f, 45.0f },
+            {  2.0f, 40.8f },
+            {  4.0f, 37.4f },
+            {  6.0f, 34.4f },
+            {  8.0f, 31.9f },
+            { 10.0f, 29.7f },
+            { 12.0f, 27.8f },
+            { 14.0f, 26.1f },
+            { 16.0f, 24.6f },
+            { 18.0f, 23.3f },
+            { 20.0f, 22.1f },
+            { 22.0f, 21.0f },
+            { 24.0f, 20.0f },
+        };
+        const int n = (int)(sizeof(keys) / sizeof(keys[0]));
+
+        float tt = finaleTime;
+        if (tt <= keys[0].t)     return keys[0].fov;
+        if (tt >= keys[n - 1].t) return keys[n - 1].fov;
+
+        for (int i = 0; i < n - 1; ++i)
+        {
+            if (tt >= keys[i].t && tt <= keys[i + 1].t)
+            {
+                float span = keys[i + 1].t - keys[i].t;
+                float p = span > 0.0f ? (tt - keys[i].t) / span : 1.0f;
+                // smootherstep within each segment so the joints between
+                // control points have matching velocity/acceleration.
+                p = p * p * p * (p * (p * 6.0f - 15.0f) + 10.0f);
+                return keys[i].fov + (keys[i + 1].fov - keys[i].fov) * p;
+            }
+        }
+        return keys[n - 1].fov;
     }
 
     // Kaliya's placement (scaled 3x). Shared by the standalone Kaliya and the
@@ -661,9 +729,9 @@ public:
         else
             krishnaFadeTime += (float)gDeltaTime / 3.0f; // (3) 3x slower
 
-        const float holdDur = 0.933f;
-        const float fadeDur = 0.667f;
-        const float slotDur = holdDur + fadeDur;
+        const float holdDur = KR_HOLD_DUR;
+        const float fadeDur = KR_FADE_DUR;
+        const float slotDur = KR_SLOT_DUR;
 
         int   stage = (int)(krishnaFadeTime / slotDur); // 0,1,2 dance; >=3 finale
         float local = krishnaFadeTime - stage * slotDur;
@@ -671,6 +739,7 @@ public:
         // Finale: combined Krishna+Kaliya model replaces everything.
         if (stage >= KRISHNA_POSE_COUNT)
         {
+            finaleTime += (float)gDeltaTime; // drives the FOV zoom-in
             if (krishnaKaliya) krishnaKaliya->Update((float)gDeltaTime);
             drawAnimModel(krishnaKaliya.get(), krishnaKaliyaMatrix(), 1.0f);
             return;
