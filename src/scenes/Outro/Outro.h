@@ -22,20 +22,20 @@ public:
         START_T,
         FADE_IN,
         SC_T1,
-        SLIDE_GROUP_FADE_IN,
-        SLIDE_GROUP_FADE_OUT,
-        SLIDE_TECHSTACK_FADE_IN,
-        SLIDE_TECHSTACK_FADE_OUT,
-        SLIDE_MUSIC_FADE_IN,
-        SLIDE_MUSIC_FADE_OUT,
         SLIDE_GROUPLEAD_FADE_IN,
         SLIDE_GROUPLEAD_FADE_OUT,
         SLIDE_TEAM_FADE_IN,
         SLIDE_TEAM_FADE_OUT,
+        SLIDE_TECHSTACK_FADE_IN,
+        SLIDE_TECHSTACK_FADE_OUT,
+        SLIDE_EFFECTS_FADE_IN,
+        SLIDE_EFFECTS_FADE_OUT,
+        SLIDE_REFERENCES_FADE_IN,
+        SLIDE_REFERENCES_FADE_OUT,
         SLIDE_SPECIAL_THANKS_FADE_IN,
         SLIDE_SPECIAL_THANKS_FADE_OUT,
-        SLIDE_DR_FADE_IN,
-        SLIDE_DR_FADE_OUT,
+        SLIDE_SIR_FADE_IN,
+        SLIDE_SIR_FADE_OUT,
         FADE_OUT,
         END_T,
     };
@@ -65,7 +65,7 @@ public:
 
     bool initialize()
     {
-        const char *facesLight[] =
+        /*const char *facesLight[] =
         {
             ".\\assets\\textures\\modelCubeMap\\vrundavan\\px.png",
             ".\\assets\\textures\\modelCubeMap\\vrundavan\\nx.png",
@@ -79,44 +79,44 @@ public:
         {
             PrintLog("OutroScene : Failed to initialize CubeMap\n");
             return FALSE;
-        }
+        }*/
 
         sceneEvents = new EventManager(
         {
             {START_T,  {0.0f, 10.0f}},
             {FADE_IN,  {0.0f, 2.0f}},
             {SC_T1,    {0.0f, 8.0f}},
-            {SLIDE_GROUP_FADE_IN, {0.0f, 2.0f}},
-            {SLIDE_GROUP_FADE_OUT, {5.0f, 2.0f}},
-            {SLIDE_TECHSTACK_FADE_IN, {7.0f, 2.0f}},
-            {SLIDE_TECHSTACK_FADE_OUT, {9.0f, 2.0f}},
-            {SLIDE_MUSIC_FADE_IN, {11.0f, 2.0f}},
-            {SLIDE_MUSIC_FADE_OUT, {14.0f, 2.0f}},
-            {SLIDE_GROUPLEAD_FADE_IN, {17.0f, 2.0f}},
-            {SLIDE_GROUPLEAD_FADE_OUT, {20.0f, 2.0f}},
-            {SLIDE_TEAM_FADE_IN, {23.0f, 2.0f}},
-            {SLIDE_TEAM_FADE_OUT, {26.0f, 2.0f}},
-            {SLIDE_SPECIAL_THANKS_FADE_IN, {29.0f, 2.0f}},
-            {SLIDE_SPECIAL_THANKS_FADE_OUT, {32.0f, 2.0f}},
-            {SLIDE_DR_FADE_IN, {35.0f, 2.0f}},
-            {SLIDE_DR_FADE_OUT, {38.0f, 2.0f}},
-            {FADE_OUT, {41.0f, 2.0f}},
-            {END_T,    {44.0f, 2.0f}}
+            {SLIDE_GROUPLEAD_FADE_IN, {0.0f, 2.0f}},
+            {SLIDE_GROUPLEAD_FADE_OUT, {5.0f, 2.0f}},
+            {SLIDE_TEAM_FADE_IN, {7.0f, 2.0f}},
+            {SLIDE_TEAM_FADE_OUT, {10.0f, 2.0f}},
+            {SLIDE_TECHSTACK_FADE_IN, {12.0f, 2.0f}},
+            {SLIDE_TECHSTACK_FADE_OUT, {15.0f, 2.0f}},
+            {SLIDE_EFFECTS_FADE_IN, {18.0f, 2.0f}},
+            {SLIDE_EFFECTS_FADE_OUT, {21.0f, 2.0f}},
+            {SLIDE_REFERENCES_FADE_IN, {24.0f, 2.0f}},
+            {SLIDE_REFERENCES_FADE_OUT, {27.0f, 2.0f}},
+            {SLIDE_SPECIAL_THANKS_FADE_IN, {30.0f, 2.0f}},
+            {SLIDE_SPECIAL_THANKS_FADE_OUT, {33.0f, 2.0f}},
+            {SLIDE_SIR_FADE_IN, {36.0f, 2.0f}},
+            {SLIDE_SIR_FADE_OUT, {40.0f, 2.0f}},
+            {FADE_OUT, {43.0f, 2.0f}},
+            {END_T,    {46.0f, 2.0f}}
         }, true);
 
         // Array of file paths
         const char* textureFiles[] = {
-            "./assets/textures/credits/OutroBackground_1.png",
-            "./assets/textures/credits/OutroBackground_1.png",
-            "./assets/textures/credits/OutroBackground_1.png",
-            "./assets/textures/credits/OutroBackground_1.png",
-            "./assets/textures/credits/OutroBackground_1.png",
-            "./assets/textures/credits/OutroBackground_1.png",
-            "./assets/textures/credits/OutroBackground_1.png",
-            "./assets/textures/credits/OutroBackground_1.png" };
+            "./assets/textures/credits/Group_Leader.png",
+            "./assets/textures/credits/Group_Members.png",
+            "./assets/textures/credits/Technical_Details.png",
+            "./assets/textures/credits/Effects.png",
+            "./assets/textures/credits/Reference.png",
+            "./assets/textures/credits/Special_Thanks.png",
+            "./assets/textures/credits/Ignited_By1.png"
+        };
 
         // Load textures
-        if (LoadTextures(textureIDs, textureFiles, 8) == false)
+        if (LoadTextures(textureIDs, textureFiles, 7) == false)
         {
             PrintLog("Failed to load all textures\n");
             return false;
@@ -124,13 +124,13 @@ public:
 
         // Create fade events
         fadeEvents = {
-            {SLIDE_GROUP_FADE_IN, SLIDE_GROUP_FADE_OUT, textureIDs[0]},
-            {SLIDE_TECHSTACK_FADE_IN, SLIDE_TECHSTACK_FADE_OUT, textureIDs[1]},
-            {SLIDE_MUSIC_FADE_IN, SLIDE_MUSIC_FADE_OUT, textureIDs[2]},
-            {SLIDE_GROUPLEAD_FADE_IN, SLIDE_GROUPLEAD_FADE_OUT, textureIDs[3]},
-            {SLIDE_TEAM_FADE_IN, SLIDE_TEAM_FADE_OUT, textureIDs[4]},
+            {SLIDE_GROUPLEAD_FADE_IN, SLIDE_GROUPLEAD_FADE_OUT, textureIDs[0]},
+            {SLIDE_TEAM_FADE_IN, SLIDE_TEAM_FADE_OUT, textureIDs[1]},
+            {SLIDE_TECHSTACK_FADE_IN, SLIDE_TECHSTACK_FADE_OUT, textureIDs[2]},
+            {SLIDE_EFFECTS_FADE_IN, SLIDE_EFFECTS_FADE_OUT, textureIDs[3]},
+            {SLIDE_REFERENCES_FADE_IN, SLIDE_REFERENCES_FADE_OUT, textureIDs[4]},
             {SLIDE_SPECIAL_THANKS_FADE_IN, SLIDE_SPECIAL_THANKS_FADE_OUT, textureIDs[5]},
-            {SLIDE_DR_FADE_IN, SLIDE_DR_FADE_OUT, textureIDs[6]},          
+            {SLIDE_SIR_FADE_IN, SLIDE_SIR_FADE_OUT, textureIDs[6]},
         };
 
         setupCamera();
@@ -261,6 +261,15 @@ public:
             cubeMap->uninitialize();
             delete cubeMap;
             cubeMap = NULL;
+        }
+
+        for (GLuint tex : textureIDs)
+        {
+            if (tex)
+            {
+                glDeleteTextures(1, &tex);
+                tex = 0;
+            }
         }
 
         if (sceneEvents)
