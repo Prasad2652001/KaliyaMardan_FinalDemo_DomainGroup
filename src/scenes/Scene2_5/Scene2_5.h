@@ -26,7 +26,16 @@ class DemoScene2_5 : public Scene
 public:
     // Models facing each other
     std::unique_ptr<Core::AnimatedModel> kaliya;
-    std::unique_ptr<Core::AnimatedModel> krishna;
+
+    // Krishna is animated by cross-fading three static dance poses
+    // (fade in / fade out between poses, sequenced 1 -> 2 -> 3 -> 1 on a loop).
+    static const int KRISHNA_POSE_COUNT = 3;
+    std::unique_ptr<Core::AnimatedModel> krishnaPoses[KRISHNA_POSE_COUNT];
+    float krishnaFadeTime = 0.0f;
+
+    // Combined Krishna+Kaliya finale model: after the three poses have played,
+    // it replaces both the standalone Kaliya and the dancing Krishna.
+    std::unique_ptr<Core::AnimatedModel> krishnaKaliya;
 
     SceneLight *lightManager = nullptr;
 
@@ -41,6 +50,13 @@ public:
     // Placement knobs (kept here so they are easy to tweak / iterate).
     float krishnaYaw = 90.0f;   // turn Krishna to face Kaliya
     float kaliyaYaw  = 270.0f;  // turn Kaliya to face Krishna (rotated 180)
+
+    // Push every character back in -Z so the shot feels viewed from a distance.
+    float sceneDepthZ = -250.0f;
+
+    // Expand the camera path outward from the subject so the larger (3x) scaled
+    // scene fits fully in frame (1.0 = original size, bigger = wider/further).
+    float cameraPathScale = 2.4f;
 
     BezierCamera sc1;
     BezierCamera sc2;
@@ -93,13 +109,22 @@ public:
         kaliya = std::make_unique<Core::AnimatedModel>();
         kaliya->LoadModel("./assets/models/scene3_models/Kaliya.glb");
 
-        // ---- Krishna (Meshy AI dancing pose) ----
-        // NOTE: the 13.5 MB Meshy FBX intermittently fails Assimp with a
-        // "bad allocation" under memory pressure (same issue as Kaliya.fbx).
-        // We load a GLB converted from that FBX, which Assimp parses cheaply.
-        krishna = std::make_unique<Core::AnimatedModel>();
-        krishna->LoadModel("./assets/models/scene3_models/KrishnaTandav/1stPosition/Krishna_1st.glb");
-        krishna->SetBaseColorTexture("./assets/models/scene3_models/KrishnaTandav/1stPosition/Meshy_AI_Dancing_Krishna_0608195926_texture.png");
+        // ---- Krishna (three Meshy AI dance poses, cross-faded) ----
+        // These GLBs embed their textures, so no base-color override is needed.
+        const char *krishnaPosePaths[KRISHNA_POSE_COUNT] = {
+            "./assets/models/scene2_5_models/Krishna_pos1.glb",
+            "./assets/models/scene2_5_models/Krishna_pos2.glb",
+            "./assets/models/scene2_5_models/Krishna_pos3.glb",
+        };
+        for (int i = 0; i < KRISHNA_POSE_COUNT; ++i)
+        {
+            krishnaPoses[i] = std::make_unique<Core::AnimatedModel>();
+            krishnaPoses[i]->LoadModel(krishnaPosePaths[i]);
+        }
+
+        // Combined Krishna+Kaliya model for the finale (shown after the 3 poses).
+        krishnaKaliya = std::make_unique<Core::AnimatedModel>();
+        krishnaKaliya->LoadModel("./assets/models/scene2_5_models/Krishna_Kaliya.glb");
 
         lightManager = new SceneLight();
         lightManager->addDirectionalLights({
@@ -441,6 +466,20 @@ public:
                 -120.000000f,
                 };
 
+        // Shift the whole camera path back in -Z (to follow the moved models),
+        // then scale it outward from the subject centre so the larger scaled
+        // scene fits fully in the visible frame.
+        const float cx = 0.0f, cy = 50.0f, cz = sceneDepthZ; // subject centre
+        for (auto &p : bezierPointsSC1)
+        {
+            if (p.size() < 3)
+                continue;
+            p[2] += sceneDepthZ; // follow the -Z model push
+            p[0] = cx + (p[0] - cx) * cameraPathScale;
+            p[1] = cy + (p[1] - cy) * cameraPathScale;
+            p[2] = cz + (p[2] - cz) * cameraPathScale;
+        }
+
         sc1.initialize();
         sc1.setBezierPoints(bezierPointsSC1, yawGlobalSC1, pitchGlobalSC1, fovGlobalSC1);
         sc1.update();
@@ -505,8 +544,7 @@ public:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
-        drawKrishna();
-        drawKaliya();
+        drawCharacters();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -535,75 +573,144 @@ public:
         // sceneCamera->displayBezierCurve();
     }
 
-    void drawKaliya()
+    // Kaliya's placement (scaled 3x). Shared by the standalone Kaliya and the
+    // combined Krishna_Kaliya finale model so they sit in the same spot.
+    vmath::mat4 kaliyaMatrix()
     {
-        if (!kaliya)
-            return;
-
-        kaliya->Update((float)gDeltaTime);
-
-        pushMatrix(modelMatrix);
-        {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            vmath::mat4 m =
-                vmath::translate(110.0f, 70.0f, 0.0f) *
-                vmath::rotate(kaliyaYaw, 0.0f, 1.0f, 0.0f) *
-                vmath::scale(55.0f, 55.0f, 55.0f);
-
-            kaliya->mShader->Use();
-            kaliya->mShader->SetUniform("isBlack", false);
-            kaliya->mShader->SetUniform("u_model", m);
-            kaliya->mShader->SetUniform("u_view", viewMatrix);
-            kaliya->mShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            kaliya->mShader->SetUniform("u_LightPosition", vec4(0.0f, 200.0f, 200.0f, 1.0f));
-            kaliya->mShader->SetUniform("u_ApplyToon", false);
-            kaliya->mShader->SetSampler2D("u_GGXLUT", 0, 5);
-            kaliya->mShader->SetUniform("u_DebugMode", 0);
-            kaliya->mShader->SetUniform("u_Alpha", 1.0f);
-
-            kaliya->Draw(kaliya->mShader);
-
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
+        return vmath::translate(110.0f, 70.0f, sceneDepthZ) *
+               vmath::rotate(kaliyaYaw, 0.0f, 1.0f, 0.0f) *
+               vmath::scale(165.0f, 165.0f, 165.0f);
     }
 
-    void drawKrishna()
+    // Combined finale model: centered in the scene (x = 0), turned +90 degrees
+    // about Y.
+    vmath::mat4 krishnaKaliyaMatrix()
     {
-        if (!krishna)
+        return vmath::translate(0.0f, 70.0f, sceneDepthZ) *
+               vmath::rotate(kaliyaYaw + 90.0f, 0.0f, 1.0f, 0.0f) *
+               vmath::scale(165.0f, 165.0f, 165.0f);
+    }
+
+    // Krishna's X position at each step of his approach. He starts far from
+    // Kaliya and takes one clear step forward on every cross-fade.
+    float krishnaStepX(int step)
+    {
+        const float xs[KRISHNA_POSE_COUNT] = { -110.0f, -50.0f, 10.0f };
+        if (step < 0) step = 0;
+        if (step >= KRISHNA_POSE_COUNT) step = KRISHNA_POSE_COUNT - 1;
+        return xs[step];
+    }
+
+    // Generic textured draw with optional transparency for cross-fading.
+    void drawAnimModel(Core::AnimatedModel *model, const vmath::mat4 &m, float alpha)
+    {
+        if (!model || alpha <= 0.001f)
             return;
 
-        krishna->Update((float)gDeltaTime);
+        bool opaque = alpha >= 0.999f;
+        if (opaque) { glDisable(GL_BLEND); glDepthMask(GL_TRUE); }
+        else        { glEnable(GL_BLEND);  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); glDepthMask(GL_FALSE); }
 
         pushMatrix(modelMatrix);
         {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            model->mShader->Use();
+            model->mShader->SetUniform("isBlack", false);
+            model->mShader->SetUniform("u_model", m);
+            model->mShader->SetUniform("u_view", viewMatrix);
+            model->mShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            model->mShader->SetUniform("u_LightPosition", vec4(0.0f, 200.0f, 200.0f, 1.0f));
+            model->mShader->SetUniform("u_ApplyToon", false);
+            model->mShader->SetSampler2D("u_GGXLUT", 0, 5);
+            model->mShader->SetUniform("u_DebugMode", 0);
+            model->mShader->SetUniform("u_UseAlpha", !opaque);
+            model->mShader->SetUniform("u_Alpha", alpha);
 
-            // GLB export is Y-up (already upright); just yaw to face Kaliya.
-            vmath::mat4 m =
-                vmath::translate(-110.0f, 20.0f, 0.0f) *
-                vmath::rotate(krishnaYaw, 0.0f, 1.0f, 0.0f) *
-                vmath::scale(48.0f, 48.0f, 48.0f);
-
-            krishna->mShader->Use();
-            krishna->mShader->SetUniform("isBlack", false);
-            krishna->mShader->SetUniform("u_model", m);
-            krishna->mShader->SetUniform("u_view", viewMatrix);
-            krishna->mShader->SetUniform("u_projection", perspectiveProjectionMatrix);
-            krishna->mShader->SetUniform("u_LightPosition", vec4(0.0f, 200.0f, 200.0f, 1.0f));
-            krishna->mShader->SetUniform("u_ApplyToon", false);
-            krishna->mShader->SetSampler2D("u_GGXLUT", 0, 5);
-            krishna->mShader->SetUniform("u_DebugMode", 0);
-            krishna->mShader->SetUniform("u_Alpha", 1.0f);
-
-            krishna->Draw(krishna->mShader);
-
-            glDisable(GL_BLEND);
+            model->Draw(model->mShader);
         }
         modelMatrix = popMatrix();
+
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+    }
+
+    void drawPose(int idx, float x, float alpha)
+    {
+        if (idx < 0 || idx >= KRISHNA_POSE_COUNT)
+            return;
+        vmath::mat4 m =
+            vmath::translate(x, 20.0f, sceneDepthZ) *
+            vmath::rotate(krishnaYaw, 0.0f, 1.0f, 0.0f) *
+            vmath::scale(48.0f, 48.0f, 48.0f);
+        drawAnimModel(krishnaPoses[idx].get(), m, alpha);
+    }
+
+    // Orchestrates Scene 2.5's characters:
+    //  - Krishna holds pose 1 until the camera transition is done.
+    //  - Then he cross-fades pose1 -> pose2 -> pose3, stepping forward toward
+    //    Kaliya on every fade. The dance runs at 1/3 speed.
+    //  - After pose3 fades out (the 3rd fade), both the standalone Kaliya and
+    //    Krishna are replaced by the combined Krishna_Kaliya model.
+    void drawCharacters()
+    {
+        if (kaliya) kaliya->Update((float)gDeltaTime);
+
+        // (1) Freeze on pose 1 until the camera has finished its move.
+        bool cameraReady = sceneEvents && sceneEvents->isEventComplete(SC_T1);
+        if (!cameraReady)
+            krishnaFadeTime = 0.0f;
+        else
+            krishnaFadeTime += (float)gDeltaTime / 3.0f; // (3) 3x slower
+
+        const float holdDur = 0.933f;
+        const float fadeDur = 0.667f;
+        const float slotDur = holdDur + fadeDur;
+
+        int   stage = (int)(krishnaFadeTime / slotDur); // 0,1,2 dance; >=3 finale
+        float local = krishnaFadeTime - stage * slotDur;
+
+        // Finale: combined Krishna+Kaliya model replaces everything.
+        if (stage >= KRISHNA_POSE_COUNT)
+        {
+            if (krishnaKaliya) krishnaKaliya->Update((float)gDeltaTime);
+            drawAnimModel(krishnaKaliya.get(), krishnaKaliyaMatrix(), 1.0f);
+            return;
+        }
+
+        // Cross-dissolve factor within the current stage (0 during the hold).
+        float f = 0.0f;
+        bool  fading = local >= holdDur;
+        if (fading)
+        {
+            f = (local - holdDur) / fadeDur;
+            f = f < 0.0f ? 0.0f : (f > 1.0f ? 1.0f : f);
+            f = f * f * (3.0f - 2.0f * f); // smoothstep ease
+        }
+
+        if (stage < KRISHNA_POSE_COUNT - 1)
+        {
+            // Stages 0 and 1: pose[stage] -> pose[stage+1], Kaliya stays solid.
+            drawAnimModel(kaliya.get(), kaliyaMatrix(), 1.0f);
+            drawPose(stage, krishnaStepX(stage), fading ? (1.0f - f) : 1.0f);
+            if (fading)
+                drawPose(stage + 1, krishnaStepX(stage + 1), f);
+        }
+        else
+        {
+            // Stage 2 (last pose): hold pose3, then its fade-out cross-dissolves
+            // into the combined model while the standalone Kaliya fades away.
+            if (!fading)
+            {
+                drawAnimModel(kaliya.get(), kaliyaMatrix(), 1.0f);
+                drawPose(KRISHNA_POSE_COUNT - 1, krishnaStepX(KRISHNA_POSE_COUNT - 1), 1.0f);
+            }
+            else
+            {
+                drawAnimModel(kaliya.get(), kaliyaMatrix(), 1.0f - f);
+                drawPose(KRISHNA_POSE_COUNT - 1, krishnaStepX(KRISHNA_POSE_COUNT - 1), 1.0f - f);
+                if (krishnaKaliya) krishnaKaliya->Update((float)gDeltaTime);
+                drawAnimModel(krishnaKaliya.get(), krishnaKaliyaMatrix(), f);
+            }
+        }
     }
 
     void update()
@@ -630,7 +737,9 @@ public:
     void uninitialize()
     {
         kaliya.reset();
-        krishna.reset();
+        for (int i = 0; i < KRISHNA_POSE_COUNT; ++i)
+            krishnaPoses[i].reset();
+        krishnaKaliya.reset();
 
         if (lightManager) { delete lightManager; lightManager = nullptr; }
         if (underwaterShader) { delete underwaterShader; underwaterShader = nullptr; }
