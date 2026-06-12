@@ -953,7 +953,7 @@ std::vector<float> fovGlobalSC1 = {
             littleCow->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 littleCowModelMatrix =
-                vmath::translae(15400.0f, 290.0f, -6200.0f) *
+                vmath::translate(15400.0f, 290.0f, -6200.0f) *
                 vmath::scale(100.0f, 100.0f, 100.0f) *
                 vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f);
                 
@@ -973,7 +973,7 @@ std::vector<float> fovGlobalSC1 = {
         }
         modelMatrix = popMatrix();
     }
-
+    
     // ============================================================
 
     // dynamic models functions
@@ -981,7 +981,7 @@ std::vector<float> fovGlobalSC1 = {
     {
         if (!eagle)
             return;
-        
+
         // Advance the skinned animation once per frame (drawn once from display()).
         if (!isDepthPass) {
             eagle->Update((float)gDeltaTime);
