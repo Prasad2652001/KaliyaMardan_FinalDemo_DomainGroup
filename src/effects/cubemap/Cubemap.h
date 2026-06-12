@@ -15,6 +15,7 @@ public:
     unsigned int cubemapTexture;
     int isBarasat = 0;
     float alpha = 0.0f;
+    float barasatBlend = 0.0f; // 0.0 = clear sky, 1.0 = full dark storm (smoothly driven from Scene)
 
     BOOL initialize(const char *faces_path[])
     {
@@ -115,6 +116,7 @@ public:
         glUniform1i(cubemap->isBarsatUniform, isBarasat);
         glUniform1f(cubemap->alphaUniform, Cubemap_Alpha);
         glUniform1f(cubemap->timeUniform, globalTime);
+        glUniform1f(cubemap->barasatBlendUniform, barasatBlend);
         glBindVertexArray(vao_cube);
 
         // Game coding here

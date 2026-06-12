@@ -14,6 +14,7 @@ public:
     GLuint isBarsatUniform;
     GLuint alphaUniform;
     GLuint timeUniform;
+    GLuint barasatBlendUniform;
 
     // Member Functions
     BOOL initialize()
@@ -48,6 +49,7 @@ public:
         isBarsatUniform = glGetUniformLocation(shaderProgramObject, "isBarsat");
         alphaUniform = glGetUniformLocation(shaderProgramObject, "u_alpha");
         timeUniform = glGetUniformLocation(shaderProgramObject, "u_time");
+        barasatBlendUniform = glGetUniformLocation(shaderProgramObject, "u_barasatBlend");
         return TRUE;
     }
 

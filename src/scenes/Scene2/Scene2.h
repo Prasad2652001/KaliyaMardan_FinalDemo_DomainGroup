@@ -495,7 +495,7 @@ std::vector<float> fovGlobalSC1 = {
     {   
         drawSleepingKrishna();
         drawMangoTree();
-        drawFlyingEagle();
+        // drawFlyingEagle();
         drawStone1();
         drawStone2();
         drawKrishnaFriend1();
@@ -1075,6 +1075,9 @@ std::vector<float> fovGlobalSC1 = {
             cubeMap->display();
         }
         modelMatrix = popMatrix();
+
+        // Include models so they appear in reflection and refraction textures
+        drawYamunaSideScene();
     }
 
     void displayTerrain(float terrainUp)
@@ -1122,26 +1125,39 @@ std::vector<float> fovGlobalSC1 = {
 
             float threshold = 10.0f / 26.0f;
             if (sceneCamera->time >= threshold) {
-                // Kaliya comes up
-                mKaliya_yPos += 5.0f; 
+                // Kaliya emerges — atmosphere gradually darkens
+                mKaliya_yPos += 5.0f;
                 if (mKaliya_yPos > 800.0f) mKaliya_yPos = 800.0f;
-                
-                // Water turns dark black/blue
-                waterMatrix->interpolateWaterColor -= 0.002f;
+
+                // Water darkens over ~3 seconds (delta-time-based)
+                waterMatrix->interpolateWaterColor -= 0.35f * (float)gDeltaTime;
                 if (waterMatrix->interpolateWaterColor < 0.0f) waterMatrix->interpolateWaterColor = 0.0f;
 
-                cubeMap->isBarasat = 2; // Dark clouds
+                // Sky cross-fades to dark storm clouds via barasatBlend (no instant jump)
+                cubeMap->barasatBlend += 0.35f * (float)gDeltaTime;
+                if (cubeMap->barasatBlend > 1.0f) cubeMap->barasatBlend = 1.0f;
+                cubeMap->isBarasat = 0; // keep base cubemap active for mix()
 
-                // rain
+                // Rain fades in over ~3 seconds
                 if (rain->alpha < 1.0f) {
-                    rain->alpha += 0.002f;
+                    rain->alpha += 0.35f * (float)gDeltaTime;
+                    if (rain->alpha > 1.0f) rain->alpha = 1.0f;
                 }
 
             } else {
                 mKaliya_yPos = -3000.0f;
-                waterMatrix->interpolateWaterColor = 1.0f;
-                cubeMap->isBarasat = 0; // Normal sky
-                rain->alpha = 0.0f;
+                // Gently restore water brightness
+                waterMatrix->interpolateWaterColor += 0.35f * (float)gDeltaTime;
+                if (waterMatrix->interpolateWaterColor > 1.0f) waterMatrix->interpolateWaterColor = 1.0f;
+                // Sky fades back to clear
+                cubeMap->barasatBlend -= 0.35f * (float)gDeltaTime;
+                if (cubeMap->barasatBlend < 0.0f) cubeMap->barasatBlend = 0.0f;
+                cubeMap->isBarasat = 0;
+                // Fade out rain
+                if (rain->alpha > 0.0f) {
+                    rain->alpha -= 0.35f * (float)gDeltaTime;
+                    if (rain->alpha < 0.0f) rain->alpha = 0.0f;
+                }
             }
         }
         
