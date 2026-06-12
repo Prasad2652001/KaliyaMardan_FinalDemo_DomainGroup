@@ -848,7 +848,7 @@ std::vector<float> fovGlobalSC1 = {
         vmath::mat4 krishnaModelMatrix =
             vmath::translate(-10.0f + -6088.600098f + -13.600082f, 325.0f + 163.500046f + -6.499954f + modelsRiseY, -40.0f + 7095.500000f + 10.500017f) *
             vmath::rotate(-90.0f + -154.000000f, 0.0f, 1.0f, 0.0f) *
-            vmath::scale(44.0f + -12.000000f + scaleX, 44.0f + -12.000000f + scaleX, 44.0f + -12.000000f + scaleX);
+            vmath::scale(44.0f + -12.000000f , 44.0f + -12.000000f, 44.0f + -12.000000f );
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
