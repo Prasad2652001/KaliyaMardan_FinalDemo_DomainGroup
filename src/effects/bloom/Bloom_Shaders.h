@@ -143,6 +143,58 @@ public:
         glUseProgram(0);
     }
 
+    // Additively blends the blurred bloom glow onto whatever is already in the
+    // default framebuffer WITHOUT clearing it.  Models drawn after this call
+    // will render on top of the glow correctly.
+    void renderBloomGlowOnly(float glowExposure = 1.8f, float glowGamma = 1.2f)
+    {
+        glViewport(0, 0, giWindowWidth, giWindowHeight);
+
+        // No depth test / no depth writes — this is a pure screen-space overlay.
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
+
+        // Additive blend: dst = src*1 + dst*1 → glow adds to existing colour.
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
+
+        glUseProgram(bloomFinalShader.shaderProgramObject);
+        {
+            // Slot 0: the HDR fire render (colourBuffers[0])
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
+            glUniform1i(bloomFinalShader.sceneTextureSamplerUniform, 0);
+
+            // Slot 1: the ping-pong blurred glow
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
+            glUniform1i(bloomFinalShader.blurTextureSamplerUniform, 1);
+
+            // Slot 2: black (no extra scene to add — the additive blend handles it)
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glUniform1i(bloomFinalShader.noBloomSceneTextureSamplerUniform, 2);
+
+            glUniform1i(bloomFinalShader.isBloomUniform, TRUE);
+            glUniform1f(bloomFinalShader.exposureUniform, glowExposure);
+            glUniform1f(bloomFinalShader.gammaUniform, glowGamma);
+
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            glBindVertexArray(0);
+
+            glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, 0);
+            glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, 0);
+            glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        glUseProgram(0);
+
+        // Restore state so subsequent 3-D draws work normally.
+        glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
+    }
+
     void renderFinalBloomScene(GLuint texture_scene)
     {
         // code

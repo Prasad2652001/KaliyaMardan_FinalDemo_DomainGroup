@@ -86,7 +86,6 @@ void main(void) {
         // FragColor = vec4(phong_ads_color,v_DOF.z); // Enable For DOF
         FragColor = (vec4(phong_ads_color, u_alpha)) * u_fade_alpha;
     }
-        FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 
     // float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
     // if(brightness > 0.1)

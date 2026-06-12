@@ -18,6 +18,7 @@ public:
     GLuint texture_fire = 0;
     GLuint texture_noise = 0;
     GLuint texture_alpha = 0;
+    float alpha = 1.0f;
 
     BOOL initialize()
     {
@@ -140,6 +141,7 @@ public:
         glUniform2fv(fire->distortion3Uniform, 1, distortion3);
         glUniform1f(fire->distortionScaleUniform, distortionScale);
         glUniform1f(fire->distortionBiasUniform, distortionBias);
+        glUniform1f(fire->alphaUniform, alpha);
 
         // bind texture
         glActiveTexture(GL_TEXTURE0);

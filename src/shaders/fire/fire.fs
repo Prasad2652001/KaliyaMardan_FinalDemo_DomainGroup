@@ -13,6 +13,7 @@ uniform vec2 distortion2;
 uniform vec2 distortion3;
 uniform float distortionScale;
 uniform float distortionBias;
+uniform float u_Alpha;
 
 out vec4 outputColor;
 
@@ -68,4 +69,5 @@ void main(void)
 	
 	// Set the final output color to be the completed fire effect.
 	outputColor = fireColor;
+	outputColor.a *= u_Alpha;
 }

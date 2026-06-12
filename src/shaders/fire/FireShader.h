@@ -25,6 +25,7 @@ public:
     GLuint texture_fire = 0;
     GLuint texture_noise = 0;
     GLuint texture_alpha = 0;
+    GLuint alphaUniform = 0;
 
     // Member Functions
     BOOL initialize()
@@ -65,6 +66,7 @@ public:
         distortion3Uniform = glGetUniformLocation(shaderProgramObject, "distortion3");
         distortionScaleUniform = glGetUniformLocation(shaderProgramObject, "distortionScale");
         distortionBiasUniform = glGetUniformLocation(shaderProgramObject, "distortionBias");
+        alphaUniform = glGetUniformLocation(shaderProgramObject, "u_Alpha");
 
         return TRUE;
     }

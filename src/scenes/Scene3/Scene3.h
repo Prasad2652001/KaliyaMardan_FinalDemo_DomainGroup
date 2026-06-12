@@ -26,6 +26,9 @@
 #include "../../shaders/terrain/TerrainShader.h"
 #include "../../shaders/godRays/GodRaysShader.h"
 #include "../../effects/rain/Rain.h"
+#include "../../effects/fire/Fire.h"
+#include "../../shaders/overlayColor/OverlayColorShader.h"
+#include "../../effects/bloom/Bloom_Shaders.h"
 
 
 #define _DEBUG
@@ -48,6 +51,13 @@ public:
     // GLuint brdfLookUp;
     WaterMatrix *waterMatrix;
     Rain *rain = NULL;
+    Fire *fireEffect = NULL;
+    OverlayColorShader *blackQuad = NULL;
+    BloomShaders bloomEffect;
+    float modelsRiseY = -600.0f; // Start underwater
+    float modelsAlpha = 0.0f;
+    float sceneFadeAlpha = 0.0f;
+    float fireAlpha = 0.0f;
 
     // moment of kaliya nag variables for translation
     float kaliyaX = 7000.000f;
@@ -137,6 +147,7 @@ public:
         waterMatrix = new WaterMatrix(300. * 400.);
         sceneCamera = new BezierCamera();
         rain = new Rain(40000);
+        fireEffect = new Fire();
         // godRaysShader = new GodRaysShader();
     }
 
@@ -254,13 +265,36 @@ public:
             rain->alpha = 0.0f; // disable rain rendering
         }
 
+        if (fireEffect)
+        {
+            if (!fireEffect->initialize())
+            {
+                PrintLog("Failed to initialize Fire effect in Scene 3\n");
+            }
+        }
+
+        // Bloom effect for fire
+        if (!bloomEffect.initialize_bloomShaderObject())
+        {
+            PrintLog("Failed to initialize Bloom effect in Scene 3\n");
+        }
+        bloomEffect.exposure = 1.8f;
+        bloomEffect.gamma    = 1.2f;
+        bloomEffect.blurAmount = 20;
+
+        blackQuad = new OverlayColorShader();
+        if (!blackQuad->initialize())
+        {
+            PrintLog("Failed to initialize OverlayColorShader in Scene 3\n");
+        }
+
         // Event System
         sceneEvents = new EventManager(
-            {{START_T, {0.0f, 30.0f}},
+            {{START_T, {0.0f, 45.0f}},
              {FADE_IN, {0.0f, 3.0f}},
              {SC_T1, {0.0f, 28.0f}},
-             {FADE_OUT, {28.0f, 2.0f}},
-             {END_T, {30.0f, 0.0f}}},
+             {FADE_OUT, {43.0f, 2.0f}},
+             {END_T, {45.0f, 0.0f}}},
             true);
 
         setupCamera();
@@ -275,84 +309,76 @@ public:
 
     void setupCamera()
     {
-        std::vector<std::vector<float>> bezierPointsSC1 = {
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {761.399902f, 8713.500000f, -14994.500000f},
-            {-1648.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -14994.500000f},
-            {-3558.600098f, 8713.500000f, -12814.500000f},
-            {-3558.600098f, 8713.500000f, -9584.500000f},
-            {-5008.600098f, 7733.500000f, -9584.500000f},
-            {-5568.600098f, 7733.500000f, -6804.500000f},
-            {-5568.600098f, 6433.500000f, -5954.500000f},
-            {-5568.600098f, 6693.500000f, -5764.500000f},
-            {-5568.600098f, 7063.500000f, -4514.500000f},
-            {-5568.600098f, 7063.500000f, -2684.500000f},
-            {-5568.600098f, 7063.500000f, -1564.500000f},
-            {-5568.600098f, 7063.500000f, 1805.500000f},
-            {-5568.600098f, 7063.500000f, 3915.500000f},
-            {-5568.600098f, 7063.500000f, 5015.500000f},
-        };
+       std::vector<std::vector<float>> bezierPointsSC1 = {
+{-28.600082f, 328.500061f, 15.500017f},
+{-398.600098f, 328.500061f, 800.500000f},
+{-1203.600098f, 328.500061f, 1785.500000f},
+{-1918.600098f, 328.500061f, 2685.500000f},
+{-2888.600098f, 328.500061f, 3525.500000f},
+{-3973.600098f, 328.500061f, 4790.500000f},
+{-4773.600098f, 328.500061f, 5635.500000f},
+{-5483.600098f, 328.500061f, 6310.500000f},
+{-5793.600098f, 328.500061f, 6685.500000f},
+{-5793.600098f, 388.500061f, 6685.500000f},
+{-5888.600098f, 388.500061f, 6820.500000f},
+{-5888.600098f, 418.500061f, 6820.500000f},
+{-5888.600098f, 463.500061f, 6820.500000f},
+{-5873.600098f, 458.500061f, 6830.500000f},
+};
 
-        // YAW GLOBAL
-        std::vector<float> yawGlobalSC1 = {
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            29.000000f,
-            49.000000f,
-            49.000000f,
-            79.000000f,
-            109.000000f,
-        };
+// YAW GLOBAL
+std::vector<float> yawGlobalSC1 = {
+133.000000f,
+133.000000f,
+133.000000f,
+133.000000f,
+133.000000f,
+133.000000f,
+133.000000f,
+133.000000f,
+131.000000f,
+131.000000f,
+133.000000f,
+133.000000f,
+135.000000f,
+134.000000f,
+};
 
-        // PITCH GLOBAL
-        std::vector<float> pitchGlobalSC1 = {
-            32.000000f,
-            12.000000f,
-            12.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            2.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-            -8.000000f,
-        };
+// PITCH GLOBAL
+std::vector<float> pitchGlobalSC1 = {
+-7.000000f,
+	-5.000000f,
+	-5.000000f,
+	-5.000000f,
+	-5.000000f,
+	-5.000000f,
+	-5.000000f,
+	-5.000000f,
+	3.000000f,
+	1.000000f,
+	1.000000f,
+	-2.000000f,
+	-8.000000f,
+	-8.000000f,
+	};
 
-        // FOV GLOBAL
-        std::vector<float> fovGlobalSC1 = {
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-            -120.000000f,
-        };
+// FOV GLOBAL
+std::vector<float> fovGlobalSC1 = {
+-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	-120.000000f,
+	};
 
         sc1.initialize();
         sc1.setBezierPoints(bezierPointsSC1, yawGlobalSC1, pitchGlobalSC1, fovGlobalSC1);
@@ -389,7 +415,7 @@ public:
         perspectiveProjectionMatrix = vmath::perspective(45.0f, (GLfloat)giWindowWidth / (GLfloat)giWindowHeight, 10.0f, 10000000.0f);
 
         // modelLoader.display();
-        // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal);
+        // sceneCamera->setBezierPoints(bezierPoints, yawGlobal, pitchGlobal , fovGlobal);
         // sceneCamera->update();
 
         pushMatrix(modelMatrix);
@@ -438,6 +464,41 @@ public:
         }
         modelMatrix = popMatrix();
 
+        if (blackQuad && sceneFadeAlpha > 0.0f)
+        {
+            mat4 orthoProj = vmath::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+            mat4 id = mat4::identity();
+            blackQuad->draw(orthoProj * id, 0.0f, 0.0f, 0.0f, sceneFadeAlpha);
+        }
+
+        // FIRE BLOOM (rendered FIRST so glow sits behind the models)
+        if (fireEffect && !isDepthPass && fireAlpha > 0.0f)
+        {
+            // --- Pass 1: render fire into the HDR bloom FBO ---
+            bloomEffect.bindBloomFBO();
+            glEnable(GL_DEPTH_TEST);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            pushMatrix(modelMatrix);
+            {
+                drawFire();
+            }
+            modelMatrix = popMatrix();
+            bloomEffect.unbindBloomFBO();
+
+            // Restore main viewport
+            glViewport(0, 0, giWindowWidth, giWindowHeight);
+
+            // --- Pass 2: ping-pong Gaussian blur on the bright buffer ---
+            bloomEffect.renderBlurFBO();
+
+            // Restore main viewport again (blur passes change it)
+            glViewport(0, 0, giWindowWidth, giWindowHeight);
+
+            // --- Pass 3: additively overlay bloom glow (no clear, models draw on top) ---
+            bloomEffect.renderBloomGlowOnly(1.8f, 1.2f);
+        }
+
+        // Models drawn ON TOP of the bloom glow
         drawKaliyaMardanScene();
 
         // RAIN RENDERING
@@ -660,12 +721,23 @@ public:
 
         pushMatrix(modelMatrix);
         {   
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            // Both models share modelsAlpha — same quintic-eased fade variable.
+            bool opaque = modelsAlpha >= 0.999f;
+            if (opaque) {
+                glDisable(GL_BLEND);
+                glDepthMask(GL_TRUE);
+            } else {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glDepthMask(GL_FALSE);
+            }
 
             vrundavanGate->mShader->Use();
             bindShadowUniforms(vrundavanGate->mShader.get());
             vrundavanGate->mShader->SetUniform("isBlack", isBlack);
+            vrundavanGate->mShader->SetUniform("u_fade_alpha", modelsAlpha);
+            vrundavanGate->mShader->SetUniform("u_UseAlpha", true);
+            vrundavanGate->mShader->SetUniform("u_Alpha", modelsAlpha);
 
             // Kaliya.glb has tiny native units (~1), so it needs a large scale.
             // Placed just below Krishna (y=245) so Krishna stands on the heads.
@@ -673,9 +745,9 @@ public:
             // sat on the waterline so half the body was submerged; lift it so the
             // body rises above the river surface.
             vmath::mat4 vrundavanGateModelMatrix =
-                vmath::translate(-10.0f, 300.0f, -40.0f) *
-                vmath::scale(50.0f, 50.0f, 50.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+                vmath::translate(-10.0f + -6128.600098f, 300.0f + 23.500046f + modelsRiseY, -40.0f + 7115.500000f) *
+                vmath::scale(50.0f + 171.399918f, 50.0f + 171.399918f, 50.0f + 171.399918f) *
+                vmath::rotate(-90.0f + -138.000000f, 0.0f, 1.0f, 0.0f);
 
             vrundavanGate->mShader->SetUniform("u_model", vrundavanGateModelMatrix);
             vrundavanGate->mShader->SetUniform("u_view", viewMatrix);
@@ -687,6 +759,7 @@ public:
 
             vrundavanGate->Draw(vrundavanGate->mShader);
 
+            glDepthMask(GL_TRUE);
             glDisable(GL_BLEND);
         }
         modelMatrix = popMatrix();
@@ -710,9 +783,9 @@ public:
             shreeKrishna->mShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 shreeKrishnaModelMatrix =
-                vmath::translate(0.0f, 245.0f, -40.0f) *
-                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f) *
-                vmath::scale(0.18f, 0.18f, 0.18f);
+                vmath::translate(0.0f + objX, 245.0f + objY, -40.0f + objZ) *
+                vmath::rotate(-90.0f + scaleY, 0.0f, 1.0f, 0.0f) *
+                vmath::scale(0.18f + scaleX, 0.18f + scaleX, 0.18f + scaleX);
 
             shreeKrishna->mShader->SetUniform("u_model", shreeKrishnaModelMatrix);
             shreeKrishna->mShader->SetUniform("u_view", viewMatrix);
@@ -736,10 +809,12 @@ public:
     void drawKrishnaPosesFade(bool isBlack = false)
     {
         // Advance the fade timeline here (display path owns per-frame time).
-        krishnaFadeTime += (float)gDeltaTime;
+        if (!isDepthPass) {
+            krishnaFadeTime += (float)gDeltaTime;
+        }
 
-        const float holdDur = 0.933f; // seconds a pose stays fully visible
-        const float fadeDur = 0.667f; // seconds of cross-dissolve into next pose
+        const float holdDur = 5.0f; // seconds a pose stays fully visible (slow cinematic hold)
+        const float fadeDur = 3.0f; // seconds of cross-dissolve into next pose (slow dissolve)
         const float slotDur = holdDur + fadeDur;
         const float cycle   = slotDur * KRISHNA_POSE_COUNT;
 
@@ -759,9 +834,11 @@ public:
         {
             float f = (local - holdDur) / fadeDur;    // 0..1 cross-dissolve
             f = f < 0.0f ? 0.0f : (f > 1.0f ? 1.0f : f);
-            f = f * f * (3.0f - 2.0f * f);            // smoothstep ease
-            alpha[slot] = 1.0f - f;
-            alpha[next] = f;
+            
+            // Smooth cosine cross-dissolve
+            float smoothF = 0.5f - 0.5f * cosf(f * 3.14159265f);
+            alpha[slot] = 1.0f - smoothF;
+            alpha[next] = smoothF;
         }
 
         // Shared placement for all eight poses (same spot, same facing).
@@ -769,9 +846,9 @@ public:
         // Scale is calibrated to Kaliya's scale (50) the same way Scene 2.5 sized
         // this Krishna GLB. Tune translate.y / scale / the -90 yaw if needed.
         vmath::mat4 krishnaModelMatrix =
-            vmath::translate(-10.0f, 325.0f, -40.0f) *
-            vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f) *
-            vmath::scale(44.0f, 44.0f, 44.0f);
+            vmath::translate(-10.0f + -6088.600098f + -13.600082f, 325.0f + 163.500046f + -6.499954f + modelsRiseY, -40.0f + 7095.500000f + 10.500017f) *
+            vmath::rotate(-90.0f + -154.000000f, 0.0f, 1.0f, 0.0f) *
+            vmath::scale(44.0f + -12.000000f + scaleX, 44.0f + -12.000000f + scaleX, 44.0f + -12.000000f + scaleX);
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -790,7 +867,7 @@ public:
             // A fully-visible (held) pose is drawn solid with depth writes so it
             // self-occludes correctly; a cross-fading pose is blended with depth
             // writes off so the two overlapping poses dissolve into each other.
-            bool opaque = alpha[i] >= 0.999f;
+            bool opaque = (alpha[i] * modelsAlpha) >= 0.999f;
             if (opaque) { glDisable(GL_BLEND); glDepthMask(GL_TRUE); }
             else        { glEnable(GL_BLEND);  glDepthMask(GL_FALSE); }
 
@@ -799,6 +876,7 @@ public:
                 krishnaPoses[i]->mShader->Use();
                 bindShadowUniforms(krishnaPoses[i]->mShader.get());
                 krishnaPoses[i]->mShader->SetUniform("isBlack", isBlack);
+                krishnaPoses[i]->mShader->SetUniform("u_fade_alpha", modelsAlpha);
                 krishnaPoses[i]->mShader->SetUniform("u_model", krishnaModelMatrix);
                 krishnaPoses[i]->mShader->SetUniform("u_view", viewMatrix);
                 krishnaPoses[i]->mShader->SetUniform("u_projection", perspectiveProjectionMatrix);
@@ -929,6 +1007,33 @@ public:
 
     // ============================================================
 
+    // FIRE RELATED
+    void drawFire(void)
+    {
+        if (!fireEffect) return;
+
+        glDepthMask(GL_FALSE);
+        
+        // Draw one massive fire wall behind Krishna
+        pushMatrix(modelMatrix);
+        {
+            // Position fire behind Krishna (Krishna base is ~ X:-6112, Y:482, Z:7066)
+            // We push it back along X and Z, and lift it up so it frames him nicely.
+            modelMatrix = modelMatrix * vmath::translate(-6300.0f , 450.0f + modelsRiseY, 7300.0f );
+            
+            // Rotate to face the camera more directly (approximate camera look direction)
+            modelMatrix = modelMatrix * vmath::rotate(30.0f + -11.000000f + -68.600082f, 0.0f, 1.0f, 0.0f);
+            
+            // Scale it up
+            modelMatrix = modelMatrix * vmath::scale(1000.0f, 1000.0f, 1.0f);
+            
+            fireEffect->display();
+        }
+        modelMatrix = popMatrix();
+
+        glDepthMask(GL_TRUE);
+    }
+
     // RAIN RELATED
     void drawRain(void)
     {
@@ -993,6 +1098,7 @@ public:
     void update()
     {
         sceneCamera->time = globalTime;
+        // sceneCamera->update();
 
         kaliyaX += 150.5f; // Move Kaliya along the X-axis
         kaliyaZ += 150.3f; // Move Kaliya along the Z-axis
@@ -1014,23 +1120,55 @@ public:
         //     terrain->setGrassCoverage(terrain->getGrassCoverage() + 0.005f);
         // }
 
-        // CAMERA UPDATE
-        sceneCamera->time = sceneEvents->getEventTime(START_T);
-        sceneEvents->increment();
+        sceneCamera = &sc1;
+        sceneCamera->time = sceneEvents->getEventTime(SC_T1);
 
-        // CAMERA UPDATE
-        if (sceneEvents->isEventInProgress(SC_T1))
-        {
-            sceneCamera = &sc1;
-            sceneCamera->time = sceneEvents->getEventTime(SC_T1);
-        }
+        // Update sequence time
+        sceneEvents->increment();
         
         if (sceneEvents->isEventComplete(END_T))
             isSceneComplete = true;
 
-        // terrain->setWaterHeight(100.0f - 15.000000f);
-        // waterMatrix->interpolateWaterColor = 1.0f;
-        // terrain->setTextureTransitionFactor(1.0f);
+        float timeNow = sceneEvents->getT();
+
+        // Models rise & fade: 18s → 28s (10-second quintic ease for a slow, smooth emergence)
+        if (timeNow < 18.0f) {
+            modelsRiseY = -600.0f;
+            modelsAlpha = 0.0f;
+        } else if (timeNow >= 18.0f && timeNow <= 28.0f) {
+            float t = (timeNow - 18.0f) / 10.0f;           // 0..1 over 10 seconds
+            // Quintic ease-in-out: much softer start and end than smoothstep
+            float smoothT = t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+            modelsRiseY = -600.0f + (smoothT * 600.0f);
+            modelsAlpha = smoothT;
+        } else {
+            modelsRiseY = 0.0f;
+            modelsAlpha = 1.0f;
+        }
+
+        if (timeNow < 30.0f) {
+            sceneFadeAlpha = 0.0f;
+        } else if (timeNow >= 30.0f && timeNow <= 34.0f) {
+            float t = (timeNow - 30.0f) / 4.0f;
+            float smoothT = t * t * (3.0f - 2.0f * t);
+            sceneFadeAlpha = smoothT;
+        } else {
+            sceneFadeAlpha = 1.0f;
+        }
+
+        if (timeNow < 34.0f) {
+            fireAlpha = 0.0f;
+        } else if (timeNow >= 34.0f && timeNow <= 38.0f) {
+            float t = (timeNow - 34.0f) / 4.0f;
+            float smoothT = t * t * (3.0f - 2.0f * t);
+            fireAlpha = smoothT;
+        } else {
+            fireAlpha = 1.0f;
+        }
+
+        if (fireEffect) {
+            fireEffect->alpha = fireAlpha;
+        }
 
         float fadeSpeed = 0.001f; // Adjust speed for smooth fade effect
 
@@ -1087,6 +1225,20 @@ public:
             rain->uninitialize();
             delete rain;
             rain = nullptr;
+        }
+
+        if (fireEffect)
+        {
+            fireEffect->uninitialize();
+            delete fireEffect;
+            fireEffect = NULL;
+        }
+
+        if (blackQuad)
+        {
+            blackQuad->uninitialize();
+            delete blackQuad;
+            blackQuad = NULL;
         }
 
         // modelLoader.uninitialize();
