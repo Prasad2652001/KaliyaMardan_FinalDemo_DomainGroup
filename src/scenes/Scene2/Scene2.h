@@ -61,6 +61,7 @@ public:
     float mKaliya_yPos = -3000.0f;
 
     std::unique_ptr<Core::Model> tree1;
+    std::unique_ptr<Core::Model> littleCow;
 
 
     // dynamic models
@@ -192,13 +193,13 @@ public:
 
         krishnaFriend2 = std::make_unique<Core::Model>();
         krishnaFriend2->LoadModel("./assets/models/scene2_models/krishnaFriend/friend2.glb");
-
+        
         balram = std::make_unique<Core::Model>();
         balram->LoadModel("./assets/models/scene2_models/krishnaFriend/balram.glb");
 
         cow1 = std::make_unique<Core::Model>();
         cow1->LoadModel("./assets/models/scene2_models/cow1.glb");
-
+        
         cow2 = std::make_unique<Core::Model>();
         cow2->LoadModel("./assets/models/scene2_models/cow2.glb");
 
@@ -207,7 +208,10 @@ public:
 
         tree1 = std::make_unique<Core::Model>();
         tree1->LoadModel("./assets/models/scene2_models/cow3.glb");
-        
+
+        littleCow = std::make_unique<Core::Model>();    
+        littleCow->LoadModel("./assets/models/scene2_models/littleCow.glb");
+
         // dynamic model
         eagle = std::make_unique<Core::AnimatedModel>();
         eagle->LoadModel("./assets/models/scene2_models/eagle/eagle.fbx");
@@ -501,6 +505,7 @@ std::vector<float> fovGlobalSC1 = {
         drawCow2();
         drawCow3();
         drawKaliyaModel();
+        drawLittleCow();
     }  
 
     // ==================== yamuna side scene models drawing functions ====================
@@ -610,6 +615,39 @@ std::vector<float> fovGlobalSC1 = {
             glDisable(GL_BLEND);
         }
         modelMatrix = popMatrix();
+
+        // second tree
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            
+            mangoTree->mTextureShader->Use();
+            bindShadowUniforms(mangoTree->mTextureShader.get());
+            mangoTree->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 mangoTreeModelMatrix =
+                vmath::translate(19000.0f, 500.0f, -5000.0f) *
+                vmath::scale(250.0f, 250.0f, 250.0f) *
+                vmath::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            mangoTree->mTextureShader->SetUniform("u_model", mangoTreeModelMatrix);
+            mangoTree->mTextureShader->SetUniform("u_view", viewMatrix);
+            mangoTree->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            mangoTree->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            mangoTree->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            mangoTree->Draw(mangoTree->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+
+
     }
 
     void drawStone1(bool isBlack = false)
@@ -900,6 +938,41 @@ std::vector<float> fovGlobalSC1 = {
         modelMatrix = popMatrix();
     }
 
+    void drawLittleCow(bool isBlack = false)
+    {   
+        if (!littleCow)
+            return;
+
+        pushMatrix(modelMatrix);
+        {   
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            littleCow->mTextureShader->Use();
+            bindShadowUniforms(cow3->mTextureShader.get());
+            littleCow->mTextureShader->SetUniform("isBlack", isBlack);
+
+            vmath::mat4 littleCowModelMatrix =
+                vmath::translae(15400.0f, 290.0f, -6200.0f) *
+                vmath::scale(100.0f, 100.0f, 100.0f) *
+                vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f);
+                
+                // vmath::translate(gModelTranslate[0], gModelTranslate[1], gModelTranslate[2]) *
+                // vmath::scale(gModelScale[0], gModelScale[1], gModelScale[2]) *
+                // vmath::rotate(gModelRotate[0], 0.0f, 1.0f, 0.0f);
+
+            littleCow->mTextureShader->SetUniform("u_model", littleCowModelMatrix);
+            littleCow->mTextureShader->SetUniform("u_view", viewMatrix);
+            littleCow->mTextureShader->SetUniform("u_projection", perspectiveProjectionMatrix);
+            littleCow->mTextureShader->SetSampler2D("u_GGXLUT", 0, 5);
+            littleCow->mTextureShader->SetUniform("u_ApplyToon", false); 
+
+            littleCow->Draw(littleCow->mTextureShader);
+
+            glDisable(GL_BLEND);
+        }
+        modelMatrix = popMatrix();
+    }
 
     // ============================================================
 
@@ -908,7 +981,7 @@ std::vector<float> fovGlobalSC1 = {
     {
         if (!eagle)
             return;
-
+        
         // Advance the skinned animation once per frame (drawn once from display()).
         if (!isDepthPass) {
             eagle->Update((float)gDeltaTime);

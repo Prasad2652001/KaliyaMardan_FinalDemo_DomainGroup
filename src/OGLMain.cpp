@@ -479,7 +479,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 			break;
-
+			
 		case 'B':
 		case 'b':
 			if (enableBezierCameraControl)
