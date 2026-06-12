@@ -126,6 +126,14 @@ public:
         rain = new Rain(40000);
         // godRaysShader = new GodRaysShader();
     }
+    glshaderprogram *lightningShader;
+    GLuint lightningVao, lightningVboPos, lightningVboTex;
+    GLuint lightningTexture1, lightningTexture2;
+    float lightningFlashTimer[4] = {0.0f, 0.5f, 1.2f, 1.8f};
+    float nextLightningThreshold[4] = {2.0f, 1.5f, 1.0f, 0.5f};
+    float lightningXOffset[4] = {0.0f, 2000.0f, -3000.0f, 5000.0f};
+    float lightningZOffset[4] = {0.0f, 1000.0f, -1500.0f, 2000.0f};
+    int currentLightningTex[4] = {0, 0, 0, 0};
 
     bool initialize()
     {  
@@ -248,6 +256,30 @@ public:
             PrintLog("Failed to initialize Rain");
         }
 
+        // --- Lightning Setup ---
+        lightningShader = new glshaderprogram({"./src/shaders/lightning/lightning.vert", "./src/shaders/lightning/lightning.frag"}); 
+        
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        glGenVertexArrays(1, &lightningVao);
+        glGenBuffers(1, &lightningVboPos);
+        glBindVertexArray(lightningVao);
+        glBindBuffer(GL_ARRAY_BUFFER, lightningVboPos);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glBindVertexArray(0);
+
+        lightningTexture1 = Core::TextureModel::LoadTextureModel(".\\assets\\textures\\lightning\\lightning1.png");
+        lightningTexture2 = Core::TextureModel::LoadTextureModel(".\\assets\\textures\\lightning\\lightning2.png");
+
         // Event System
         sceneEvents = new EventManager(
             {{START_T, {0.0f, 37.0f}},
@@ -270,110 +302,82 @@ public:
     void setupCamera()
     {
         std::vector<std::vector<float>> bezierPointsSC1 = {
-{15611.400391f, 763.500000f, -10064.500000f},
-{15611.400391f, 823.500000f, -10064.500000f},
-{15611.400391f, 923.500000f, -10064.500000f},
-{15611.400391f, 1023.500000f, -10064.500000f},
-{15611.400391f, 1823.500000f, -10064.500000f},
-{15611.400391f, 2443.500000f, -10064.500000f},
-{15611.400391f, 3663.500000f, -10064.500000f},
-{15711.400391f, 4223.500000f, -8924.500000f},
-{15711.400391f, 4223.500000f, -8064.500000f},
-{15711.400391f, 4223.500000f, -4404.500000f},
-{15711.400391f, 5043.500000f, -3664.500000f},
-{15711.400391f, 6303.500000f, -2284.500000f},
-{14911.400391f, 6303.500000f, -1504.500000f},
-{12811.400391f, 6303.500000f, -1024.500000f},
-{11471.400391f, 6303.500000f, -1024.500000f},
-{9991.400391f, 6303.500000f, -1024.500000f},
-{7311.400391f, 6303.500000f, 615.500000f},
-{5071.400391f, 6303.500000f, 1455.500000f},
-{811.400391f, 5183.500000f, 3195.500000f},
-{-228.599609f, 5183.500000f, 3195.500000f},
-{-2028.599609f, 5183.500000f, 3195.500000f},
-{-2028.599609f, 4703.500000f, 3195.500000f},
-{-2028.599609f, 4143.500000f, 3195.500000f},
-{-2028.599609f, 2523.500000f, 3195.500000f},
-{-4348.599609f, 2083.500000f, 4795.500000f},
-{-4348.599609f, 923.500000f, 4795.500000f},
-{-4348.599609f, 923.500000f, 4795.500000f},
+{16131.400391f, 723.500000f, -10444.500000f},
+{16131.400391f, 723.500000f, -10204.500000f},
+{16131.400391f, 723.500000f, -9724.500000f},
+{16131.400391f, 723.500000f, -9164.500000f},
+{16131.400391f, 723.500000f, -8304.500000f},
+{16131.400391f, 583.500000f, -7944.500000f},
+{16131.400391f, 523.500000f, -6244.500000f},
+{15511.400391f, 523.500000f, -5224.500000f},
+{14251.400391f, 523.500000f, -4124.500000f},
+{12571.400391f, 523.500000f, -3104.500000f},
+{11051.400391f, 523.500000f, -1944.500000f},
+{9891.400391f, 523.500000f, -964.500000f},
+{7671.400391f, 523.500000f, 335.500000f},
+{6151.400391f, 523.500000f, 1535.500000f},
+{3271.400391f, 523.500000f, 3755.500000f},
+{231.400391f, 523.500000f, 5875.500000f},
+{-2128.599609f, 523.500000f, 7675.500000f},
+{-4708.599609f, 523.500000f, 10055.500000f},
+{-7248.599609f, 523.500000f, 12075.500000f},
+{-7248.599609f, 523.500000f, 12075.500000f},
 };
 
 
 // YAW GLOBAL
 std::vector<float> yawGlobalSC1 = {
-435.000000f,
-435.000000f,
-435.000000f,
-435.000000f,
-435.000000f,
-435.000000f,
-435.000000f,
-438.000000f,
-438.000000f,
-438.000000f,
-438.000000f,
-463.000000f,
-508.000000f,
-498.000000f,
-498.000000f,
-498.000000f,
-496.000000f,
-498.000000f,
-494.000000f,
-490.000000f,
-486.000000f,
-486.000000f,
-488.000000f,
-491.000000f,
-488.000000f,
-488.000000f,
-488.000000f,
+110.000000f,
+110.000000f,
+110.000000f,
+110.000000f,
+110.000000f,
+110.000000f,
+110.000000f,
+135.000000f,
+133.000000f,
+138.000000f,
+143.000000f,
+143.000000f,
+144.000000f,
+145.000000f,
+145.000000f,
+145.000000f,
+145.000000f,
+149.000000f,
+149.000000f,
+149.000000f,
 };
 
 
 // PITCH GLOBAL
 std::vector<float> pitchGlobalSC1 = {
--2.000000f,
+-6.000000f,
 	-6.000000f,
-	-13.000000f,
-	-26.000000f,
-	-49.000000f,
-	-64.000000f,
-	-68.000000f,
-	-68.000000f,
-	-74.000000f,
-	-74.000000f,
-	-74.000000f,
-	-74.000000f,
-	-74.000000f,
-	-42.000000f,
-	-30.000000f,
-	-21.000000f,
-	-21.000000f,
-	-21.000000f,
-	-19.000000f,
-	-19.000000f,
-	-19.000000f,
-	-13.000000f,
-	-11.000000f,
-	-9.000000f,
-	-9.000000f,
+	-6.000000f,
+	-6.000000f,
+	-6.000000f,
+	-6.000000f,
+	-6.000000f,
+	-3.000000f,
+	-2.000000f,
+	-2.000000f,
+	-2.000000f,
+	-2.000000f,
 	-1.000000f,
 	-1.000000f,
+	-1.000000f,
+	-1.000000f,
+	-1.000000f,
+	2.000000f,
+	5.000000f,
+	5.000000f,
 	};
 
 
 // FOV GLOBAL
 std::vector<float> fovGlobalSC1 = {
 -120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
-	-120.000000f,
 	-120.000000f,
 	-120.000000f,
 	-120.000000f,
@@ -505,6 +509,7 @@ std::vector<float> fovGlobalSC1 = {
         drawCow2();
         drawCow3();
         drawKaliyaModel();
+        drawLightning();
         drawLittleCow();
     }  
 
@@ -773,7 +778,7 @@ std::vector<float> fovGlobalSC1 = {
             krishnaFriend2->mTextureShader->SetUniform("isBlack", isBlack);
 
             vmath::mat4 krishnaFriend2ModelMatrix =
-                vmath::translate(16000.0f, 650.0f, -9000.0f) *
+                vmath::translate(16000.0f, 650.0f + -30.0f, -9000.0f) *
                 vmath::scale(90.0f, 90.0f, 90.0f) *
                 vmath::rotate(0.0f, 0.0f, 1.0f, 0.0f);
                 
@@ -1026,40 +1031,94 @@ std::vector<float> fovGlobalSC1 = {
     // RAIN RELATED
     void drawRain(void)
     {
-        // code
-        pushMatrix(modelMatrix);
-        {
-            rain->lightAmbient[0] = 0.0f;
-            rain->lightAmbient[1] = 0.0f;
-            rain->lightAmbient[2] = 0.0f;
-            rain->lightAmbient[3] = 1.0f;
+        // // code
+        // pushMatrix(modelMatrix);
+        // {
+        //     rain->lightAmbient[0] = 0.0f;
+        //     rain->lightAmbient[1] = 0.0f;
+        //     rain->lightAmbient[2] = 0.0f;
+        //     rain->lightAmbient[3] = 1.0f;
 
-            rain->lightDiffuse[0] = 1.0f;
-            rain->lightDiffuse[1] = 1.0f;
-            rain->lightDiffuse[2] = 1.0f;
-            rain->lightDiffuse[3] = 1.0f;
+        //     rain->lightDiffuse[0] = 1.0f;
+        //     rain->lightDiffuse[1] = 1.0f;
+        //     rain->lightDiffuse[2] = 1.0f;
+        //     rain->lightDiffuse[3] = 1.0f;
 
-            rain->lightPosition[0] = 0.0f;
-            rain->lightPosition[1] = 100.0f;
-            rain->lightPosition[2] = -30.0f;
-            rain->lightPosition[3] = 1.0f;
+        //     rain->lightPosition[0] = 0.0f;
+        //     rain->lightPosition[1] = 100.0f;
+        //     rain->lightPosition[2] = -30.0f;
+        //     rain->lightPosition[3] = 1.0f;
 
-            rain->lightSpecular[0] = 1.0f;
-            rain->lightSpecular[1] = 1.0f;
-            rain->lightSpecular[2] = 1.0f;
-            rain->lightSpecular[3] = 1.0f;
+        //     rain->lightSpecular[0] = 1.0f;
+        //     rain->lightSpecular[1] = 1.0f;
+        //     rain->lightSpecular[2] = 1.0f;
+        //     rain->lightSpecular[3] = 1.0f;
 
-            // depth buffer madhe writing disable karnya sathi
+        //     // depth buffer madhe writing disable karnya sathi
 
-            glEnable(GL_BLEND);
+        //     glEnable(GL_BLEND);
 
-            rain->display();
-            glDisable(GL_BLEND);
-        }
-        modelMatrix = popMatrix();
+        //     rain->display();
+        //     glDisable(GL_BLEND);
+        // }
+        // modelMatrix = popMatrix();
     }
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    void drawLightning()
+    {
+        if (cubeMap->barasatBlend < 0.1f) return; // Only draw when storm is active
+        if (mKaliya_yPos < 600.0f) return; // Wait until Kaliya is almost fully up
+        
+        for (int i = 0; i < 4; i++) {
+            lightningFlashTimer[i] += (float)gDeltaTime; // Use normal delta time for clear logic
+            if (lightningFlashTimer[i] > nextLightningThreshold[i]) {
+                lightningFlashTimer[i] = 0.0f;
+                currentLightningTex[i] = (rand() % 10 > 2) ? 1 : 2; // More frequent strikes
+                nextLightningThreshold[i] = 0.1f + (rand() % 150) / 100.0f; // 0.1s to 1.6s between strikes
+                lightningXOffset[i] = (rand() % 20000) - 10000.0f; // Random X offset between -10000 and 10000
+                lightningZOffset[i] = (rand() % 4000) - 2000.0f;   // Random Z offset to layer them
+            }
+            
+            // Show lightning flash briefly (e.g., for 0.15s)
+            if (lightningFlashTimer[i] > 0.15f || currentLightningTex[i] == 0) continue;
 
+            pushMatrix(modelMatrix);
+            {
+                // Position behind Kaliya
+                modelMatrix = vmath::translate(-11000.0f + lightningXOffset[i], 4000.0f, 8000.0f + lightningZOffset[i]) * 
+                              vmath::scale(8000.0f, 8000.0f, 8000.0f);
+
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive blending for bright flash
+                glDepthMask(GL_FALSE); // Don't write to depth buffer
+
+                lightningShader->use();
+                
+                glUniformMatrix4fv(glGetUniformLocation(lightningShader->programObject, "u_modelMatrix"), 1, GL_FALSE, modelMatrix);
+                glUniformMatrix4fv(glGetUniformLocation(lightningShader->programObject, "u_viewMatrix"), 1, GL_FALSE, viewMatrix);
+                glUniformMatrix4fv(glGetUniformLocation(lightningShader->programObject, "u_projectionMatrix"), 1, GL_FALSE, perspectiveProjectionMatrix);
+                
+                // Adjust alpha based on flash intensity
+                float alpha = (1.0f - (lightningFlashTimer[i] / 0.15f)) * cubeMap->barasatBlend;
+                glUniform1f(glGetUniformLocation(lightningShader->programObject, "u_alpha"), alpha);
+                
+                glActiveTexture(GL_TEXTURE0);
+                glUniform1i(glGetUniformLocation(lightningShader->programObject, "lightningTex"), 0);
+                glBindTexture(GL_TEXTURE_2D, currentLightningTex[i] == 1 ? lightningTexture1 : lightningTexture2);
+
+                glBindVertexArray(lightningVao);
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                glBindVertexArray(0);
+
+                glDepthMask(GL_TRUE);
+                glDisable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            }
+            modelMatrix = popMatrix();
+        }
+    }
+    
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     void displayScene(float terrainUp)
     {
         pushMatrix(modelMatrix);
@@ -1136,7 +1195,7 @@ std::vector<float> fovGlobalSC1 = {
                 // Sky cross-fades to dark storm clouds via barasatBlend (no instant jump)
                 cubeMap->barasatBlend += 0.35f * (float)gDeltaTime;
                 if (cubeMap->barasatBlend > 1.0f) cubeMap->barasatBlend = 1.0f;
-                cubeMap->isBarasat = 0; // keep base cubemap active for mix()
+                cubeMap->isBarasat = 2; // Set to 2 so cubemap.fs executes the procedural cloud blending
 
                 // Rain fades in over ~3 seconds
                 if (rain->alpha < 1.0f) {
@@ -1151,8 +1210,12 @@ std::vector<float> fovGlobalSC1 = {
                 if (waterMatrix->interpolateWaterColor > 1.0f) waterMatrix->interpolateWaterColor = 1.0f;
                 // Sky fades back to clear
                 cubeMap->barasatBlend -= 0.35f * (float)gDeltaTime;
-                if (cubeMap->barasatBlend < 0.0f) cubeMap->barasatBlend = 0.0f;
-                cubeMap->isBarasat = 0;
+                if (cubeMap->barasatBlend <= 0.0f) {
+                    cubeMap->barasatBlend = 0.0f;
+                    cubeMap->isBarasat = 0;
+                } else {
+                    cubeMap->isBarasat = 2; // Keep procedural clouds active while fading out
+                }
                 // Fade out rain
                 if (rain->alpha > 0.0f) {
                     rain->alpha -= 0.35f * (float)gDeltaTime;

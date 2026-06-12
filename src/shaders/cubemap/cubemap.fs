@@ -7,6 +7,7 @@ uniform samplerCube u_skyBox;
 uniform int isBarsat = 0;
 uniform float u_alpha;
 uniform float u_time;
+uniform float u_barasatBlend;
 
 // Procedural 3D noise for clouds
 float hash(vec3 p) {
@@ -53,10 +54,13 @@ void main(void) {
         
         // Colors
         vec3 skyColor = vec3(0.02, 0.05, 0.08); // dark night sky
-        vec3 cloudColor = vec3(0.1, 0.15, 0.2); // dark grey clouds
+        vec3 cloudColor = vec3(0.08, 0.25, 0.12); // darker green-tinted clouds
         
-        vec3 finalColor = mix(skyColor, cloudColor, density);
-        FragColor = vec4(finalColor, 1.0) * u_alpha;
+        vec3 stormSky = mix(skyColor, cloudColor, density);
+        vec3 originalSky = texture(u_skyBox, a_texcoords).rgb;
+        
+        // Smoothly blend between the base cubemap and the procedural storm based on u_barasatBlend
+        FragColor = vec4(mix(originalSky, stormSky, u_barasatBlend), 1.0) * u_alpha;
     } else {
 		FragColor = texture(u_skyBox, a_texcoords) * u_alpha;
 	}
