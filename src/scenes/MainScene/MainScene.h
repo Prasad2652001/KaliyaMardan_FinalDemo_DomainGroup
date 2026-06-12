@@ -57,7 +57,7 @@ public:
         if (maxScene >= SCENE_02 && !scene2->isInitialized) scene2->initialize();
         if (maxScene >= SCENE_03 && !scene3->isInitialized) scene3->initialize();
         // if (maxScene >= SCENE_04 && !scene4->isInitialized) scene4->initialize();
-        // if (maxScene >= SCENE_OUTRO && !outroScene->isInitialized) outroScene->initialize();
+        if (maxScene >= SCENE_OUTRO && !outroScene->isInitialized) outroScene->initialize();
     }
 
     void initializeActiveSceneOnly()
